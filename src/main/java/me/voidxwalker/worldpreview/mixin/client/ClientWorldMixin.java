@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.function.Supplier;
 
 @Mixin(ClientWorld.class)
-public class ClientWorldMixin {
+public abstract class ClientWorldMixin {
     @Mutable
     @Shadow
     @Final

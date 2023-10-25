@@ -78,9 +78,8 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
     @Shadow
     public abstract int getSpawnRadius(@Nullable ServerWorld world);
 
-    @Inject(method = "prepareStartRegion", at = @At(value = "HEAD"))
-
-    public void worldpreview_getWorld(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci) {
+    @Inject(method = "prepareStartRegion", at = @At("HEAD"))
+    private void worldpreview_getWorld(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci) {
         WorldPreview.calculatedSpawn = false;
         synchronized (WorldPreview.lock) {
             if (!WorldPreview.existingWorld) {
@@ -140,7 +139,7 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
     }
 
     @Inject(method = "shutdown", at = @At(value = "HEAD"), cancellable = true)
-    public void worldpreview_kill(CallbackInfo ci) {
+    private void worldpreview_kill(CallbackInfo ci) {
         if (MinecraftClient.getInstance().currentScreen instanceof LevelLoadingScreen && Thread.currentThread().getId() != this.getThread().getId()) {
             worldpreview_shutdownWithoutSave();
             ci.cancel();
@@ -148,7 +147,7 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
     }
 
     @Inject(method = "runServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;setupServer()Z", shift = At.Shift.AFTER), cancellable = true)
-    public void worldpreview_kill2(CallbackInfo ci) {
+    private void worldpreview_kill2(CallbackInfo ci) {
         WorldPreview.inPreview = false;
         WorldPreview.renderingPreview = false;
         LockSupport.unpark(((MinecraftClientMixin) MinecraftClient.getInstance()).invokeGetThread());
@@ -158,15 +157,15 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
     }
 
     @Unique
-    public void worldpreview_shutdownWithoutSave() {
+    private void worldpreview_shutdownWithoutSave() {
         LOGGER.info("Stopping server");
         if (this.getNetworkIo() != null) {
             this.getNetworkIo().stop();
         }
-        Iterator var1 = this.getWorlds().iterator();
+        Iterator<ServerWorld> var1 = this.getWorlds().iterator();
         ServerWorld serverWorld2;
         while (var1.hasNext()) {
-            serverWorld2 = (ServerWorld) var1.next();
+            serverWorld2 = var1.next();
             if (serverWorld2 != null) {
                 serverWorld2.savingDisabled = false;
             }
@@ -192,7 +191,7 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
     }
 
     @Inject(method = "prepareStartRegion", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkManager;getTotalChunksLoadedCount()I", shift = At.Shift.AFTER), cancellable = true)
-    public void worldpreview_kill(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci) {
+    private void worldpreview_kill(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci) {
         if (WorldPreview.kill == 1) {
             ci.cancel();
         }

@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import java.util.Random;
 
 @Mixin(BlockRenderManager.class)
-public class BlockRenderManagerMixin {
+public abstract class BlockRenderManagerMixin {
     @Redirect(method = "renderBlock", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/block/BlockModelRenderer;render(Lnet/minecraft/world/BlockRenderView;Lnet/minecraft/client/render/model/BakedModel;Lnet/minecraft/block/BlockState;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;ZLjava/util/Random;JI)Z"))
     public boolean worldpreview_oldSodiumCompatibility(BlockModelRenderer instance, BlockRenderView world, BakedModel model, BlockState state, BlockPos pos, MatrixStack matrix, VertexConsumer vertexConsumer, boolean cull, Random random, long seed, int overlay) {
         return ((OldSodiumCompatibility) instance).worldpreview_renderSafe(world, model, state, pos, matrix, vertexConsumer, cull, random, seed, overlay);

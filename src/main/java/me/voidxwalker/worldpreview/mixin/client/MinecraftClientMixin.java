@@ -1,7 +1,6 @@
 package me.voidxwalker.worldpreview.mixin.client;
 
 import me.voidxwalker.worldpreview.OldSodiumCompatibility;
-import me.voidxwalker.worldpreview.StateOutputInterface;
 import me.voidxwalker.worldpreview.WorldPreview;
 import me.voidxwalker.worldpreview.mixin.access.WorldRendererMixin;
 import net.minecraft.client.MinecraftClient;
@@ -125,9 +124,6 @@ public abstract class MinecraftClientMixin {
     private void worldpreview_actuallyInPreview(boolean tick, CallbackInfo ci) {
         if (WorldPreview.inPreview && !WorldPreview.renderingPreview) {
             WorldPreview.renderingPreview = true;
-            if (WorldPreview.hasStateOutput) {
-                StateOutputInterface.outputPreviewing();
-            }
             WorldPreview.log(Level.INFO, "Starting Preview at (" + WorldPreview.player.getX() + ", " + Math.floor(WorldPreview.player.getY()) + ", " + WorldPreview.player.getZ() + ")");
         }
     }

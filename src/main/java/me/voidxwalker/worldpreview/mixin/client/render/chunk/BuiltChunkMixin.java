@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
 @Mixin(ChunkBuilder.BuiltChunk.class)
-public class BuiltChunkMixin {
+public abstract class BuiltChunkMixin {
     @Redirect(method = "getSquaredCameraDistance", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;getCamera()Lnet/minecraft/client/render/Camera;"))
     public Camera worldpreview_getCorrectPos(GameRenderer instance) {
         if (MinecraftClient.getInstance().currentScreen instanceof LevelLoadingScreen) {

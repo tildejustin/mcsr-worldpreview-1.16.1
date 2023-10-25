@@ -19,7 +19,7 @@ import java.util.Queue;
 import java.util.concurrent.Executor;
 
 @Mixin(ChunkBuilder.class)
-public class ChunkBuilderMixin {
+public abstract class ChunkBuilderMixin {
     @Shadow
     @Final
     private static Logger LOGGER;

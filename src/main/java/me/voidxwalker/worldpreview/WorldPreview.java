@@ -34,7 +34,6 @@ public class WorldPreview implements ClientModInitializer {
     public static KeyBinding resetKey;
     public static KeyBinding freezeKey;
     public static boolean freezePreview;
-    public static boolean hasStateOutput;
     public static Logger LOGGER = LogManager.getLogger();
 
     public static void log(Level level, String message) {
@@ -43,8 +42,6 @@ public class WorldPreview implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        hasStateOutput = FabricLoader.getInstance().isModLoaded("state-output");
-
         resetKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "Leave Preview",
                 InputUtil.Type.KEYSYM,
