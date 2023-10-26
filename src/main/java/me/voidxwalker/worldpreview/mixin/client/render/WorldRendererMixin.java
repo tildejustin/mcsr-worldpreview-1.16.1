@@ -3,6 +3,7 @@ package me.voidxwalker.worldpreview.mixin.client.render;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import it.unimi.dsi.fastutil.objects.ObjectListIterator;
@@ -173,40 +174,16 @@ public abstract class WorldRendererMixin {
     @Shadow
     protected abstract void checkEmpty(MatrixStack matrices);
 
-    @Redirect(method = "renderWeather", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;world:Lnet/minecraft/client/world/ClientWorld;", opcode = Opcodes.GETFIELD))
-    private ClientWorld worldpreview_getCorrectWorld(MinecraftClient instance) {
-        if (client.currentScreen instanceof LevelLoadingScreen) {
-            return this.world;
-        }
-        return instance.world;
-    }
-
-    @Redirect(method = "tickRainSplashing", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;world:Lnet/minecraft/client/world/ClientWorld;", opcode = Opcodes.GETFIELD))
-    private ClientWorld worldpreview_getCorrectWorld2(MinecraftClient instance) {
-        if (client.currentScreen instanceof LevelLoadingScreen) {
-            return this.world;
-        }
-        return instance.world;
-    }
-
-    @Redirect(method = "reload", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getCameraEntity()Lnet/minecraft/entity/Entity;"))
-    private Entity worldpreview_getCameraEntity(MinecraftClient instance) {
-        if (instance.getCameraEntity() == null && client.currentScreen instanceof LevelLoadingScreen) {
-            return WorldPreview.player;
-        }
-        return instance.getCameraEntity();
-    }
-
     @Inject(method = "reload", at = @At(value = "TAIL"))
     private void worldpreview_reload(CallbackInfo ci) {
-        if (this.world != null && client.currentScreen instanceof LevelLoadingScreen) {
+        if (this.world != null && this.isWorldPreview()) {
             this.chunks = new BuiltChunkStorage(this.chunkBuilder, this.world, this.client.options.viewDistance, (WorldRenderer) (Object) this);
         }
     }
 
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;setupTerrain(Lnet/minecraft/client/render/Camera;Lnet/minecraft/client/render/Frustum;ZIZ)V"))
     private void worldpreview_setupTerrain(WorldRenderer instance, Camera camera, Frustum frustum, boolean hasForcedFrustum, int frame, boolean spectator) {
-        if (!(client.currentScreen instanceof LevelLoadingScreen)) {
+        if (!this.isWorldPreview()) {
             this.setupTerrain(camera, frustum, hasForcedFrustum, frame, spectator);
             return;
         }
@@ -337,7 +314,7 @@ public abstract class WorldRendererMixin {
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/BufferBuilderStorage;getEntityVertexConsumers()Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;"), cancellable = true)
     private void worldpreview_render(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci) {
-        if (client.currentScreen instanceof LevelLoadingScreen) {
+        if (this.isWorldPreview()) {
             worldpreview_renderSafe(matrices, tickDelta, limitTime, renderBlockOutline, camera, gameRenderer, lightmapTextureManager, matrix4f);
             ci.cancel();
         }
@@ -476,7 +453,7 @@ public abstract class WorldRendererMixin {
 
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;renderLayer(Lnet/minecraft/client/render/RenderLayer;Lnet/minecraft/client/util/math/MatrixStack;DDD)V"))
     private void worldpreview_renderLayer(WorldRenderer instance, RenderLayer renderLayer, MatrixStack matrixStack, double d, double e, double f) {
-        if (!(client.currentScreen instanceof LevelLoadingScreen)) {
+        if (!this.isWorldPreview()) {
             this.renderLayer(renderLayer, matrixStack, d, e, f);
             return;
         }
@@ -536,48 +513,23 @@ public abstract class WorldRendererMixin {
 
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;getViewDistance()F"))
     private float worldpreview_getViewDistance(GameRenderer instance) {
-        if (client.currentScreen instanceof LevelLoadingScreen) {
+        if (this.isWorldPreview()) {
             return client.options.viewDistance * 16;
         }
-
         return instance.getViewDistance();
-    }
-
-    @Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;targetedEntity:Lnet/minecraft/entity/Entity;", opcode = Opcodes.GETFIELD))
-    private Entity worldpreview_getCorrectTargetedPlayerEntity(MinecraftClient instance) {
-        if (instance.player == null && client.currentScreen instanceof LevelLoadingScreen) {
-            return WorldPreview.player;
-        }
-        return instance.targetedEntity;
-    }
-
-    @Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;world:Lnet/minecraft/client/world/ClientWorld;", opcode = Opcodes.GETFIELD))
-    private ClientWorld worldpreview_getCorrectWorld3(MinecraftClient instance) {
-        if (instance.currentScreen instanceof LevelLoadingScreen) {
-            return this.world;
-        }
-        return instance.world;
     }
 
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/SkyProperties;useThickFog(II)Z"))
     private boolean worldpreview_shouldThickenFog(SkyProperties instance, int i, int j) {
-        if (client.gameRenderer == null && client.currentScreen instanceof LevelLoadingScreen) {
+        if (client.gameRenderer == null && this.isWorldPreview()) {
             return false;
         }
         return instance.useThickFog(i, j);
     }
 
-    @Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;player:Lnet/minecraft/client/network/ClientPlayerEntity;", ordinal = 1, opcode = Opcodes.GETFIELD))
-    private ClientPlayerEntity worldpreview_getCorrectPlayer2(MinecraftClient instance) {
-        if (instance.player == null && client.currentScreen instanceof LevelLoadingScreen) {
-            return WorldPreview.player;
-        }
-        return instance.player;
-    }
-
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSpectator()Z"))
     private boolean worldpreview_spectator(ClientPlayerEntity instance) {
-        if (client.currentScreen instanceof LevelLoadingScreen && instance == null) {
+        if (this.isWorldPreview()) {
             return false;
         }
         assert instance != null;
@@ -586,33 +538,54 @@ public abstract class WorldRendererMixin {
 
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/debug/DebugRenderer;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;DDD)V"))
     private void worldpreview_stopDebugRenderer(DebugRenderer instance, MatrixStack matrices, VertexConsumerProvider.Immediate vertexConsumers, double cameraX, double cameraY, double cameraZ) {
-        if (client.currentScreen instanceof LevelLoadingScreen) {
+        if (this.isWorldPreview()) {
             return;
         }
         instance.render(matrices, vertexConsumers, cameraX, cameraY, cameraZ);
     }
 
-    @Redirect(method = "renderSky", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;world:Lnet/minecraft/client/world/ClientWorld;", opcode = Opcodes.GETFIELD))
-    private ClientWorld worldpreview_getCorrectWorld4(MinecraftClient instance) {
-        if (instance.world == null && client.currentScreen instanceof LevelLoadingScreen) {
-            return this.world;
+    @ModifyExpressionValue(method = "*", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;world:Lnet/minecraft/client/world/ClientWorld;", opcode = Opcodes.GETFIELD))
+    private ClientWorld modifyWorld(ClientWorld world) {
+        if (this.isWorldPreview()) {
+            return WorldPreview.clientWorld;
         }
-        return instance.world;
+        return world;
     }
 
-    @Redirect(method = "renderSky", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;getCamera()Lnet/minecraft/client/render/Camera;"))
-    private Camera worldpreview_getCamera(GameRenderer instance) {
-        if (instance.getCamera() == null && client.currentScreen instanceof LevelLoadingScreen) {
-            return WorldPreview.camera;
-        }
-        return instance.getCamera();
-    }
-
-    @Redirect(method = "renderSky", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;player:Lnet/minecraft/client/network/ClientPlayerEntity;", opcode = Opcodes.GETFIELD))
-    private ClientPlayerEntity worldpreview_getCorrectPlayer3(MinecraftClient instance) {
-        if (instance.player == null && client.currentScreen instanceof LevelLoadingScreen) {
+    @ModifyExpressionValue(method = "*", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;player:Lnet/minecraft/client/network/ClientPlayerEntity;", opcode = Opcodes.GETFIELD))
+    private ClientPlayerEntity modifyPlayer(ClientPlayerEntity player) {
+        if (this.isWorldPreview()) {
             return WorldPreview.player;
         }
-        return instance.player;
+        return player;
+    }
+
+    @ModifyExpressionValue(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getCameraEntity()Lnet/minecraft/entity/Entity;"))
+    private Entity modifyCameraEntity(Entity entity) {
+        if (this.isWorldPreview()) {
+            return WorldPreview.player;
+        }
+        return entity;
+    }
+
+    @ModifyExpressionValue(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;getCamera()Lnet/minecraft/client/render/Camera;"))
+    private Camera modifyCamera(Camera camera) {
+        if (this.isWorldPreview()) {
+            return WorldPreview.camera;
+        }
+        return camera;
+    }
+
+    @ModifyExpressionValue(method = "*", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;targetedEntity:Lnet/minecraft/entity/Entity;", opcode = Opcodes.GETFIELD))
+    private Entity modifyTargetedEntity(Entity entity) {
+        if (this.isWorldPreview()) {
+            return null;
+        }
+        return entity;
+    }
+
+    @Unique
+    private boolean isWorldPreview() {
+        return (Object) this == WorldPreview.worldRenderer;
     }
 }
