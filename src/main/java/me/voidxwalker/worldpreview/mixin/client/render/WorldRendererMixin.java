@@ -16,7 +16,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gl.ShaderEffect;
 import net.minecraft.client.gl.VertexBuffer;
-import net.minecraft.client.gui.screen.LevelLoadingScreen;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.options.CloudRenderMode;
 import net.minecraft.client.render.*;
@@ -517,14 +516,6 @@ public abstract class WorldRendererMixin {
             return client.options.viewDistance * 16;
         }
         return instance.getViewDistance();
-    }
-
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/SkyProperties;useThickFog(II)Z"))
-    private boolean worldpreview_shouldThickenFog(SkyProperties instance, int i, int j) {
-        if (client.gameRenderer == null && this.isWorldPreview()) {
-            return false;
-        }
-        return instance.useThickFog(i, j);
     }
 
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSpectator()Z"))
