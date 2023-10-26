@@ -1,6 +1,5 @@
 package me.voidxwalker.worldpreview.mixin.client;
 
-import me.voidxwalker.worldpreview.OldSodiumCompatibility;
 import me.voidxwalker.worldpreview.WorldPreview;
 import me.voidxwalker.worldpreview.mixin.access.WorldRendererMixin;
 import net.minecraft.client.MinecraftClient;
@@ -101,7 +100,6 @@ public abstract class MinecraftClientMixin {
     @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/resource/ReloadableResourceManager;registerListener(Lnet/minecraft/resource/ResourceReloadListener;)V", ordinal = 11))
     public void worldpreview_createWorldRenderer(ReloadableResourceManager instance, ResourceReloadListener resourceReloadListener) {
         WorldPreview.worldRenderer = new WorldRenderer(MinecraftClient.getInstance(), new BufferBuilderStorage());
-        ((OldSodiumCompatibility) WorldPreview.worldRenderer).setPreviewRenderer();
         this.worldRenderer = new WorldRenderer((MinecraftClient) (Object) this, this.bufferBuilders);
         instance.registerListener(worldRenderer);
 
@@ -114,7 +112,7 @@ public abstract class MinecraftClientMixin {
             WorldPreview.clientWorld = null;
             WorldPreview.camera = null;
             if (WorldPreview.worldRenderer != null) {
-                ((OldSodiumCompatibility) WorldPreview.worldRenderer).worldpreview_setWorldSafe(null);
+                WorldPreview.worldRenderer.setWorld(null);
             }
         }
     }
@@ -126,5 +124,4 @@ public abstract class MinecraftClientMixin {
             WorldPreview.log(Level.INFO, "Starting Preview at (" + WorldPreview.player.getX() + ", " + Math.floor(WorldPreview.player.getY()) + ", " + WorldPreview.player.getZ() + ")");
         }
     }
-
 }

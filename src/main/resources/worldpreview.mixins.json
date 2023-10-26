@@ -21,8 +21,6 @@
     "client.MinecraftClientMixin",
     "client.render.LevelLoadingScreenMixin",
     "client.render.WorldRendererMixin",
-    "client.render.block.BlockModelRendererMixin",
-    "client.render.block.BlockRenderManagerMixin",
     "client.render.chunk.BuiltChunkMixin",
     "client.render.chunk.ChunkBuilderMixin",
     "server.MinecraftServerMixin",

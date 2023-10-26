@@ -1,7 +1,6 @@
 package me.voidxwalker.worldpreview.mixin.client.render;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import me.voidxwalker.worldpreview.OldSodiumCompatibility;
 import me.voidxwalker.worldpreview.WorldPreview;
 import me.voidxwalker.worldpreview.mixin.access.WorldRendererMixin;
 import net.minecraft.client.MinecraftClient;
@@ -67,7 +66,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
     public void worldpreview_render(MatrixStack matrices, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (WorldPreview.clientWorld != null && WorldPreview.player != null && !WorldPreview.freezePreview) {
             if (((WorldRendererMixin) WorldPreview.worldRenderer).getWorld() == null && WorldPreview.calculatedSpawn) {
-                ((OldSodiumCompatibility) WorldPreview.worldRenderer).worldpreview_setWorldSafe(WorldPreview.clientWorld);
+                WorldPreview.worldRenderer.setWorld(WorldPreview.clientWorld);
                 WorldPreview.showMenu = true;
                 this.worldpreview_showMenu = true;
                 this.worldpreview_initWidgets();
