@@ -39,31 +39,31 @@ public abstract class LevelLoadingScreenMixin extends Screen {
     }
 
     @Inject(method = "<init>", at = @At(value = "TAIL"))
-    public void worldpreview_init(WorldGenerationProgressTracker progressProvider, CallbackInfo ci) {
+    private void worldpreview_init(WorldGenerationProgressTracker progressProvider, CallbackInfo ci) {
         WorldPreview.calculatedSpawn = true;
         WorldPreview.freezePreview = false;
         KeyBinding.unpressAll();
     }
 
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/LevelLoadingScreen;renderBackground(Lnet/minecraft/client/util/math/MatrixStack;)V"))
-    public void worldpreview_stopBackgroundRender(LevelLoadingScreen instance, MatrixStack matrixStack) {
+    private void worldpreview_stopBackgroundRender(LevelLoadingScreen instance, MatrixStack matrixStack) {
         if (WorldPreview.camera == null) {
             instance.renderBackground(matrixStack);
         }
     }
 
     @ModifyVariable(method = "render", at = @At("STORE"), ordinal = 2)
-    public int worldpreview_moveLoadingScreen(int i) {
+    private int worldpreview_moveLoadingScreen(int i) {
         return worldpreview_getChunkMapPos().x;
     }
 
     @ModifyVariable(method = "render", at = @At("STORE"), ordinal = 3)
-    public int moveLoadingScreen2(int i) {
+    private int moveLoadingScreen2(int i) {
         return worldpreview_getChunkMapPos().y;
     }
 
     @Inject(method = "render", at = @At("HEAD"))
-    public void worldpreview_render(MatrixStack matrices, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+    private void worldpreview_render(MatrixStack matrices, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (WorldPreview.clientWorld != null && WorldPreview.player != null && !WorldPreview.freezePreview) {
             if (((WorldRendererMixin) WorldPreview.worldRenderer).getWorld() == null && WorldPreview.calculatedSpawn) {
                 WorldPreview.worldRenderer.setWorld(WorldPreview.clientWorld);
@@ -131,7 +131,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
     }
 
     @Unique
-    public Matrix4f worldpreview_getBasicProjectionMatrix() {
+    private Matrix4f worldpreview_getBasicProjectionMatrix() {
         MatrixStack matrixStack = new MatrixStack();
         matrixStack.peek().getModel().loadIdentity();
         matrixStack.peek().getModel().multiply(Matrix4f.viewboxMatrix(client.options.fov, (float) this.client.getWindow().getFramebufferWidth() / (float) this.client.getWindow().getFramebufferHeight(), 0.05F, this.client.options.viewDistance * 16 * 4.0F));
@@ -161,6 +161,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
         }));
     }
 
+    @Override
     public void resize(MinecraftClient client, int width, int height) {
         this.init(client, width, height);
         this.worldpreview_initWidgets();

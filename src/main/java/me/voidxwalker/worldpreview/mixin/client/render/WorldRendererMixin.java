@@ -174,7 +174,7 @@ public abstract class WorldRendererMixin {
     protected abstract void checkEmpty(MatrixStack matrices);
 
     @Redirect(method = "renderWeather", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;world:Lnet/minecraft/client/world/ClientWorld;", opcode = Opcodes.GETFIELD))
-    public ClientWorld worldpreview_getCorrectWorld(MinecraftClient instance) {
+    private ClientWorld worldpreview_getCorrectWorld(MinecraftClient instance) {
         if (client.currentScreen instanceof LevelLoadingScreen) {
             return this.world;
         }
@@ -182,7 +182,7 @@ public abstract class WorldRendererMixin {
     }
 
     @Redirect(method = "tickRainSplashing", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;world:Lnet/minecraft/client/world/ClientWorld;", opcode = Opcodes.GETFIELD))
-    public ClientWorld worldpreview_getCorrectWorld2(MinecraftClient instance) {
+    private ClientWorld worldpreview_getCorrectWorld2(MinecraftClient instance) {
         if (client.currentScreen instanceof LevelLoadingScreen) {
             return this.world;
         }
@@ -190,7 +190,7 @@ public abstract class WorldRendererMixin {
     }
 
     @Redirect(method = "reload", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getCameraEntity()Lnet/minecraft/entity/Entity;"))
-    public Entity worldpreview_getCameraEntity(MinecraftClient instance) {
+    private Entity worldpreview_getCameraEntity(MinecraftClient instance) {
         if (instance.getCameraEntity() == null && client.currentScreen instanceof LevelLoadingScreen) {
             return WorldPreview.player;
         }
@@ -198,7 +198,7 @@ public abstract class WorldRendererMixin {
     }
 
     @Inject(method = "reload", at = @At(value = "TAIL"))
-    public void worldpreview_reload(CallbackInfo ci) {
+    private void worldpreview_reload(CallbackInfo ci) {
         if (this.world != null && client.currentScreen instanceof LevelLoadingScreen) {
             this.chunks = new BuiltChunkStorage(this.chunkBuilder, this.world, this.client.options.viewDistance, (WorldRenderer) (Object) this);
         }
@@ -336,7 +336,7 @@ public abstract class WorldRendererMixin {
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/BufferBuilderStorage;getEntityVertexConsumers()Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;"), cancellable = true)
-    public void worldpreview_render(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci) {
+    private void worldpreview_render(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo ci) {
         if (client.currentScreen instanceof LevelLoadingScreen) {
             worldpreview_renderSafe(matrices, tickDelta, limitTime, renderBlockOutline, camera, gameRenderer, lightmapTextureManager, matrix4f);
             ci.cancel();
@@ -344,7 +344,7 @@ public abstract class WorldRendererMixin {
     }
 
     @Unique
-    public void worldpreview_renderSafe(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f) {
+    private void worldpreview_renderSafe(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f) {
         Profiler profiler = this.world.getProfiler();
         Vec3d vec3d = camera.getPos();
         double d = vec3d.getX();
@@ -535,7 +535,7 @@ public abstract class WorldRendererMixin {
     }
 
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;getViewDistance()F"))
-    public float worldpreview_getViewDistance(GameRenderer instance) {
+    private float worldpreview_getViewDistance(GameRenderer instance) {
         if (client.currentScreen instanceof LevelLoadingScreen) {
             return client.options.viewDistance * 16;
         }
@@ -544,7 +544,7 @@ public abstract class WorldRendererMixin {
     }
 
     @Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;targetedEntity:Lnet/minecraft/entity/Entity;", opcode = Opcodes.GETFIELD))
-    public Entity worldpreview_getCorrectTargetedPlayerEntity(MinecraftClient instance) {
+    private Entity worldpreview_getCorrectTargetedPlayerEntity(MinecraftClient instance) {
         if (instance.player == null && client.currentScreen instanceof LevelLoadingScreen) {
             return WorldPreview.player;
         }
@@ -552,7 +552,7 @@ public abstract class WorldRendererMixin {
     }
 
     @Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;world:Lnet/minecraft/client/world/ClientWorld;", opcode = Opcodes.GETFIELD))
-    public ClientWorld worldpreview_getCorrectWorld3(MinecraftClient instance) {
+    private ClientWorld worldpreview_getCorrectWorld3(MinecraftClient instance) {
         if (instance.currentScreen instanceof LevelLoadingScreen) {
             return this.world;
         }
@@ -560,7 +560,7 @@ public abstract class WorldRendererMixin {
     }
 
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/SkyProperties;useThickFog(II)Z"))
-    public boolean worldpreview_shouldThickenFog(SkyProperties instance, int i, int j) {
+    private boolean worldpreview_shouldThickenFog(SkyProperties instance, int i, int j) {
         if (client.gameRenderer == null && client.currentScreen instanceof LevelLoadingScreen) {
             return false;
         }
@@ -568,7 +568,7 @@ public abstract class WorldRendererMixin {
     }
 
     @Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;player:Lnet/minecraft/client/network/ClientPlayerEntity;", ordinal = 1, opcode = Opcodes.GETFIELD))
-    public ClientPlayerEntity worldpreview_getCorrectPlayer2(MinecraftClient instance) {
+    private ClientPlayerEntity worldpreview_getCorrectPlayer2(MinecraftClient instance) {
         if (instance.player == null && client.currentScreen instanceof LevelLoadingScreen) {
             return WorldPreview.player;
         }
@@ -576,7 +576,7 @@ public abstract class WorldRendererMixin {
     }
 
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSpectator()Z"))
-    public boolean worldpreview_spectator(ClientPlayerEntity instance) {
+    private boolean worldpreview_spectator(ClientPlayerEntity instance) {
         if (client.currentScreen instanceof LevelLoadingScreen && instance == null) {
             return false;
         }
@@ -585,7 +585,7 @@ public abstract class WorldRendererMixin {
     }
 
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/debug/DebugRenderer;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;DDD)V"))
-    public void worldpreview_stopDebugRenderer(DebugRenderer instance, MatrixStack matrices, VertexConsumerProvider.Immediate vertexConsumers, double cameraX, double cameraY, double cameraZ) {
+    private void worldpreview_stopDebugRenderer(DebugRenderer instance, MatrixStack matrices, VertexConsumerProvider.Immediate vertexConsumers, double cameraX, double cameraY, double cameraZ) {
         if (client.currentScreen instanceof LevelLoadingScreen) {
             return;
         }
@@ -593,7 +593,7 @@ public abstract class WorldRendererMixin {
     }
 
     @Redirect(method = "renderSky", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;world:Lnet/minecraft/client/world/ClientWorld;", opcode = Opcodes.GETFIELD))
-    public ClientWorld worldpreview_getCorrectWorld4(MinecraftClient instance) {
+    private ClientWorld worldpreview_getCorrectWorld4(MinecraftClient instance) {
         if (instance.world == null && client.currentScreen instanceof LevelLoadingScreen) {
             return this.world;
         }
@@ -601,7 +601,7 @@ public abstract class WorldRendererMixin {
     }
 
     @Redirect(method = "renderSky", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;getCamera()Lnet/minecraft/client/render/Camera;"))
-    public Camera worldpreview_getCamera(GameRenderer instance) {
+    private Camera worldpreview_getCamera(GameRenderer instance) {
         if (instance.getCamera() == null && client.currentScreen instanceof LevelLoadingScreen) {
             return WorldPreview.camera;
         }
@@ -609,7 +609,7 @@ public abstract class WorldRendererMixin {
     }
 
     @Redirect(method = "renderSky", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;player:Lnet/minecraft/client/network/ClientPlayerEntity;", opcode = Opcodes.GETFIELD))
-    public ClientPlayerEntity worldpreview_getCorrectPlayer3(MinecraftClient instance) {
+    private ClientPlayerEntity worldpreview_getCorrectPlayer3(MinecraftClient instance) {
         if (instance.player == null && client.currentScreen instanceof LevelLoadingScreen) {
             return WorldPreview.player;
         }

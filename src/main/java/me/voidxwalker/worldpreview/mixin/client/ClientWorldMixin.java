@@ -24,7 +24,7 @@ public abstract class ClientWorldMixin {
     private ClientChunkManager chunkManager;
 
     @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayNetworkHandler;getRegistryTracker()Lnet/minecraft/util/registry/RegistryTracker;"))
-    public RegistryTracker worldpreview_stopLag(ClientPlayNetworkHandler instance) {
+    private RegistryTracker worldpreview_stopLag(ClientPlayNetworkHandler instance) {
         if (instance == null) {
             return RegistryTracker.create();
         }
@@ -32,7 +32,7 @@ public abstract class ClientWorldMixin {
     }
 
     @Inject(method = "<init>", at = @At("TAIL"))
-    public void worldpreview_oldSodiumCompatibility(ClientPlayNetworkHandler clientPlayNetworkHandler, ClientWorld.Properties properties, RegistryKey registryKey, RegistryKey registryKey2, DimensionType dimensionType, int i, Supplier supplier, WorldRenderer worldRenderer, boolean bl, long l, CallbackInfo ci) {
+    private void worldpreview_oldSodiumCompatibility(ClientPlayNetworkHandler clientPlayNetworkHandler, ClientWorld.Properties properties, RegistryKey registryKey, RegistryKey registryKey2, DimensionType dimensionType, int i, Supplier supplier, WorldRenderer worldRenderer, boolean bl, long l, CallbackInfo ci) {
         if (WorldPreview.camera == null && WorldPreview.clientWorld != null && WorldPreview.spawnPos != null) {
             this.chunkManager = worldpreview_getChunkManager(i);
         }

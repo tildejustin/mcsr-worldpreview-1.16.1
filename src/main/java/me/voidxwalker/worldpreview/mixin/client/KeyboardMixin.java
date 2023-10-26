@@ -21,7 +21,7 @@ public abstract class KeyboardMixin {
     private MinecraftClient client;
 
     @Inject(method = "onKey", at = @At("HEAD"))
-    public void worldpreview_getF3ESCKey(long window, int key, int scancode, int i, int j, CallbackInfo ci) {
+    private void worldpreview_getF3ESCKey(long window, int key, int scancode, int i, int j, CallbackInfo ci) {
         if (client.currentScreen instanceof LevelLoadingScreen && window == this.client.getWindow().getHandle() && WorldPreview.inPreview) {
             if (i != 0) {
                 InputUtil.Key key2 = InputUtil.fromKeyCode(key, scancode);
@@ -40,7 +40,6 @@ public abstract class KeyboardMixin {
                         KeyBinding.onKeyPressed(key2);
                     }
                 }
-
             }
         }
     }

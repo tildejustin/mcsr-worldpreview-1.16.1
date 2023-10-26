@@ -33,7 +33,7 @@ public abstract class ChunkBuilderMixin {
     private volatile int bufferCount;
 
     @Inject(method = "<init>", at = @At(value = "TAIL"))
-    public void worldpreview_sodiumCompatibility(World world, WorldRenderer worldRenderer, Executor executor, boolean is64Bits, BlockBufferBuilderStorage buffers, CallbackInfo ci) {
+    private void worldpreview_sodiumCompatibility(World world, WorldRenderer worldRenderer, Executor executor, boolean is64Bits, BlockBufferBuilderStorage buffers, CallbackInfo ci) {
         if (MinecraftClient.getInstance().currentScreen instanceof LevelLoadingScreen) {
             // Override vanilla logic because 1 buffer thread is just better for multi instance, faster world gen and less memory usage (Author @jojoe77777)
             int l = 1;

@@ -28,11 +28,10 @@ public abstract class ServerChunkManagerMixin {
     public ThreadedAnvilChunkStorage threadedAnvilChunkStorage;
 
     @Shadow
-    public @Nullable
-    abstract WorldChunk getWorldChunk(int chunkX, int chunkZ);
+    public abstract  @Nullable WorldChunk getWorldChunk(int chunkX, int chunkZ);
 
     @Inject(method = "tick()Z", at = @At(value = "TAIL"))
-    public void worldpreview_getChunks(CallbackInfoReturnable<Boolean> cir) {
+    private void worldpreview_getChunks(CallbackInfoReturnable<Boolean> cir) {
         synchronized (WorldPreview.lock) {
             if (WorldPreview.player != null && WorldPreview.calculatedSpawn && !WorldPreview.freezePreview && MinecraftClient.getInstance().currentScreen instanceof LevelLoadingScreen) {
                 ClientChunkManager.ClientChunkMap map = ((((ClientChunkManagerMixin) WorldPreview.clientWorld.getChunkManager()).getChunks()));
