@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 import java.util.Map;
 
 @Mixin(KeyBinding.class)
-public interface KeyBindingMixin {
+public interface KeyBindingAccessor {
     @Accessor
     static Map<InputUtil.Key, KeyBinding> getKeyToBindings() {
         throw new AssertionError();

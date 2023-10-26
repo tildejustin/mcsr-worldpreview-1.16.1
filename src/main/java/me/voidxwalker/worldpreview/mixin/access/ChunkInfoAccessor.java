@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(WorldRenderer.ChunkInfo.class)
-public interface ChunkInfoMixin {
+public interface ChunkInfoAccessor {
     @Accessor
     ChunkBuilder.BuiltChunk getChunk();
 

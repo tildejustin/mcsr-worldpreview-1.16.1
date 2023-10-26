@@ -1,7 +1,7 @@
 package me.voidxwalker.worldpreview.mixin.client;
 
 import me.voidxwalker.worldpreview.WorldPreview;
-import me.voidxwalker.worldpreview.mixin.access.WorldRendererMixin;
+import me.voidxwalker.worldpreview.mixin.access.WorldRendererAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.LevelLoadingScreen;
 import net.minecraft.client.gui.screen.Screen;
@@ -88,7 +88,7 @@ public abstract class MinecraftClientMixin {
 
     @Redirect(method = "reset", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;openScreen(Lnet/minecraft/client/gui/screen/Screen;)V"))
     private void worldpreview_smoothTransition(MinecraftClient instance, Screen screen) {
-        if (this.currentScreen instanceof LevelLoadingScreen && ((WorldRendererMixin) WorldPreview.worldRenderer).getWorld() != null && WorldPreview.clientWorld != null && WorldPreview.player != null) {
+        if (this.currentScreen instanceof LevelLoadingScreen && ((WorldRendererAccessor) WorldPreview.worldRenderer).getWorld() != null && WorldPreview.clientWorld != null && WorldPreview.player != null) {
             return;
         }
         instance.openScreen(screen);

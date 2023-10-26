@@ -2,8 +2,8 @@ package me.voidxwalker.worldpreview.mixin.server.shutdown;
 
 import com.mojang.datafixers.DataFixer;
 import me.voidxwalker.worldpreview.IFastCloseable;
-import me.voidxwalker.worldpreview.mixin.access.SerializingRegionBasedStorageMixin;
-import me.voidxwalker.worldpreview.mixin.access.VersionedChunkStorageMixin;
+import me.voidxwalker.worldpreview.mixin.access.SerializingRegionBasedStorageAccessor;
+import me.voidxwalker.worldpreview.mixin.access.VersionedChunkStorageAccessor;
 import net.minecraft.server.world.ChunkTaskPrioritySystem;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.world.poi.PointOfInterestStorage;
@@ -33,9 +33,9 @@ public abstract class ThreadedAnvilChunkStorageMixin extends VersionedChunkStora
     public void fastClose() throws IOException {
         try {
             this.chunkTaskPrioritySystem.close();
-            ((IFastCloseable) ((SerializingRegionBasedStorageMixin) this.pointOfInterestStorage).getWorker()).fastClose();
+            ((IFastCloseable) ((SerializingRegionBasedStorageAccessor) this.pointOfInterestStorage).getWorker()).fastClose();
         } finally {
-            ((IFastCloseable) ((VersionedChunkStorageMixin) this).getWorker()).fastClose();
+            ((IFastCloseable) ((VersionedChunkStorageAccessor) this).getWorker()).fastClose();
         }
     }
 }

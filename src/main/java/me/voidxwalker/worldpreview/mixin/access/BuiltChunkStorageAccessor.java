@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(BuiltChunkStorage.class)
-public interface BuiltChunkStorageMixin {
+public interface BuiltChunkStorageAccessor {
     @Invoker
     ChunkBuilder.BuiltChunk callGetRenderedChunk(BlockPos pos);
 }

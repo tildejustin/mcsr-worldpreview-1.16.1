@@ -2,8 +2,8 @@ package me.voidxwalker.worldpreview.mixin.server;
 
 import me.voidxwalker.worldpreview.IFastCloseable;
 import me.voidxwalker.worldpreview.WorldPreview;
-import me.voidxwalker.worldpreview.mixin.access.MinecraftClientMixin;
-import me.voidxwalker.worldpreview.mixin.access.SpawnLocatingMixin;
+import me.voidxwalker.worldpreview.mixin.access.MinecraftClientAccessor;
+import me.voidxwalker.worldpreview.mixin.access.SpawnLocatingAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.LevelLoadingScreen;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -23,7 +23,6 @@ import net.minecraft.util.snooper.Snooper;
 import net.minecraft.util.thread.ReentrantThreadExecutor;
 import net.minecraft.world.Difficulty;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.source.BiomeAccess;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraft.world.level.storage.LevelStorage;
 import org.apache.logging.log4j.Logger;
@@ -124,7 +123,7 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
             int q = (o + n * p) % k;
             int r = q % (i * 2 + 1);
             int s = q / (i * 2 + 1);
-            BlockPos blockPos2 = SpawnLocatingMixin.callFindOverworldSpawn(serverWorld, blockPos.getX() + r - i, blockPos.getZ() + s - i, false);
+            BlockPos blockPos2 = SpawnLocatingAccessor.callFindOverworldSpawn(serverWorld, blockPos.getX() + r - i, blockPos.getZ() + s - i, false);
             if (blockPos2 != null) {
                 WorldPreview.player.refreshPositionAndAngles(blockPos2, 0.0F, 0.0F);
                 if (serverWorld.doesNotCollide(WorldPreview.player)) {
@@ -151,7 +150,7 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
     private void worldpreview_kill2(CallbackInfo ci) {
         WorldPreview.inPreview = false;
         WorldPreview.renderingPreview = false;
-        LockSupport.unpark(((MinecraftClientMixin) MinecraftClient.getInstance()).invokeGetThread());
+        LockSupport.unpark(((MinecraftClientAccessor) MinecraftClient.getInstance()).invokeGetThread());
         if (WorldPreview.kill == 1) {
             ci.cancel();
         }

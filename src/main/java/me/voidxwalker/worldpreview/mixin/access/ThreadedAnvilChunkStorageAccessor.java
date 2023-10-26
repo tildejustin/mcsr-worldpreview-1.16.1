@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(ThreadedAnvilChunkStorage.class)
-public interface ThreadedAnvilChunkStorageMixin {
+public interface ThreadedAnvilChunkStorageAccessor {
     @Accessor
     Long2ObjectLinkedOpenHashMap<ChunkHolder> getChunkHolders();
 }

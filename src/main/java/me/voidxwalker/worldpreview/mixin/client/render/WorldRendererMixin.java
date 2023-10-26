@@ -7,9 +7,9 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import it.unimi.dsi.fastutil.objects.ObjectListIterator;
 import me.voidxwalker.worldpreview.WorldPreview;
-import me.voidxwalker.worldpreview.mixin.access.BuiltChunkStorageMixin;
-import me.voidxwalker.worldpreview.mixin.access.ChunkInfoMixin;
-import me.voidxwalker.worldpreview.mixin.access.RenderPhaseMixin;
+import me.voidxwalker.worldpreview.mixin.access.BuiltChunkStorageAccessor;
+import me.voidxwalker.worldpreview.mixin.access.ChunkInfoAccessor;
+import me.voidxwalker.worldpreview.mixin.access.RenderPhaseAccessor;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
@@ -236,7 +236,7 @@ public abstract class WorldRendererMixin {
         this.world.getProfiler().swap("cull");
         this.client.getProfiler().swap("culling");
         BlockPos blockPos = camera.getBlockPos();
-        ChunkBuilder.BuiltChunk builtChunk = ((BuiltChunkStorageMixin) this.chunks).callGetRenderedChunk(blockPos);
+        ChunkBuilder.BuiltChunk builtChunk = ((BuiltChunkStorageAccessor) this.chunks).callGetRenderedChunk(blockPos);
         BlockPos blockPos2 = new BlockPos(MathHelper.floor(vec3d.x / 16.0) * 16, MathHelper.floor(vec3d.y / 16.0) * 16, MathHelper.floor(vec3d.z / 16.0) * 16);
         float g = camera.getPitch();
         float h = camera.getYaw();
@@ -276,7 +276,7 @@ public abstract class WorldRendererMixin {
 
                 for (int m = -this.renderDistance; m <= this.renderDistance; ++m) {
                     for (int n = -this.renderDistance; n <= this.renderDistance; ++n) {
-                        ChunkBuilder.BuiltChunk builtChunk2 = ((BuiltChunkStorageMixin) this.chunks).callGetRenderedChunk(new BlockPos(k + (m << 4) + 8, j, l + (n << 4) + 8));
+                        ChunkBuilder.BuiltChunk builtChunk2 = ((BuiltChunkStorageAccessor) this.chunks).callGetRenderedChunk(new BlockPos(k + (m << 4) + 8, j, l + (n << 4) + 8));
                         if (builtChunk2 != null && frustum.isVisible(builtChunk2.boundingBox)) {
                             builtChunk2.setRebuildFrame(frame);
                             list.add(((WorldRenderer) (Object) (this)).new ChunkInfo(builtChunk2, null, 0));
@@ -284,7 +284,7 @@ public abstract class WorldRendererMixin {
                     }
                 }
 
-                list.sort(Comparator.comparingDouble(chunkInfox -> blockPos.getSquaredDistance((((ChunkInfoMixin) chunkInfox).getChunk().getOrigin().add(8, 8, 8)))));
+                list.sort(Comparator.comparingDouble(chunkInfox -> blockPos.getSquaredDistance((((ChunkInfoAccessor) chunkInfox).getChunk().getOrigin().add(8, 8, 8)))));
                 queue.addAll(list);
             }
 
@@ -292,8 +292,8 @@ public abstract class WorldRendererMixin {
 
             while (!queue.isEmpty()) {
                 WorldRenderer.ChunkInfo chunkInfo = queue.poll();
-                ChunkBuilder.BuiltChunk builtChunk3 = ((ChunkInfoMixin) chunkInfo).getChunk();
-                Direction direction = ((ChunkInfoMixin) chunkInfo).getDirection();
+                ChunkBuilder.BuiltChunk builtChunk3 = ((ChunkInfoAccessor) chunkInfo).getChunk();
+                Direction direction = ((ChunkInfoAccessor) chunkInfo).getDirection();
                 this.visibleChunks.add(chunkInfo);
 
                 for (Direction direction2 : DIRECTIONS) {
@@ -304,8 +304,8 @@ public abstract class WorldRendererMixin {
                             && builtChunk4.shouldBuild()
                             && builtChunk4.setRebuildFrame(frame)
                             && frustum.isVisible(builtChunk4.boundingBox)) {
-                        WorldRenderer.ChunkInfo chunkInfo2 = ((WorldRenderer) (Object) (this)).new ChunkInfo(builtChunk4, direction2, ((ChunkInfoMixin) chunkInfo).getPropagationLevel() + 1);
-                        chunkInfo2.updateCullingState(((ChunkInfoMixin) chunkInfo).getCullingState(), direction2);
+                        WorldRenderer.ChunkInfo chunkInfo2 = ((WorldRenderer) (Object) (this)).new ChunkInfo(builtChunk4, direction2, ((ChunkInfoAccessor) chunkInfo).getPropagationLevel() + 1);
+                        chunkInfo2.updateCullingState(((ChunkInfoAccessor) chunkInfo).getCullingState(), direction2);
                         queue.add(chunkInfo2);
                     }
                 }
@@ -319,7 +319,7 @@ public abstract class WorldRendererMixin {
         this.chunksToRebuild = Sets.newLinkedHashSet();
 
         for (WorldRenderer.ChunkInfo chunkInfo : this.visibleChunks) {
-            ChunkBuilder.BuiltChunk builtChunk3 = ((ChunkInfoMixin) chunkInfo).getChunk();
+            ChunkBuilder.BuiltChunk builtChunk3 = ((ChunkInfoAccessor) chunkInfo).getChunk();
             if (builtChunk3.needsRebuild() || set.contains(builtChunk3)) {
                 this.needsTerrainUpdate = true;
                 BlockPos blockPos3 = builtChunk3.getOrigin().add(8, 8, 8);
@@ -376,7 +376,7 @@ public abstract class WorldRendererMixin {
         immediate.draw(RenderLayer.getEntitySmoothCutout(SpriteAtlasTexture.BLOCK_ATLAS_TEX));
 
         for (WorldRenderer.ChunkInfo chunkInfo : this.visibleChunks) {
-            List<BlockEntity> list = ((ChunkInfoMixin) chunkInfo).getChunk().getData().getBlockEntities();
+            List<BlockEntity> list = ((ChunkInfoAccessor) chunkInfo).getChunk().getData().getBlockEntities();
             if (!list.isEmpty()) {
                 for (BlockEntity blockEntity : list) {
                     BlockPos blockPos = blockEntity.getPos();
@@ -440,10 +440,10 @@ public abstract class WorldRendererMixin {
         RenderSystem.multMatrix(matrices.peek().getModel());
         if (this.client.options.getCloudRenderMode() != CloudRenderMode.OFF) {
             if (this.transparencyShader != null) {
-                RenderPhaseMixin.getCLOUDS_TARGET().startDrawing();
+                RenderPhaseAccessor.getCLOUDS_TARGET().startDrawing();
                 profiler.swap("clouds");
                 this.renderClouds(matrices, tickDelta, d, e, f);
-                RenderPhaseMixin.getCLOUDS_TARGET().endDrawing();
+                RenderPhaseAccessor.getCLOUDS_TARGET().endDrawing();
             } else {
                 profiler.swap("clouds");
                 this.renderClouds(matrices, tickDelta, d, e, f);
@@ -451,11 +451,11 @@ public abstract class WorldRendererMixin {
         }
 
         if (this.transparencyShader != null) {
-            RenderPhaseMixin.getWEATHER_TARGET().startDrawing();
+            RenderPhaseAccessor.getWEATHER_TARGET().startDrawing();
             profiler.swap("weather");
             this.renderWeather(lightmapTextureManager, tickDelta, d, e, f);
             this.renderWorldBorder(camera);
-            RenderPhaseMixin.getWEATHER_TARGET().endDrawing();
+            RenderPhaseAccessor.getWEATHER_TARGET().endDrawing();
             this.transparencyShader.render(tickDelta);
             this.client.getFramebuffer().beginWrite(false);
         } else {
@@ -498,7 +498,7 @@ public abstract class WorldRendererMixin {
                 int j = 0;
 
                 for (WorldRenderer.ChunkInfo chunkInfo : this.visibleChunks) {
-                    if (j < 15 && ((ChunkInfoMixin) chunkInfo).getChunk().scheduleSort(renderLayer, this.chunkBuilder)) {
+                    if (j < 15 && ((ChunkInfoAccessor) chunkInfo).getChunk().scheduleSort(renderLayer, this.chunkBuilder)) {
                         ++j;
                     }
                 }
@@ -514,7 +514,7 @@ public abstract class WorldRendererMixin {
 
         while (bl ? objectListIterator.hasNext() : objectListIterator.hasPrevious()) {
             WorldRenderer.ChunkInfo chunkInfo2 = bl ? objectListIterator.next() : objectListIterator.previous();
-            ChunkBuilder.BuiltChunk builtChunk = ((ChunkInfoMixin) chunkInfo2).getChunk();
+            ChunkBuilder.BuiltChunk builtChunk = ((ChunkInfoAccessor) chunkInfo2).getChunk();
             if (!builtChunk.getData().isEmpty(renderLayer)) {
                 VertexBuffer vertexBuffer = builtChunk.getBuffer(renderLayer);
                 matrixStack.push();

@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(ClientChunkManager.ClientChunkMap.class)
-public interface ClientChunkMapMixin {
+public interface ClientChunkMapAccessor {
     @Invoker
     void callSet(int index, @Nullable WorldChunk chunk);
 

@@ -6,7 +6,7 @@ import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(RenderPhase.class)
-public interface RenderPhaseMixin {
+public interface RenderPhaseAccessor {
     @Accessor
     @Mutable
     static RenderPhase.Target getCLOUDS_TARGET() {
