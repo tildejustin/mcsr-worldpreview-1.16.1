@@ -65,7 +65,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
 
     @Inject(method = "render", at = @At("HEAD"))
     public void worldpreview_render(MatrixStack matrices, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        if (WorldPreview.world != null && WorldPreview.clientWorld != null && WorldPreview.player != null && !WorldPreview.freezePreview) {
+        if (WorldPreview.clientWorld != null && WorldPreview.player != null && !WorldPreview.freezePreview) {
             if (((WorldRendererMixin) WorldPreview.worldRenderer).getWorld() == null && WorldPreview.calculatedSpawn) {
                 ((OldSodiumCompatibility) WorldPreview.worldRenderer).worldpreview_setWorldSafe(WorldPreview.clientWorld);
                 WorldPreview.showMenu = true;
@@ -87,7 +87,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
                 if (WorldPreview.camera == null) {
                     WorldPreview.player.refreshPositionAndAngles(WorldPreview.player.getX(), WorldPreview.player.getEyeY(), WorldPreview.player.getZ(), 0.0F, 0.0F);
                     WorldPreview.camera = new Camera();
-                    WorldPreview.camera.update(WorldPreview.world, WorldPreview.player, this.client.options.perspective > 0, this.client.options.perspective == 2, 0.2F);
+                    WorldPreview.camera.update(WorldPreview.clientWorld, WorldPreview.player, this.client.options.perspective > 0, this.client.options.perspective == 2, 0.2F);
                     WorldPreview.inPreview = true;
                 }
                 MatrixStack matrixStack = new MatrixStack();

@@ -2,7 +2,6 @@ package me.voidxwalker.worldpreview;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.render.Camera;
@@ -10,7 +9,6 @@ import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,7 +16,6 @@ import org.lwjgl.glfw.GLFW;
 
 public class WorldPreview implements ClientModInitializer {
     public static final Object lock = new Object();
-    public static World world;
     public static ClientPlayerEntity player;
     public static ClientWorld clientWorld;
     public static boolean inPreview;

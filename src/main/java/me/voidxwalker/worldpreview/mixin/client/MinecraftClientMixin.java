@@ -89,7 +89,7 @@ public abstract class MinecraftClientMixin {
 
     @Redirect(method = "reset", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;openScreen(Lnet/minecraft/client/gui/screen/Screen;)V"))
     public void worldpreview_smoothTransition(MinecraftClient instance, Screen screen) {
-        if (this.currentScreen instanceof LevelLoadingScreen && ((WorldRendererMixin) WorldPreview.worldRenderer).getWorld() != null && WorldPreview.world != null && WorldPreview.clientWorld != null && WorldPreview.player != null) {
+        if (this.currentScreen instanceof LevelLoadingScreen && ((WorldRendererMixin) WorldPreview.worldRenderer).getWorld() != null && WorldPreview.clientWorld != null && WorldPreview.player != null) {
             return;
         }
         instance.openScreen(screen);
@@ -110,7 +110,6 @@ public abstract class MinecraftClientMixin {
     @Inject(method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V", at = @At(value = "HEAD"))
     public void worldpreview_reset(Screen screen, CallbackInfo ci) {
         synchronized (WorldPreview.lock) {
-            WorldPreview.world = null;
             WorldPreview.player = null;
             WorldPreview.clientWorld = null;
             WorldPreview.camera = null;

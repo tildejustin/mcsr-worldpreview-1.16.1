@@ -33,7 +33,7 @@ public abstract class ClientWorldMixin {
 
     @Inject(method = "<init>", at = @At("TAIL"))
     public void worldpreview_oldSodiumCompatibility(ClientPlayNetworkHandler clientPlayNetworkHandler, ClientWorld.Properties properties, RegistryKey registryKey, RegistryKey registryKey2, DimensionType dimensionType, int i, Supplier supplier, WorldRenderer worldRenderer, boolean bl, long l, CallbackInfo ci) {
-        if (WorldPreview.camera == null && WorldPreview.world != null && WorldPreview.spawnPos != null) {
+        if (WorldPreview.camera == null && WorldPreview.clientWorld != null && WorldPreview.spawnPos != null) {
             this.chunkManager = worldpreview_getChunkManager(i);
         }
 

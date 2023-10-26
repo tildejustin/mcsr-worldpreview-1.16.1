@@ -34,6 +34,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.io.IOException;
@@ -78,35 +79,35 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
     @Shadow
     public abstract int getSpawnRadius(@Nullable ServerWorld world);
 
-    @Inject(method = "prepareStartRegion", at = @At("HEAD"))
-    private void worldpreview_getWorld(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci) {
+    @Shadow public abstract boolean isHardcore();
+
+    @ModifyVariable(method = "prepareStartRegion", at = @At("STORE"))
+    private ServerWorld worldpreview_getWorld(ServerWorld serverWorld) {
         WorldPreview.calculatedSpawn = false;
         synchronized (WorldPreview.lock) {
             if (!WorldPreview.existingWorld) {
-                ServerWorld serverWorld = this.getOverworld();
                 WorldPreview.spawnPos = serverWorld.getSpawnPos();
                 WorldPreview.freezePreview = false;
-                WorldPreview.world = this.getWorld(World.OVERWORLD);
                 RegistryKey<DimensionType> registryKey = DimensionType.OVERWORLD_REGISTRY_KEY;
                 RegistryKey<World> registryKey2 = World.OVERWORLD;
                 DimensionType dimensionType = DimensionType.getOverworldDimensionType();
-                ClientWorld.Properties properties = new ClientWorld.Properties(Difficulty.NORMAL, WorldPreview.world.getLevelProperties().isHardcore(), false);
+                ClientWorld.Properties properties = new ClientWorld.Properties(Difficulty.NORMAL, this.isHardcore(), false);
                 Supplier<Profiler> s = MinecraftClient.getInstance()::getProfiler;
-                long seed = BiomeAccess.hashSeed(((ServerWorld) (WorldPreview.world)).getSeed());
-                WorldPreview.clientWorld = new ClientWorld(null, properties, registryKey2, registryKey, dimensionType, 16, s, null, false, seed);
+                WorldPreview.clientWorld = new ClientWorld(null, properties, registryKey2, registryKey, dimensionType, 16, s, null, false, serverWorld.getSeed());
                 WorldPreview.player = new ClientPlayerEntity(MinecraftClient.getInstance(), WorldPreview.clientWorld, new ClientPlayNetworkHandler(MinecraftClient.getInstance(), null, null, MinecraftClient.getInstance().getSession().getProfile()), null, null, false, false);
                 worldpreview_calculateSpawn(serverWorld);
                 WorldPreview.calculatedSpawn = true;
             }
             WorldPreview.existingWorld = false;
         }
+        return serverWorld;
     }
 
     @Unique
     private void worldpreview_calculateSpawn(ServerWorld serverWorld) {
         BlockPos blockPos = WorldPreview.spawnPos;
-        int i = Math.max(0, this.getSpawnRadius((ServerWorld) WorldPreview.world));
-        int j = MathHelper.floor(WorldPreview.world.getWorldBorder().getDistanceInsideBorder(blockPos.getX(), blockPos.getZ()));
+        int i = Math.max(0, this.getSpawnRadius(serverWorld));
+        int j = MathHelper.floor(serverWorld.getWorldBorder().getDistanceInsideBorder(blockPos.getX(), blockPos.getZ()));
         if (j < i) {
             i = j;
         }
