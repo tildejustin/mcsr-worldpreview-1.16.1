@@ -11,7 +11,6 @@ import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameMode;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;

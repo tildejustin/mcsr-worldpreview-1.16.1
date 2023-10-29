@@ -1,7 +1,7 @@
 package me.voidxwalker.worldpreview.mixin.server;
 
-import me.voidxwalker.worldpreview.interfaces.FastCloseable;
 import me.voidxwalker.worldpreview.WorldPreview;
+import me.voidxwalker.worldpreview.interfaces.FastCloseable;
 import me.voidxwalker.worldpreview.interfaces.IMinecraftServer;
 import me.voidxwalker.worldpreview.mixin.access.MinecraftClientAccessor;
 import me.voidxwalker.worldpreview.mixin.access.SpawnLocatingAccessor;

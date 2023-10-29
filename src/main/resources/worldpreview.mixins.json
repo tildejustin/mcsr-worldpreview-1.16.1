@@ -28,7 +28,6 @@
     "client.render.InGameOverlayRendererMixin",
     "client.render.LevelLoadingScreenMixin",
     "client.render.LivingEntityRendererMixin",
-    "client.render.PlayerEntityRendererMixin",
     "client.render.WorldRendererMixin",
     "client.render.chunk.ChunkBuilderMixin",
     "server.MinecraftServerMixin",

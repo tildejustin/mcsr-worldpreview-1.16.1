@@ -2,7 +2,6 @@ package me.voidxwalker.worldpreview.mixin.client;
 
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import me.voidxwalker.worldpreview.WorldPreview;
-import me.voidxwalker.worldpreview.mixin.access.WorldRendererAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.LevelLoadingScreen;
 import net.minecraft.client.gui.screen.Screen;
@@ -17,7 +16,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -80,8 +78,6 @@ public abstract class MinecraftClientMixin {
     private boolean smoothTransition(MinecraftClient client, Screen screen) {
         return !(this.currentScreen instanceof LevelLoadingScreen && screen != null);
     }
-
-    //sodium
 
     @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/resource/ReloadableResourceManager;registerListener(Lnet/minecraft/resource/ResourceReloadListener;)V", ordinal = 11))
     private void worldpreview_createWorldRenderer(CallbackInfo ci) {
