@@ -50,6 +50,7 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
     @Shadow
     private ServerResourceManager serverResourceManager;
 
+    @Unique
     private Integer spawnPos;
 
     @Shadow
@@ -166,19 +167,15 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
         if (this.getNetworkIo() != null) {
             this.getNetworkIo().stop();
         }
-        Iterator<ServerWorld> var1 = this.getWorlds().iterator();
-        ServerWorld serverWorld2;
-        while (var1.hasNext()) {
-            serverWorld2 = var1.next();
-            if (serverWorld2 != null) {
-                serverWorld2.savingDisabled = false;
+        for (ServerWorld serverWorld : this.getWorlds()) {
+            if (serverWorld != null) {
+                serverWorld.savingDisabled = false;
             }
         }
         for (ServerWorld serverWorld : this.getWorlds()) {
-            serverWorld2 = serverWorld;
-            if (serverWorld2 != null) {
+            if (serverWorld != null) {
                 try {
-                    ((FastCloseable) serverWorld2.getChunkManager().threadedAnvilChunkStorage).worldpreview$fastClose();
+                    ((FastCloseable) serverWorld.getChunkManager().threadedAnvilChunkStorage).worldpreview$fastClose();
                 } catch (IOException ignored) {
                 }
             }

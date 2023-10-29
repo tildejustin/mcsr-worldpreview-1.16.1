@@ -15,7 +15,7 @@ public abstract class ChunkBuilderMixin {
 
     @Shadow @Final private WorldRenderer worldRenderer;
 
-    @ModifyVariable(method = "<init>", at = @At(value = "STORE", ordinal = 0), ordinal = 2)
+    @ModifyVariable(method = "<init>", at = @At("STORE"), ordinal = 2)
     private int modifyBufferThreads(int threads) {
         if (this.isWorldPreview()) {
             return 1;

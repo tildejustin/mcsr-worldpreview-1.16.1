@@ -27,11 +27,12 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.awt.*;
-
 @SuppressWarnings("deprecation")
 @Mixin(LevelLoadingScreen.class)
 public abstract class LevelLoadingScreenMixin extends Screen {
+
+    @Unique
+    private static final ButtonWidget.PressAction NO_OP = button -> {};
 
     @Unique
     private boolean showMenu = true;
@@ -55,13 +56,13 @@ public abstract class LevelLoadingScreenMixin extends Screen {
     }
 
     @ModifyVariable(method = "render", at = @At("STORE"), ordinal = 2)
-    private int worldpreview_moveLoadingScreen(int i) {
-        return worldpreview_getChunkMapPos().x;
+    private int moveChunkMapX(int i) {
+        return 45;
     }
 
     @ModifyVariable(method = "render", at = @At("STORE"), ordinal = 3)
-    private int moveLoadingScreen2(int i) {
-        return worldpreview_getChunkMapPos().y;
+    private int moveChunkMapY(int i) {
+        return this.height - 75;
     }
 
     @Inject(method = "render", at = @At("HEAD"))
@@ -136,11 +137,6 @@ public abstract class LevelLoadingScreenMixin extends Screen {
     }
 
     @Unique
-    private Point worldpreview_getChunkMapPos() {
-        return new Point(45, this.height - 75);
-    }
-
-    @Unique
     private Matrix4f worldpreview_getBasicProjectionMatrix() {
         MatrixStack matrixStack = new MatrixStack();
         matrixStack.peek().getModel().loadIdentity();
@@ -150,24 +146,17 @@ public abstract class LevelLoadingScreenMixin extends Screen {
 
     @Unique
     private void worldpreview_initWidgets() {
-        this.addButton(new ButtonWidget(this.width / 2 - 102, this.height / 4 + 24 - 16, 204, 20, new TranslatableText("menu.returnToGame"), (ignored) -> {
-        }));
-        this.addButton(new ButtonWidget(this.width / 2 - 102, this.height / 4 + 48 - 16, 98, 20, new TranslatableText("gui.advancements"), (ignored) -> {
-        }));
-        this.addButton(new ButtonWidget(this.width / 2 + 4, this.height / 4 + 48 - 16, 98, 20, new TranslatableText("gui.stats"), (ignored) -> {
-        }));
-        this.addButton(new ButtonWidget(this.width / 2 - 102, this.height / 4 + 72 - 16, 98, 20, new TranslatableText("menu.sendFeedback"), (ignored) -> {
-        }));
-        this.addButton(new ButtonWidget(this.width / 2 + 4, this.height / 4 + 72 - 16, 98, 20, new TranslatableText("menu.reportBugs"), (ignored) -> {
-        }));
-        this.addButton(new ButtonWidget(this.width / 2 - 102, this.height / 4 + 96 - 16, 98, 20, new TranslatableText("menu.options"), (ignored) -> {
-        }));
-        this.addButton(new ButtonWidget(this.width / 2 + 4, this.height / 4 + 96 - 16, 98, 20, new TranslatableText("menu.shareToLan"), (ignored) -> {
-        }));
-        this.addButton(new ButtonWidget(this.width / 2 - 102, this.height / 4 + 120 - 16, 204, 20, new TranslatableText("menu.returnToMenu"), (buttonWidgetX) -> {
+        this.addButton(new ButtonWidget(this.width / 2 - 102, this.height / 4 + 24 - 16, 204, 20, new TranslatableText("menu.returnToGame"), NO_OP));
+        this.addButton(new ButtonWidget(this.width / 2 - 102, this.height / 4 + 48 - 16, 98, 20, new TranslatableText("gui.advancements"), NO_OP));
+        this.addButton(new ButtonWidget(this.width / 2 + 4, this.height / 4 + 48 - 16, 98, 20, new TranslatableText("gui.stats"), NO_OP));
+        this.addButton(new ButtonWidget(this.width / 2 - 102, this.height / 4 + 72 - 16, 98, 20, new TranslatableText("menu.sendFeedback"), NO_OP));
+        this.addButton(new ButtonWidget(this.width / 2 + 4, this.height / 4 + 72 - 16, 98, 20, new TranslatableText("menu.reportBugs"), NO_OP));
+        this.addButton(new ButtonWidget(this.width / 2 - 102, this.height / 4 + 96 - 16, 98, 20, new TranslatableText("menu.options"), NO_OP));
+        this.addButton(new ButtonWidget(this.width / 2 + 4, this.height / 4 + 96 - 16, 98, 20, new TranslatableText("menu.shareToLan"), NO_OP));
+        this.addButton(new ButtonWidget(this.width / 2 - 102, this.height / 4 + 120 - 16, 204, 20, new TranslatableText("menu.returnToMenu"), button -> {
             this.client.getSoundManager().stopAll();
             WorldPreview.kill = -1;
-            buttonWidgetX.active = false;
+            button.active = false;
         }));
     }
 
@@ -185,6 +174,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
     @Override
     protected void init() {
         super.init();
+        this.worldpreview_initWidgets();
     }
 
     @Override

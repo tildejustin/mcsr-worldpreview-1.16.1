@@ -27,7 +27,7 @@ public abstract class ServerChunkManagerMixin {
     public ThreadedAnvilChunkStorage threadedAnvilChunkStorage;
 
     @Shadow
-    public abstract  @Nullable WorldChunk getWorldChunk(int chunkX, int chunkZ);
+    public abstract @Nullable WorldChunk getWorldChunk(int chunkX, int chunkZ);
 
     @Inject(method = "tick()Z", at = @At("TAIL"))
     private void worldpreview_getChunks(CallbackInfoReturnable<Boolean> cir) {
