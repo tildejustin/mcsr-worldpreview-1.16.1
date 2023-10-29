@@ -173,7 +173,7 @@ public abstract class WorldRendererMixin {
     @Shadow
     protected abstract void checkEmpty(MatrixStack matrices);
 
-    @Inject(method = "reload", at = @At(value = "TAIL"))
+    @Inject(method = "reload", at = @At("TAIL"))
     private void worldpreview_reload(CallbackInfo ci) {
         if (this.world != null && this.isWorldPreview()) {
             this.chunks = new BuiltChunkStorage(this.chunkBuilder, this.world, this.client.options.viewDistance, (WorldRenderer) (Object) this);
@@ -513,18 +513,9 @@ public abstract class WorldRendererMixin {
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;getViewDistance()F"))
     private float worldpreview_getViewDistance(GameRenderer instance) {
         if (this.isWorldPreview()) {
-            return client.options.viewDistance * 16;
+            return this.client.options.viewDistance * 16;
         }
         return instance.getViewDistance();
-    }
-
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSpectator()Z"))
-    private boolean worldpreview_spectator(ClientPlayerEntity instance) {
-        if (this.isWorldPreview()) {
-            return false;
-        }
-        assert instance != null;
-        return instance.isSpectator();
     }
 
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/debug/DebugRenderer;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;DDD)V"))
@@ -538,7 +529,7 @@ public abstract class WorldRendererMixin {
     @ModifyExpressionValue(method = "*", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;world:Lnet/minecraft/client/world/ClientWorld;", opcode = Opcodes.GETFIELD))
     private ClientWorld modifyWorld(ClientWorld world) {
         if (this.isWorldPreview()) {
-            return WorldPreview.clientWorld;
+            return WorldPreview.world;
         }
         return world;
     }
@@ -557,14 +548,6 @@ public abstract class WorldRendererMixin {
             return WorldPreview.player;
         }
         return entity;
-    }
-
-    @ModifyExpressionValue(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;getCamera()Lnet/minecraft/client/render/Camera;"))
-    private Camera modifyCamera(Camera camera) {
-        if (this.isWorldPreview()) {
-            return WorldPreview.camera;
-        }
-        return camera;
     }
 
     @ModifyExpressionValue(method = "*", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;targetedEntity:Lnet/minecraft/entity/Entity;", opcode = Opcodes.GETFIELD))

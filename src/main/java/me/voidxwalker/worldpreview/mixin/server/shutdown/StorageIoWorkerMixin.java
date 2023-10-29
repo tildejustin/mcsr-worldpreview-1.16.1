@@ -1,6 +1,6 @@
 package me.voidxwalker.worldpreview.mixin.server.shutdown;
 
-import me.voidxwalker.worldpreview.IFastCloseable;
+import me.voidxwalker.worldpreview.interfaces.FastCloseable;
 import net.minecraft.util.thread.TaskExecutor;
 import net.minecraft.util.thread.TaskQueue;
 import net.minecraft.world.storage.RegionBasedStorage;
@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(StorageIoWorker.class)
-public abstract class StorageIoWorkerMixin implements IFastCloseable {
+public abstract class StorageIoWorkerMixin implements FastCloseable {
     @Shadow
     @Final
     private static Logger LOGGER;
@@ -23,7 +23,7 @@ public abstract class StorageIoWorkerMixin implements IFastCloseable {
     private RegionBasedStorage storage;
 
     @Override
-    public void fastClose() {
+    public void worldpreview$fastClose() {
         this.field_24468.close();
         try {
             this.storage.close();

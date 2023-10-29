@@ -1,29 +1,23 @@
 package me.voidxwalker.worldpreview.mixin.server;
 
-import me.voidxwalker.worldpreview.IFastCloseable;
+import me.voidxwalker.worldpreview.interfaces.FastCloseable;
 import me.voidxwalker.worldpreview.WorldPreview;
+import me.voidxwalker.worldpreview.interfaces.IMinecraftServer;
 import me.voidxwalker.worldpreview.mixin.access.MinecraftClientAccessor;
 import me.voidxwalker.worldpreview.mixin.access.SpawnLocatingAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.LevelLoadingScreen;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.resource.ServerResourceManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerNetworkIo;
-import net.minecraft.server.ServerTask;
 import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.profiler.Profiler;
-import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.util.snooper.Snooper;
-import net.minecraft.util.thread.ReentrantThreadExecutor;
-import net.minecraft.world.Difficulty;
-import net.minecraft.world.World;
-import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.world.GameMode;
 import net.minecraft.world.level.storage.LevelStorage;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -40,10 +34,10 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.concurrent.locks.LockSupport;
-import java.util.function.Supplier;
 
 @Mixin(MinecraftServer.class)
-public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<ServerTask> {
+public abstract class MinecraftServerMixin implements IMinecraftServer {
+
     @Shadow
     @Final
     private static Logger LOGGER;
@@ -56,15 +50,7 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
     @Shadow
     private ServerResourceManager serverResourceManager;
 
-    public MinecraftServerMixin(String string) {
-        super(string);
-    }
-
-    @Shadow
-    public abstract @Nullable ServerWorld getWorld(RegistryKey<World> key);
-
-    @Shadow
-    public abstract ServerWorld getOverworld();
+    private Integer spawnPos;
 
     @Shadow
     public abstract Iterable<ServerWorld> getWorlds();
@@ -80,20 +66,38 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 
     @Shadow public abstract boolean isHardcore();
 
+    @Shadow public abstract GameMode getDefaultGameMode();
+
     @ModifyVariable(method = "prepareStartRegion", at = @At("STORE"))
     private ServerWorld worldpreview_getWorld(ServerWorld serverWorld) {
         WorldPreview.calculatedSpawn = false;
-        synchronized (WorldPreview.lock) {
+        synchronized (WorldPreview.LOCK) {
             if (!WorldPreview.existingWorld) {
-                WorldPreview.spawnPos = serverWorld.getSpawnPos();
                 WorldPreview.freezePreview = false;
-                RegistryKey<DimensionType> registryKey = DimensionType.OVERWORLD_REGISTRY_KEY;
-                RegistryKey<World> registryKey2 = World.OVERWORLD;
-                DimensionType dimensionType = DimensionType.getOverworldDimensionType();
-                ClientWorld.Properties properties = new ClientWorld.Properties(Difficulty.NORMAL, this.isHardcore(), false);
-                Supplier<Profiler> s = MinecraftClient.getInstance()::getProfiler;
-                WorldPreview.clientWorld = new ClientWorld(null, properties, registryKey2, registryKey, dimensionType, 16, s, null, false, serverWorld.getSeed());
-                WorldPreview.player = new ClientPlayerEntity(MinecraftClient.getInstance(), WorldPreview.clientWorld, new ClientPlayNetworkHandler(MinecraftClient.getInstance(), null, null, MinecraftClient.getInstance().getSession().getProfile()), null, null, false, false);
+
+                WorldPreview.world = new ClientWorld(
+                        WorldPreview.DUMMY_NETWORK_HANDLER,
+                        new ClientWorld.Properties(serverWorld.getDifficulty(), this.isHardcore(), serverWorld.isFlat()),
+                        serverWorld.getRegistryKey(),
+                        serverWorld.getDimensionRegistryKey(),
+                        serverWorld.getDimension(),
+                        16,
+                        MinecraftClient.getInstance()::getProfiler,
+                        WorldPreview.worldRenderer,
+                        serverWorld.isDebugWorld(),
+                        serverWorld.getSeed()
+                );
+                WorldPreview.player = new ClientPlayerEntity(
+                        MinecraftClient.getInstance(),
+                        WorldPreview.world,
+                        WorldPreview.DUMMY_NETWORK_HANDLER,
+                        null,
+                        null,
+                        false,
+                        false
+                );
+                WorldPreview.gameMode = this.getDefaultGameMode();
+
                 worldpreview_calculateSpawn(serverWorld);
                 WorldPreview.calculatedSpawn = true;
             }
@@ -104,7 +108,7 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
 
     @Unique
     private void worldpreview_calculateSpawn(ServerWorld serverWorld) {
-        BlockPos blockPos = WorldPreview.spawnPos;
+        BlockPos blockPos = serverWorld.getSpawnPos();
         int i = Math.max(0, this.getSpawnRadius(serverWorld));
         int j = MathHelper.floor(serverWorld.getWorldBorder().getDistanceInsideBorder(blockPos.getX(), blockPos.getZ()));
         if (j < i) {
@@ -118,7 +122,7 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
         int k = m > 2147483647L ? Integer.MAX_VALUE : (int) m;
         int n = this.worldpreview_calculateSpawnOffsetMultiplier(k);
         int o = (new Random()).nextInt(k);
-        WorldPreview.playerSpawn = o;
+        this.spawnPos = o;
         for (int p = 0; p < k; ++p) {
             int q = (o + n * p) % k;
             int r = q % (i * 2 + 1);
@@ -174,7 +178,7 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
             serverWorld2 = serverWorld;
             if (serverWorld2 != null) {
                 try {
-                    ((IFastCloseable) serverWorld2.getChunkManager().threadedAnvilChunkStorage).fastClose();
+                    ((FastCloseable) serverWorld2.getChunkManager().threadedAnvilChunkStorage).worldpreview$fastClose();
                 } catch (IOException ignored) {
                 }
             }
@@ -195,5 +199,12 @@ public abstract class MinecraftServerMixin extends ReentrantThreadExecutor<Serve
         if (WorldPreview.kill == 1) {
             ci.cancel();
         }
+    }
+
+    @Override
+    public Integer worldpreview$getSpawnPos() {
+        Integer spawnPos = this.spawnPos;
+        this.spawnPos = null;
+        return spawnPos;
     }
 }

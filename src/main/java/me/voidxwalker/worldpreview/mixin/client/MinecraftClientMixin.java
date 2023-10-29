@@ -1,5 +1,6 @@
 package me.voidxwalker.worldpreview.mixin.client;
 
+import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import me.voidxwalker.worldpreview.WorldPreview;
 import me.voidxwalker.worldpreview.mixin.access.WorldRendererAccessor;
 import net.minecraft.client.MinecraftClient;
@@ -9,14 +10,10 @@ import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.render.BufferBuilderStorage;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.resource.ReloadableResourceManager;
-import net.minecraft.resource.ResourceReloadListener;
 import net.minecraft.server.integrated.IntegratedServer;
 import org.apache.logging.log4j.Level;
 import org.jetbrains.annotations.Nullable;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -35,15 +32,8 @@ public abstract class MinecraftClientMixin {
     @Shadow
     @Nullable
     public Screen currentScreen;
-    @Mutable
-    @Shadow
-    @Final
-    public WorldRenderer worldRenderer;
     @Shadow
     private @Nullable IntegratedServer server;
-    @Shadow
-    @Final
-    private BufferBuilderStorage bufferBuilders;
 
     @Shadow
     protected abstract void render(boolean tick);
@@ -82,35 +72,29 @@ public abstract class MinecraftClientMixin {
     }
 
     @Inject(method = "startIntegratedServer(Ljava/lang/String;)V", at = @At("HEAD"))
-    private void worldpreview_isExistingWorld(String worldName, CallbackInfo ci) {
+    private void worldpreview_isExistingWorld(CallbackInfo ci) {
         WorldPreview.existingWorld = true;
     }
 
-    @Redirect(method = "reset", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;openScreen(Lnet/minecraft/client/gui/screen/Screen;)V"))
-    private void worldpreview_smoothTransition(MinecraftClient instance, Screen screen) {
-        if (this.currentScreen instanceof LevelLoadingScreen && ((WorldRendererAccessor) WorldPreview.worldRenderer).getWorld() != null && WorldPreview.clientWorld != null && WorldPreview.player != null) {
-            return;
-        }
-        instance.openScreen(screen);
-
+    @WrapWithCondition(method = "reset", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;openScreen(Lnet/minecraft/client/gui/screen/Screen;)V"))
+    private boolean smoothTransition(MinecraftClient client, Screen screen) {
+        return !(this.currentScreen instanceof LevelLoadingScreen && screen != null);
     }
 
     //sodium
 
-    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/resource/ReloadableResourceManager;registerListener(Lnet/minecraft/resource/ResourceReloadListener;)V", ordinal = 11))
-    private void worldpreview_createWorldRenderer(ReloadableResourceManager instance, ResourceReloadListener resourceReloadListener) {
+    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/resource/ReloadableResourceManager;registerListener(Lnet/minecraft/resource/ResourceReloadListener;)V", ordinal = 11))
+    private void worldpreview_createWorldRenderer(CallbackInfo ci) {
         WorldPreview.worldRenderer = new WorldRenderer(MinecraftClient.getInstance(), new BufferBuilderStorage());
-        this.worldRenderer = new WorldRenderer((MinecraftClient) (Object) this, this.bufferBuilders);
-        instance.registerListener(worldRenderer);
-
     }
 
     @Inject(method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V", at = @At("HEAD"))
-    private void worldpreview_reset(Screen screen, CallbackInfo ci) {
-        synchronized (WorldPreview.lock) {
+    private void worldpreview_reset(CallbackInfo ci) {
+        synchronized (WorldPreview.LOCK) {
+            WorldPreview.world = null;
             WorldPreview.player = null;
-            WorldPreview.clientWorld = null;
             WorldPreview.camera = null;
+            WorldPreview.gameMode = null;
             if (WorldPreview.worldRenderer != null) {
                 WorldPreview.worldRenderer.setWorld(null);
             }
@@ -118,7 +102,7 @@ public abstract class MinecraftClientMixin {
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/Window;swapBuffers()V", shift = At.Shift.AFTER))
-    private void worldpreview_actuallyInPreview(boolean tick, CallbackInfo ci) {
+    private void worldpreview_actuallyInPreview(CallbackInfo ci) {
         if (WorldPreview.inPreview && !WorldPreview.renderingPreview) {
             WorldPreview.renderingPreview = true;
             WorldPreview.log(Level.INFO, "Starting Preview at (" + WorldPreview.player.getX() + ", " + Math.floor(WorldPreview.player.getY()) + ", " + WorldPreview.player.getZ() + ")");

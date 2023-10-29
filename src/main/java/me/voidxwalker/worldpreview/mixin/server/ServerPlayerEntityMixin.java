@@ -1,30 +1,25 @@
 package me.voidxwalker.worldpreview.mixin.server;
 
-import com.mojang.authlib.GameProfile;
-import me.voidxwalker.worldpreview.WorldPreview;
-import net.minecraft.entity.player.PlayerEntity;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import me.voidxwalker.worldpreview.interfaces.IMinecraftServer;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
-
-import java.util.Random;
 
 @Mixin(ServerPlayerEntity.class)
-public abstract class ServerPlayerEntityMixin extends PlayerEntity {
-    public ServerPlayerEntityMixin(World world, BlockPos blockPos, GameProfile gameProfile) {
-        super(world, blockPos, gameProfile);
-    }
+public abstract class ServerPlayerEntityMixin {
 
-    @Redirect(method = "moveToSpawn", at = @At(value = "INVOKE", target = "Ljava/util/Random;nextInt(I)I"))
-    private int worldpreview_setSpawnPos(Random defaultRandom, int k) {
-        if (WorldPreview.spawnPos != null) {
-            int value = WorldPreview.playerSpawn;
-            WorldPreview.spawnPos = null;
-            return value;
+    @Shadow @Final public MinecraftServer server;
+
+    @ModifyExpressionValue(method = "moveToSpawn", at = @At(value = "INVOKE", target = "Ljava/util/Random;nextInt(I)I"))
+    private int setSpawnPos(int original) {
+        Integer spawnPos = ((IMinecraftServer) this.server).worldpreview$getSpawnPos();
+        if (spawnPos != null) {
+            return spawnPos;
         }
-        return defaultRandom.nextInt(k);
+        return original;
     }
 }

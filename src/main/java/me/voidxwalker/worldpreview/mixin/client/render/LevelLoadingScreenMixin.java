@@ -2,6 +2,7 @@ package me.voidxwalker.worldpreview.mixin.client.render;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.voidxwalker.worldpreview.WorldPreview;
+import me.voidxwalker.worldpreview.mixin.access.GameRendererAccessor;
 import me.voidxwalker.worldpreview.mixin.access.WorldRendererAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.WorldGenerationProgressTracker;
@@ -31,8 +32,9 @@ import java.awt.*;
 @SuppressWarnings("deprecation")
 @Mixin(LevelLoadingScreen.class)
 public abstract class LevelLoadingScreenMixin extends Screen {
+
     @Unique
-    private boolean worldpreview_showMenu;
+    private boolean showMenu = true;
 
     protected LevelLoadingScreenMixin(Text title) {
         super(title);
@@ -64,29 +66,28 @@ public abstract class LevelLoadingScreenMixin extends Screen {
 
     @Inject(method = "render", at = @At("HEAD"))
     private void worldpreview_render(MatrixStack matrices, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        if (WorldPreview.clientWorld != null && WorldPreview.player != null && !WorldPreview.freezePreview) {
+        if (WorldPreview.world != null && WorldPreview.player != null && !WorldPreview.freezePreview) {
+            assert this.client != null;
             if (((WorldRendererAccessor) WorldPreview.worldRenderer).getWorld() == null && WorldPreview.calculatedSpawn) {
-                WorldPreview.worldRenderer.setWorld(WorldPreview.clientWorld);
+                WorldPreview.worldRenderer.setWorld(WorldPreview.world);
                 WorldPreview.showMenu = true;
-                this.worldpreview_showMenu = true;
-                this.worldpreview_initWidgets();
             }
             if (((WorldRendererAccessor) WorldPreview.worldRenderer).getWorld() != null) {
                 KeyBinding.unpressAll();
                 WorldPreview.kill = 0;
-                if (this.worldpreview_showMenu != WorldPreview.showMenu) {
+                if (this.showMenu != WorldPreview.showMenu) {
                     if (!WorldPreview.showMenu) {
                         this.children.clear();
                     } else {
                         this.worldpreview_initWidgets();
                     }
-                    this.worldpreview_showMenu = WorldPreview.showMenu;
+                    this.showMenu = WorldPreview.showMenu;
                 }
                 MinecraftClient.getInstance().gameRenderer.getLightmapTextureManager().update(0);
                 if (WorldPreview.camera == null) {
                     WorldPreview.player.refreshPositionAndAngles(WorldPreview.player.getX(), WorldPreview.player.getEyeY(), WorldPreview.player.getZ(), 0.0F, 0.0F);
                     WorldPreview.camera = new Camera();
-                    WorldPreview.camera.update(WorldPreview.clientWorld, WorldPreview.player, this.client.options.perspective > 0, this.client.options.perspective == 2, 0.2F);
+                    WorldPreview.camera.update(WorldPreview.world, WorldPreview.player, this.client.options.perspective > 0, this.client.options.perspective == 2, 0.2F);
                     WorldPreview.inPreview = true;
                 }
                 MatrixStack matrixStack = new MatrixStack();
@@ -99,7 +100,10 @@ public abstract class LevelLoadingScreenMixin extends Screen {
                 MatrixStack m = new MatrixStack();
                 m.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(WorldPreview.camera.getPitch()));
                 m.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(WorldPreview.camera.getYaw() + 180.0F));
-                WorldPreview.worldRenderer.render(m, 0.2F, 1000000, false, WorldPreview.camera, MinecraftClient.getInstance().gameRenderer, MinecraftClient.getInstance().gameRenderer.getLightmapTextureManager(), matrix4f);
+                WorldPreview.worldRenderer.render(m, delta, 1000000, ((GameRendererAccessor) this.client.gameRenderer).callShouldRenderBlockOutline(), WorldPreview.camera, MinecraftClient.getInstance().gameRenderer, MinecraftClient.getInstance().gameRenderer.getLightmapTextureManager(), matrix4f);
+                RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
+                ((GameRendererAccessor) this.client.gameRenderer).callRenderHand(matrices, WorldPreview.camera, delta);
+                WorldPreview.worldRenderer.drawEntityOutlinesFramebuffer();
                 Window window = this.client.getWindow();
                 RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
                 RenderSystem.matrixMode(5889);
@@ -109,6 +113,12 @@ public abstract class LevelLoadingScreenMixin extends Screen {
                 RenderSystem.loadIdentity();
                 RenderSystem.translatef(0.0F, 0.0F, -2000.0F);
                 DiffuseLighting.enableGuiDepthLighting();
+                RenderSystem.defaultAlphaFunc();
+                this.client.inGameHud.render(matrices, delta);
+                RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
+                if (this.showMenu) {
+                    this.fillGradient(matrices, 0, 0, this.width, this.height, -1072689136, -804253680);
+                }
                 this.worldpreview_renderPauseMenu(matrices, mouseX, mouseY, delta);
             }
         }
@@ -134,7 +144,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
     private Matrix4f worldpreview_getBasicProjectionMatrix() {
         MatrixStack matrixStack = new MatrixStack();
         matrixStack.peek().getModel().loadIdentity();
-        matrixStack.peek().getModel().multiply(Matrix4f.viewboxMatrix(client.options.fov, (float) this.client.getWindow().getFramebufferWidth() / (float) this.client.getWindow().getFramebufferHeight(), 0.05F, this.client.options.viewDistance * 16 * 4.0F));
+        matrixStack.peek().getModel().multiply(Matrix4f.viewboxMatrix(this.client.options.fov, (float) this.client.getWindow().getFramebufferWidth() / (float) this.client.getWindow().getFramebufferHeight(), 0.05F, this.client.options.viewDistance * 16 * 4.0F));
         return matrixStack.peek().getModel();
     }
 
@@ -155,7 +165,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
         this.addButton(new ButtonWidget(this.width / 2 + 4, this.height / 4 + 96 - 16, 98, 20, new TranslatableText("menu.shareToLan"), (ignored) -> {
         }));
         this.addButton(new ButtonWidget(this.width / 2 - 102, this.height / 4 + 120 - 16, 204, 20, new TranslatableText("menu.returnToMenu"), (buttonWidgetX) -> {
-            client.getSoundManager().stopAll();
+            this.client.getSoundManager().stopAll();
             WorldPreview.kill = -1;
             buttonWidgetX.active = false;
         }));
@@ -163,7 +173,22 @@ public abstract class LevelLoadingScreenMixin extends Screen {
 
     @Override
     public void resize(MinecraftClient client, int width, int height) {
-        this.init(client, width, height);
+        super.resize(client, width, height);
         this.worldpreview_initWidgets();
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        return super.keyPressed(keyCode, scanCode, modifiers);
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+    }
+
+    @Override
+    public void removed() {
+        super.removed();
     }
 }
