@@ -95,9 +95,9 @@ public abstract class LevelLoadingScreenMixin extends Screen {
                 MatrixStack m = new MatrixStack();
                 m.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(WorldPreview.camera.getPitch()));
                 m.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(WorldPreview.camera.getYaw() + 180.0F));
-                WorldPreview.worldRenderer.render(m, delta, 1000000, ((GameRendererAccessor) this.client.gameRenderer).callShouldRenderBlockOutline(), WorldPreview.camera, MinecraftClient.getInstance().gameRenderer, MinecraftClient.getInstance().gameRenderer.getLightmapTextureManager(), matrix4f);
+                WorldPreview.worldRenderer.render(m, 0.0F, 1000000, ((GameRendererAccessor) this.client.gameRenderer).callShouldRenderBlockOutline(), WorldPreview.camera, MinecraftClient.getInstance().gameRenderer, MinecraftClient.getInstance().gameRenderer.getLightmapTextureManager(), matrix4f);
                 RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
-                ((GameRendererAccessor) this.client.gameRenderer).callRenderHand(matrices, WorldPreview.camera, delta);
+                ((GameRendererAccessor) this.client.gameRenderer).callRenderHand(matrices, WorldPreview.camera, 0.0F);
                 WorldPreview.worldRenderer.drawEntityOutlinesFramebuffer();
                 Window window = this.client.getWindow();
                 RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
@@ -109,7 +109,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
                 RenderSystem.translatef(0.0F, 0.0F, -2000.0F);
                 DiffuseLighting.enableGuiDepthLighting();
                 RenderSystem.defaultAlphaFunc();
-                this.client.inGameHud.render(matrices, delta);
+                this.client.inGameHud.render(matrices, 0.0F);
                 RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
                 this.worldpreview_renderPauseMenu(matrices, mouseX, mouseY, delta);
             }
