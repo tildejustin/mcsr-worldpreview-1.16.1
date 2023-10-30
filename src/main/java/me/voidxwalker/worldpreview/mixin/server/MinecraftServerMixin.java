@@ -2,11 +2,10 @@ package me.voidxwalker.worldpreview.mixin.server;
 
 import me.voidxwalker.worldpreview.WorldPreview;
 import me.voidxwalker.worldpreview.interfaces.FastCloseable;
-import me.voidxwalker.worldpreview.interfaces.IMinecraftServer;
+import me.voidxwalker.worldpreview.interfaces.WPMinecraftServer;
 import me.voidxwalker.worldpreview.mixin.access.MinecraftClientAccessor;
 import me.voidxwalker.worldpreview.mixin.access.SpawnLocatingAccessor;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.LevelLoadingScreen;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.resource.ServerResourceManager;
@@ -31,12 +30,11 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.Random;
 import java.util.concurrent.locks.LockSupport;
 
 @Mixin(MinecraftServer.class)
-public abstract class MinecraftServerMixin implements IMinecraftServer {
+public abstract class MinecraftServerMixin implements WPMinecraftServer {
 
     @Shadow
     @Final
@@ -52,15 +50,17 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
 
     @Unique
     private Integer spawnPos;
+    @Unique
+    private boolean killed;
+    @Unique
+    private boolean isNewWorld;
+
 
     @Shadow
     public abstract Iterable<ServerWorld> getWorlds();
 
     @Shadow
     public abstract @Nullable ServerNetworkIo getNetworkIo();
-
-    @Shadow
-    public abstract Thread getThread();
 
     @Shadow
     public abstract int getSpawnRadius(@Nullable ServerWorld world);
@@ -73,9 +73,7 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
     private ServerWorld worldpreview_getWorld(ServerWorld serverWorld) {
         WorldPreview.calculatedSpawn = false;
         synchronized (WorldPreview.LOCK) {
-            if (!WorldPreview.existingWorld) {
-                WorldPreview.freezePreview = false;
-
+            if (this.isNewWorld) {
                 WorldPreview.world = new ClientWorld(
                         WorldPreview.DUMMY_NETWORK_HANDLER,
                         new ClientWorld.Properties(serverWorld.getDifficulty(), this.isHardcore(), serverWorld.isFlat()),
@@ -102,7 +100,6 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
                 worldpreview_calculateSpawn(serverWorld);
                 WorldPreview.calculatedSpawn = true;
             }
-            WorldPreview.existingWorld = false;
         }
         return serverWorld;
     }
@@ -143,9 +140,9 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
         return horizontalSpawnArea <= 16 ? horizontalSpawnArea - 1 : 17;
     }
 
-    @Inject(method = "shutdown", at = @At(value = "HEAD"), cancellable = true)
+    @Inject(method = "shutdown", at = @At("HEAD"), cancellable = true)
     private void worldpreview_kill(CallbackInfo ci) {
-        if (MinecraftClient.getInstance().currentScreen instanceof LevelLoadingScreen && Thread.currentThread().getId() != this.getThread().getId()) {
+        if (this.killed) {
             worldpreview_shutdownWithoutSave();
             ci.cancel();
         }
@@ -156,7 +153,7 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
         WorldPreview.inPreview = false;
         WorldPreview.renderingPreview = false;
         LockSupport.unpark(((MinecraftClientAccessor) MinecraftClient.getInstance()).invokeGetThread());
-        if (WorldPreview.kill == 1) {
+        if (this.killed) {
             ci.cancel();
         }
     }
@@ -193,7 +190,7 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
 
     @Inject(method = "prepareStartRegion", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkManager;getTotalChunksLoadedCount()I", shift = At.Shift.AFTER), cancellable = true)
     private void worldpreview_kill(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci) {
-        if (WorldPreview.kill == 1) {
+        if (this.killed) {
             ci.cancel();
         }
     }
@@ -203,5 +200,15 @@ public abstract class MinecraftServerMixin implements IMinecraftServer {
         Integer spawnPos = this.spawnPos;
         this.spawnPos = null;
         return spawnPos;
+    }
+
+    @Override
+    public void worldpreview$kill() {
+        this.killed = true;
+    }
+
+    @Override
+    public void worldpreview$setIsNewWorld(boolean isNewWorld) {
+        this.isNewWorld = isNewWorld;
     }
 }

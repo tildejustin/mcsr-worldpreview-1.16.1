@@ -33,11 +33,8 @@ public class WorldPreview implements ClientModInitializer {
 
     public static boolean inPreview;
     public static boolean renderingPreview;
-    public static int kill = 0;
-    public static boolean existingWorld;
-    public static boolean showMenu;
+    public static boolean kill;
     public static boolean calculatedSpawn;
-    public static boolean freezePreview;
 
     public static KeyBinding resetKey;
     public static KeyBinding freezeKey;

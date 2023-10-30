@@ -36,6 +36,7 @@ public abstract class ServerChunkManagerMixin {
                 ClientChunkMapAccessor map = (ClientChunkMapAccessor) (Object) Objects.requireNonNull(((ClientChunkManagerAccessor) WorldPreview.world.getChunkManager()).getChunks());
                 for (ChunkHolder holder : ((ThreadedAnvilChunkStorageAccessor) this.threadedAnvilChunkStorage).getChunkHolders().values()) {
                     if (holder == null) {
+                        // idk if this ever happens, but it was in the original WorldPreview, and I'd rather not break this
                         continue;
                     }
                     ChunkPos pos = holder.getPos();
