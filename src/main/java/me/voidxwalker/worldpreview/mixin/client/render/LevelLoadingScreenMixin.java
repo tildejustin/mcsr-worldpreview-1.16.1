@@ -150,12 +150,6 @@ public abstract class LevelLoadingScreenMixin extends Screen {
     }
 
     @Override
-    public void resize(MinecraftClient client, int width, int height) {
-        super.resize(client, width, height);
-        this.worldpreview_initWidgets();
-    }
-
-    @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
@@ -186,12 +180,13 @@ public abstract class LevelLoadingScreenMixin extends Screen {
     @Override
     protected void init() {
         super.init();
-        this.worldpreview_initWidgets();
+        if (this.showMenu) {
+            this.worldpreview_initWidgets();
+        }
     }
 
     @Override
     public void removed() {
-        super.removed();
         WorldPreview.kill = false;
     }
 }
