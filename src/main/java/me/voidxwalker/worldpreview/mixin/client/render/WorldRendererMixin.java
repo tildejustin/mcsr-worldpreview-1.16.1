@@ -5,7 +5,6 @@ import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import me.voidxwalker.worldpreview.WorldPreview;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.render.BuiltChunkStorage;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.chunk.ChunkBuilder;
@@ -19,8 +18,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Collection;
 import java.util.Set;
@@ -29,24 +26,8 @@ import java.util.Set;
 public abstract class WorldRendererMixin {
 
     @Shadow
-    private ClientWorld world;
-
-    @Shadow
     @Final
     private MinecraftClient client;
-
-    @Shadow
-    private BuiltChunkStorage chunks;
-
-    @Shadow
-    private ChunkBuilder chunkBuilder;
-
-    @Inject(method = "reload", at = @At("TAIL"))
-    private void worldpreview_reload(CallbackInfo ci) {
-        if (this.world != null && this.isWorldPreview()) {
-            this.chunks = new BuiltChunkStorage(this.chunkBuilder, this.world, this.client.options.viewDistance, (WorldRenderer) (Object) this);
-        }
-    }
 
     @WrapWithCondition(method = "setupTerrain", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/chunk/ChunkBuilder$BuiltChunk;cancelRebuild()V"))
     private boolean worldpreview_modifyChunkRebuilding(ChunkBuilder.BuiltChunk builtChunk) {
