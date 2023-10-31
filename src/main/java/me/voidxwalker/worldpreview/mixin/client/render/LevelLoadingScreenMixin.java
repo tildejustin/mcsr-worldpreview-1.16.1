@@ -1,5 +1,6 @@
 package me.voidxwalker.worldpreview.mixin.client.render;
 
+import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.voidxwalker.worldpreview.WorldPreview;
 import me.voidxwalker.worldpreview.mixin.access.GameRendererAccessor;
@@ -24,10 +25,8 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@SuppressWarnings("deprecation")
 @Mixin(LevelLoadingScreen.class)
 public abstract class LevelLoadingScreenMixin extends Screen {
 
@@ -36,7 +35,6 @@ public abstract class LevelLoadingScreenMixin extends Screen {
 
     @Unique
     private boolean showMenu = true;
-
     @Unique
     private boolean freezePreview = false;
 
@@ -44,11 +42,9 @@ public abstract class LevelLoadingScreenMixin extends Screen {
         super(title);
     }
 
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/LevelLoadingScreen;renderBackground(Lnet/minecraft/client/util/math/MatrixStack;)V"))
-    private void worldpreview_stopBackgroundRender(LevelLoadingScreen instance, MatrixStack matrixStack) {
-        if (WorldPreview.camera == null) {
-            instance.renderBackground(matrixStack);
-        }
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/LevelLoadingScreen;renderBackground(Lnet/minecraft/client/util/math/MatrixStack;)V"))
+    private boolean worldpreview_stopBackgroundRender(LevelLoadingScreen screen, MatrixStack matrixStack) {
+        return !WorldPreview.inPreview;
     }
 
     @ModifyVariable(method = "render", at = @At("STORE"), ordinal = 2)
@@ -61,6 +57,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
         return this.height - 75;
     }
 
+    @SuppressWarnings("deprecation")
     @Inject(method = "render", at = @At("HEAD"))
     private void worldpreview_render(MatrixStack matrices, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (!WorldPreview.inPreview) {
