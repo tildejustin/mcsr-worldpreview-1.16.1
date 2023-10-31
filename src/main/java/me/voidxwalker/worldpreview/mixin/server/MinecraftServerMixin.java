@@ -43,6 +43,8 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
     @Unique
     private volatile boolean killed;
     @Unique
+    private boolean tooLateToKill;
+    @Unique
     private volatile boolean isNewWorld;
 
     @Shadow
@@ -99,9 +101,12 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
     }
 
     @ModifyExpressionValue(method = "runServer", at = @At(value = "FIELD", target = "Lnet/minecraft/server/MinecraftServer;running:Z"))
-    private boolean killServer(boolean running) {
-        if (!this.loading && this.killed) {
-            return false;
+    private synchronized boolean killServer(boolean running) {
+        if (!this.loading) {
+            if (this.killed) {
+                return false;
+            }
+            this.tooLateToKill = true;
         }
         return running;
     }
@@ -168,7 +173,7 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
         } else {
             player.refreshPositionAndAngles(blockPos, 0.0F, 0.0F);
 
-            while(!world.doesNotCollide(player) && player.getY() < 255.0) {
+            while (!world.doesNotCollide(player) && player.getY() < 255.0) {
                 player.updatePosition(player.getX(), player.getY() + 1.0, player.getZ());
             }
         }
@@ -183,7 +188,10 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
     }
 
     @Override
-    public void worldpreview$kill() {
+    public synchronized void worldpreview$kill() {
+        if (this.tooLateToKill) {
+            return;
+        }
         this.killed = true;
     }
 
