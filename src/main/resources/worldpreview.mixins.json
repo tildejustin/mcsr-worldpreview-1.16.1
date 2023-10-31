@@ -27,7 +27,7 @@
     "client.render.LevelLoadingScreenMixin",
     "client.render.LivingEntityRendererMixin",
     "client.render.WorldRendererMixin",
-    "client.render.chunk.ChunkBuilderMixin",
+    "client.optimization.ChunkBuilderMixin",
     "server.MinecraftServerMixin",
     "server.ServerChunkManagerMixin",
     "server.ServerPlayerEntityMixin",

@@ -1,4 +1,4 @@
-package me.voidxwalker.worldpreview.mixin.client.render.chunk;
+package me.voidxwalker.worldpreview.mixin.client.optimization;
 
 import me.voidxwalker.worldpreview.WorldPreview;
 import net.minecraft.client.render.WorldRenderer;
@@ -15,6 +15,7 @@ public abstract class ChunkBuilderMixin {
 
     @Shadow @Final private WorldRenderer worldRenderer;
 
+    // Override vanilla logic because 1 buffer thread is just better for multi instance, faster world gen and less memory usage (Author @jojoe77777)
     @ModifyVariable(method = "<init>", at = @At("STORE"), ordinal = 2)
     private int modifyBufferThreads(int threads) {
         if (this.isWorldPreview()) {
