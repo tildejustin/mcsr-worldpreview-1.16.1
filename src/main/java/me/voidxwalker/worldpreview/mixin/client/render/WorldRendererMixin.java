@@ -20,6 +20,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 
 @Mixin(WorldRenderer.class)
@@ -47,9 +48,19 @@ public abstract class WorldRendererMixin {
         return original;
     }
 
+    // TODO: removing this doesn't crash, but chunkborders just don't render
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/debug/DebugRenderer;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;DDD)V"))
     private boolean stopDebugRenderer(DebugRenderer instance, MatrixStack matrices, VertexConsumerProvider.Immediate vertexConsumers, double cameraX, double cameraY, double cameraZ) {
         return !this.isWorldPreview();
+    }
+
+    // TODO: this does successfully add the player entity, the rendering is just fucked
+    @ModifyExpressionValue(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld;getEntities()Ljava/lang/Iterable;"))
+    private Iterable<Entity> modifyEntities(Iterable<Entity> original) {
+        if (this.isWorldPreview()) {
+            return Collections.singleton(WorldPreview.player);
+        }
+        return original;
     }
 
     @ModifyExpressionValue(method = "*", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;world:Lnet/minecraft/client/world/ClientWorld;", opcode = Opcodes.GETFIELD))
