@@ -38,10 +38,6 @@ public class WorldPreview implements ClientModInitializer {
     public static KeyBinding resetKey;
     public static KeyBinding freezeKey;
 
-    public static void log(Level level, String message) {
-        LOGGER.log(level, message);
-    }
-
     @Override
     public void onInitializeClient() {
         resetKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(

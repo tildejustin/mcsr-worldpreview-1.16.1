@@ -58,7 +58,7 @@ public abstract class MinecraftClientMixin {
     @Inject(method = "startIntegratedServer(Ljava/lang/String;Lnet/minecraft/util/registry/RegistryTracker$Modifiable;Ljava/util/function/Function;Lcom/mojang/datafixers/util/Function4;ZLnet/minecraft/client/MinecraftClient$WorldLoadAction;)V", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/integrated/IntegratedServer;isLoading()Z"), cancellable = true)
     private void resetPreview(CallbackInfo ci) {
         if (WorldPreview.inPreview && WorldPreview.kill && this.server != null) {
-            WorldPreview.log(Level.INFO, "Leaving world generation");
+            WorldPreview.LOGGER.info("Leaving world generation");
             ((WPMinecraftServer) this.server).worldpreview$kill();
             this.disconnect();
             this.openScreen(new TitleScreen());
@@ -86,7 +86,7 @@ public abstract class MinecraftClientMixin {
     private void logWorldPreviewStart(CallbackInfo ci) {
         if (WorldPreview.inPreview && !WorldPreview.renderingPreview) {
             WorldPreview.renderingPreview = true;
-            WorldPreview.log(Level.INFO, "Starting Preview at (" + WorldPreview.player.getX() + ", " + Math.floor(WorldPreview.player.getY()) + ", " + WorldPreview.player.getZ() + ")");
+            WorldPreview.LOGGER.info("Starting Preview at (" + WorldPreview.player.getX() + ", " + Math.floor(WorldPreview.player.getY()) + ", " + WorldPreview.player.getZ() + ")");
         }
     }
 }
