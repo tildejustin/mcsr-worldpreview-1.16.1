@@ -14,10 +14,10 @@ import java.io.IOException;
 
 @Mixin(ThreadedAnvilChunkStorage.class)
 public abstract class ThreadedAnvilChunkStorageMixin implements FastCloseable {
+
     @Shadow
     @Final
     private ChunkTaskPrioritySystem chunkTaskPrioritySystem;
-
     @Shadow
     @Final
     private PointOfInterestStorage pointOfInterestStorage;

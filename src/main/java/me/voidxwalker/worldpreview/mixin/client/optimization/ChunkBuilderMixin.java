@@ -13,7 +13,8 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(ChunkBuilder.class)
 public abstract class ChunkBuilderMixin {
 
-    @Shadow @Final
+    @Shadow
+    @Final
     private WorldRenderer worldRenderer;
 
     // Override vanilla logic because 1 buffer thread is just better for multi instance, faster world gen and less memory usage (Author @jojoe77777)

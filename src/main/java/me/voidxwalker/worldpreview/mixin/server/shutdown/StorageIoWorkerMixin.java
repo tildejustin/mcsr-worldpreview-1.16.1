@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 @Mixin(StorageIoWorker.class)
 public abstract class StorageIoWorkerMixin implements FastCloseable {
+
     @Shadow
     @Final
     private static Logger LOGGER;
