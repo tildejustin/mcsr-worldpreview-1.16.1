@@ -12,6 +12,8 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.DiffuseLighting;
+import net.minecraft.client.render.GameRenderer;
+import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.util.math.MatrixStack;
@@ -45,12 +47,6 @@ public abstract class LevelLoadingScreenMixin extends Screen {
         super(title);
     }
 
-    @Inject(method = "<init>", at = @At("TAIL"))
-    private void worldpreview_init(WorldGenerationProgressTracker progressProvider, CallbackInfo ci) {
-        WorldPreview.calculatedSpawn = true;
-        KeyBinding.unpressAll();
-    }
-
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/LevelLoadingScreen;renderBackground(Lnet/minecraft/client/util/math/MatrixStack;)V"))
     private void worldpreview_stopBackgroundRender(LevelLoadingScreen instance, MatrixStack matrixStack) {
         if (WorldPreview.camera == null) {
@@ -70,50 +66,56 @@ public abstract class LevelLoadingScreenMixin extends Screen {
 
     @Inject(method = "render", at = @At("HEAD"))
     private void worldpreview_render(MatrixStack matrices, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        if (WorldPreview.world != null && WorldPreview.player != null && !this.freezePreview) {
-            assert this.client != null;
-            if (((WorldRendererAccessor) WorldPreview.worldRenderer).getWorld() == null && WorldPreview.calculatedSpawn) {
-                WorldPreview.worldRenderer.setWorld(WorldPreview.world);
-            }
-            if (((WorldRendererAccessor) WorldPreview.worldRenderer).getWorld() != null) {
-                KeyBinding.unpressAll();
-                WorldPreview.kill = false;
-                MinecraftClient.getInstance().gameRenderer.getLightmapTextureManager().update(0);
-                if (WorldPreview.camera == null) {
-                    WorldPreview.player.refreshPositionAndAngles(WorldPreview.player.getX(), WorldPreview.player.getEyeY(), WorldPreview.player.getZ(), 0.0F, 0.0F);
-                    WorldPreview.camera = new Camera();
-                    WorldPreview.camera.update(WorldPreview.world, WorldPreview.player, this.client.options.perspective > 0, this.client.options.perspective == 2, 0.2F);
-                    WorldPreview.inPreview = true;
+        if (!WorldPreview.inPreview) {
+            synchronized (WorldPreview.LOCK) {
+                WorldPreview.inPreview = WorldPreview.world != null && WorldPreview.player != null && WorldPreview.camera != null && WorldPreview.gameMode != null;
+
+                if (WorldPreview.inPreview) {
+                    WorldPreview.worldRenderer.setWorld(WorldPreview.world);
+                    WorldPreview.renderingPreview = false;
                 }
-                MatrixStack matrixStack = new MatrixStack();
-                matrixStack.peek().getModel().multiply(this.worldpreview_getBasicProjectionMatrix());
-                Matrix4f matrix4f = matrixStack.peek().getModel();
-                RenderSystem.matrixMode(5889);
-                RenderSystem.loadIdentity();
-                RenderSystem.multMatrix(matrix4f);
-                RenderSystem.matrixMode(5888);
-                MatrixStack m = new MatrixStack();
-                m.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(WorldPreview.camera.getPitch()));
-                m.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(WorldPreview.camera.getYaw() + 180.0F));
-                WorldPreview.worldRenderer.render(m, 0.0F, 1000000, ((GameRendererAccessor) this.client.gameRenderer).callShouldRenderBlockOutline(), WorldPreview.camera, MinecraftClient.getInstance().gameRenderer, MinecraftClient.getInstance().gameRenderer.getLightmapTextureManager(), matrix4f);
-                RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
-                ((GameRendererAccessor) this.client.gameRenderer).callRenderHand(matrices, WorldPreview.camera, 0.0F);
-                WorldPreview.worldRenderer.drawEntityOutlinesFramebuffer();
-                Window window = this.client.getWindow();
-                RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
-                RenderSystem.matrixMode(5889);
-                RenderSystem.loadIdentity();
-                RenderSystem.ortho(0.0D, (double) window.getFramebufferWidth() / window.getScaleFactor(), (double) window.getFramebufferHeight() / window.getScaleFactor(), 0.0D, 1000.0D, 3000.0D);
-                RenderSystem.matrixMode(5888);
-                RenderSystem.loadIdentity();
-                RenderSystem.translatef(0.0F, 0.0F, -2000.0F);
-                DiffuseLighting.enableGuiDepthLighting();
-                RenderSystem.defaultAlphaFunc();
-                this.client.inGameHud.render(matrices, 0.0F);
-                RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
-                this.worldpreview_renderPauseMenu(matrices, mouseX, mouseY, delta);
             }
         }
+
+        if (!WorldPreview.inPreview || this.freezePreview) {
+            return;
+        }
+
+        assert this.client != null;
+
+        GameRenderer gameRenderer = this.client.gameRenderer;
+        WorldRenderer worldRenderer = WorldPreview.worldRenderer;
+        Camera camera = WorldPreview.camera;
+        Window window = this.client.getWindow();
+
+        gameRenderer.getLightmapTextureManager().update(0.0F);
+        MatrixStack matrixStack = new MatrixStack();
+        matrixStack.peek().getModel().multiply(this.worldpreview_getBasicProjectionMatrix());
+        Matrix4f matrix4f = matrixStack.peek().getModel();
+        RenderSystem.matrixMode(5889);
+        RenderSystem.loadIdentity();
+        RenderSystem.multMatrix(matrix4f);
+        RenderSystem.matrixMode(5888);
+        MatrixStack m = new MatrixStack();
+        m.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(camera.getPitch()));
+        m.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(camera.getYaw() + 180.0F));
+        worldRenderer.render(m, 0.0F, 1000000, ((GameRendererAccessor) gameRenderer).callShouldRenderBlockOutline(), camera, gameRenderer, gameRenderer.getLightmapTextureManager(), matrix4f);
+        RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
+        ((GameRendererAccessor) gameRenderer).callRenderHand(matrices, camera, 0.0F);
+        worldRenderer.drawEntityOutlinesFramebuffer();
+        RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
+        RenderSystem.matrixMode(5889);
+        RenderSystem.loadIdentity();
+        RenderSystem.ortho(0.0D, (double) window.getFramebufferWidth() / window.getScaleFactor(), (double) window.getFramebufferHeight() / window.getScaleFactor(), 0.0D, 1000.0D, 3000.0D);
+        RenderSystem.matrixMode(5888);
+        RenderSystem.loadIdentity();
+        RenderSystem.translatef(0.0F, 0.0F, -2000.0F);
+        DiffuseLighting.enableGuiDepthLighting();
+        RenderSystem.defaultAlphaFunc();
+        this.client.inGameHud.render(matrices, 0.0F);
+        RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
+
+        this.worldpreview_renderPauseMenu(matrices, mouseX, mouseY, delta);
     }
 
     @Unique
@@ -187,6 +189,8 @@ public abstract class LevelLoadingScreenMixin extends Screen {
 
     @Override
     public void removed() {
-        WorldPreview.kill = false;
+        WorldPreview.clear();
+        WorldPreview.inPreview = false;
+        WorldPreview.renderingPreview = false;
     }
 }

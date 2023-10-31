@@ -32,7 +32,7 @@ public abstract class ServerChunkManagerMixin {
     @Inject(method = "tick()Z", at = @At("TAIL"))
     private void worldpreview_getChunks(CallbackInfoReturnable<Boolean> cir) {
         synchronized (WorldPreview.LOCK) {
-            if (WorldPreview.isPreview() && WorldPreview.world != null) {
+            if (WorldPreview.world != null) {
                 ClientChunkMapAccessor map = (ClientChunkMapAccessor) (Object) Objects.requireNonNull(((ClientChunkManagerAccessor) WorldPreview.world.getChunkManager()).getChunks());
                 for (ChunkHolder holder : ((ThreadedAnvilChunkStorageAccessor) this.threadedAnvilChunkStorage).getChunkHolders().values()) {
                     if (holder == null) {

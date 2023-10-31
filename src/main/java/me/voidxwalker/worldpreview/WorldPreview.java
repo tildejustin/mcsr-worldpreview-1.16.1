@@ -34,7 +34,6 @@ public class WorldPreview implements ClientModInitializer {
     public static boolean inPreview;
     public static boolean renderingPreview;
     public static boolean kill;
-    public static boolean calculatedSpawn;
 
     public static KeyBinding resetKey;
     public static KeyBinding freezeKey;
@@ -60,7 +59,24 @@ public class WorldPreview implements ClientModInitializer {
         ));
     }
 
-    public static boolean isPreview() {
-        return inPreview;
+    public static void configure(ClientWorld world, ClientPlayerEntity player, Camera camera, GameMode gameMode) {
+        synchronized (LOCK) {
+            WorldPreview.world = world;
+            WorldPreview.player = player;
+            WorldPreview.camera = camera;
+            WorldPreview.gameMode = gameMode;
+
+            if (player != null && camera != null) {
+                player.refreshPositionAndAngles(player.getX(), player.getEyeY(), player.getZ(), 0.0F, 0.0F);
+                int perspective = MinecraftClient.getInstance().options.perspective;
+                camera.update(world, player, perspective > 0, perspective == 2, 0.0F);
+            }
+
+            kill = false;
+        }
+    }
+
+    public static void clear() {
+        configure(null, null, null, null);
     }
 }

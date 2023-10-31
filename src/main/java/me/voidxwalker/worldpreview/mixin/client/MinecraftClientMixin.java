@@ -28,7 +28,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.concurrent.locks.LockSupport;
 import java.util.function.Function;
 
 @Mixin(MinecraftClient.class)
@@ -43,16 +42,13 @@ public abstract class MinecraftClientMixin {
     @Shadow
     private @Nullable IntegratedServer server;
 
-    @Shadow
-    protected abstract void render(boolean tick);
-
     @Shadow public abstract void disconnect();
 
     @Shadow public abstract void openScreen(@Nullable Screen screen);
-
+    
     @Inject(method = "isFabulousGraphicsOrBetter", at = @At("RETURN"), cancellable = true)
     private static void stopFabulousDuringPreview(CallbackInfoReturnable<Boolean> cir) {
-        if (MinecraftClient.getInstance().currentScreen instanceof LevelLoadingScreen && MinecraftClient.getInstance().world == null) {
+        if (WorldPreview.inPreview) {
             cir.setReturnValue(false);
         }
     }
@@ -62,13 +58,8 @@ public abstract class MinecraftClientMixin {
         if (WorldPreview.inPreview && WorldPreview.kill && this.server != null) {
             WorldPreview.log(Level.INFO, "Leaving world generation");
             ((WPMinecraftServer) this.server).worldpreview$kill();
-            while (WorldPreview.inPreview) {
-                LockSupport.park(); // I am at a loss to emphasize how bad of an idea Thread.yield() here is.
-            }
-            this.server.shutdown();
             this.disconnect();
             this.openScreen(new TitleScreen());
-            WorldPreview.kill = false;
             ci.cancel();
         }
     }
@@ -87,19 +78,6 @@ public abstract class MinecraftClientMixin {
     @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/resource/ReloadableResourceManager;registerListener(Lnet/minecraft/resource/ResourceReloadListener;)V", ordinal = 11))
     private void createWorldPreviewRenderer(CallbackInfo ci) {
         WorldPreview.worldRenderer = new WorldRenderer(MinecraftClient.getInstance(), new BufferBuilderStorage());
-    }
-
-    @Inject(method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V", at = @At("HEAD"))
-    private void resetWorldPreviewProperties(CallbackInfo ci) {
-        synchronized (WorldPreview.LOCK) {
-            WorldPreview.world = null;
-            WorldPreview.player = null;
-            WorldPreview.camera = null;
-            WorldPreview.gameMode = null;
-            if (WorldPreview.worldRenderer != null) {
-                WorldPreview.worldRenderer.setWorld(null);
-            }
-        }
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/Window;swapBuffers()V", shift = At.Shift.AFTER))

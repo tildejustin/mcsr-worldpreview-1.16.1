@@ -1,5 +1,6 @@
 package me.voidxwalker.worldpreview.mixin.server;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import me.voidxwalker.worldpreview.WorldPreview;
 import me.voidxwalker.worldpreview.interfaces.FastCloseable;
 import me.voidxwalker.worldpreview.interfaces.WPMinecraftServer;
@@ -7,7 +8,9 @@ import me.voidxwalker.worldpreview.mixin.access.MinecraftClientAccessor;
 import me.voidxwalker.worldpreview.mixin.access.SpawnLocatingAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.render.Camera;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.resource.ServerResourceManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerNetworkIo;
@@ -47,6 +50,8 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
     private Snooper snooper;
     @Shadow
     private ServerResourceManager serverResourceManager;
+    @Shadow
+    private volatile boolean loading;
 
     @Unique
     private Integer spawnPos;
@@ -71,126 +76,127 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
 
     @ModifyVariable(method = "prepareStartRegion", at = @At("STORE"))
     private ServerWorld worldpreview_getWorld(ServerWorld serverWorld) {
-        WorldPreview.calculatedSpawn = false;
-        synchronized (WorldPreview.LOCK) {
-            if (this.isNewWorld) {
-                WorldPreview.world = new ClientWorld(
-                        WorldPreview.DUMMY_NETWORK_HANDLER,
-                        new ClientWorld.Properties(serverWorld.getDifficulty(), this.isHardcore(), serverWorld.isFlat()),
-                        serverWorld.getRegistryKey(),
-                        serverWorld.getDimensionRegistryKey(),
-                        serverWorld.getDimension(),
-                        16,
-                        MinecraftClient.getInstance()::getProfiler,
-                        WorldPreview.worldRenderer,
-                        serverWorld.isDebugWorld(),
-                        serverWorld.getSeed()
-                );
-                WorldPreview.player = new ClientPlayerEntity(
-                        MinecraftClient.getInstance(),
-                        WorldPreview.world,
-                        WorldPreview.DUMMY_NETWORK_HANDLER,
-                        null,
-                        null,
-                        false,
-                        false
-                );
-                WorldPreview.gameMode = this.getDefaultGameMode();
+        if (this.isNewWorld) {
+            ClientWorld world = new ClientWorld(
+                    WorldPreview.DUMMY_NETWORK_HANDLER,
+                    new ClientWorld.Properties(serverWorld.getDifficulty(), this.isHardcore(), serverWorld.isFlat()),
+                    serverWorld.getRegistryKey(),
+                    serverWorld.getDimensionRegistryKey(),
+                    serverWorld.getDimension(),
+                    16,
+                    MinecraftClient.getInstance()::getProfiler,
+                    WorldPreview.worldRenderer,
+                    serverWorld.isDebugWorld(),
+                    serverWorld.getSeed()
+            );
+            ClientPlayerEntity player = new ClientPlayerEntity(
+                    MinecraftClient.getInstance(),
+                    world,
+                    WorldPreview.DUMMY_NETWORK_HANDLER,
+                    null,
+                    null,
+                    false,
+                    false
+            );
 
-                worldpreview_calculateSpawn(serverWorld);
-                WorldPreview.calculatedSpawn = true;
-            }
+            this.spawnPos = this.worldpreview$calculateSpawn(serverWorld, player);
+
+            WorldPreview.configure(world, player, new Camera(), this.getDefaultGameMode());
         }
         return serverWorld;
     }
 
+    /**
+     * Copied from ServerPlayerEntity#moveToSpawn.
+     */
+    @SuppressWarnings("all")
     @Unique
-    private void worldpreview_calculateSpawn(ServerWorld serverWorld) {
-        BlockPos blockPos = serverWorld.getSpawnPos();
-        int i = Math.max(0, this.getSpawnRadius(serverWorld));
-        int j = MathHelper.floor(serverWorld.getWorldBorder().getDistanceInsideBorder(blockPos.getX(), blockPos.getZ()));
-        if (j < i) {
-            i = j;
-        }
-        if (j <= 1) {
-            i = 1;
-        }
-        long l = i * 2L + 1;
-        long m = l * l;
-        int k = m > 2147483647L ? Integer.MAX_VALUE : (int) m;
-        int n = this.worldpreview_calculateSpawnOffsetMultiplier(k);
-        int o = (new Random()).nextInt(k);
-        this.spawnPos = o;
-        for (int p = 0; p < k; ++p) {
-            int q = (o + n * p) % k;
-            int r = q % (i * 2 + 1);
-            int s = q / (i * 2 + 1);
-            BlockPos blockPos2 = SpawnLocatingAccessor.callFindOverworldSpawn(serverWorld, blockPos.getX() + r - i, blockPos.getZ() + s - i, false);
-            if (blockPos2 != null) {
-                WorldPreview.player.refreshPositionAndAngles(blockPos2, 0.0F, 0.0F);
-                if (serverWorld.doesNotCollide(WorldPreview.player)) {
-                    break;
+    private @Nullable Integer worldpreview$calculateSpawn(ServerWorld world, PlayerEntity player) {
+        BlockPos blockPos = world.getSpawnPos();
+        if (world.getDimension().hasSkyLight() && world.getServer().getSaveProperties().getGameMode() != GameMode.ADVENTURE) {
+            int i = Math.max(0, this.getSpawnRadius(world));
+            int j = MathHelper.floor(world.getWorldBorder().getDistanceInsideBorder((double)blockPos.getX(), (double)blockPos.getZ()));
+            if (j < i) {
+                i = j;
+            }
+
+            if (j <= 1) {
+                i = 1;
+            }
+
+            long l = (long)(i * 2 + 1);
+            long m = l * l;
+            int k = m > 2147483647L ? Integer.MAX_VALUE : (int)m;
+            int n = k <= 16 ? k - 1 : 17;;
+            int o = (new Random()).nextInt(k);
+
+            for (int p = 0; p < k; ++p) {
+                int q = (o + n * p) % k;
+                int r = q % (i * 2 + 1);
+                int s = q / (i * 2 + 1);
+                BlockPos blockPos2 = SpawnLocatingAccessor.callFindOverworldSpawn(world, blockPos.getX() + r - i, blockPos.getZ() + s - i, false);
+                if (blockPos2 != null) {
+                    player.refreshPositionAndAngles(blockPos2, 0.0F, 0.0F);
+                    if (world.doesNotCollide(player)) {
+                        break;
+                    }
                 }
             }
-        }
-    }
+            return o;
+        } else {
+            player.refreshPositionAndAngles(blockPos, 0.0F, 0.0F);
 
-    @Unique
-    private int worldpreview_calculateSpawnOffsetMultiplier(int horizontalSpawnArea) {
-        return horizontalSpawnArea <= 16 ? horizontalSpawnArea - 1 : 17;
-    }
-
-    @Inject(method = "shutdown", at = @At("HEAD"), cancellable = true)
-    private void worldpreview_kill(CallbackInfo ci) {
-        if (this.killed) {
-            worldpreview_shutdownWithoutSave();
-            ci.cancel();
-        }
-    }
-
-    @Inject(method = "runServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;setupServer()Z", shift = At.Shift.AFTER), cancellable = true)
-    private void worldpreview_kill2(CallbackInfo ci) {
-        WorldPreview.inPreview = false;
-        WorldPreview.renderingPreview = false;
-        LockSupport.unpark(((MinecraftClientAccessor) MinecraftClient.getInstance()).invokeGetThread());
-        if (this.killed) {
-            ci.cancel();
-        }
-    }
-
-    @Unique
-    private void worldpreview_shutdownWithoutSave() {
-        LOGGER.info("Stopping server");
-        if (this.getNetworkIo() != null) {
-            this.getNetworkIo().stop();
-        }
-        for (ServerWorld serverWorld : this.getWorlds()) {
-            if (serverWorld != null) {
-                serverWorld.savingDisabled = false;
+            while(!world.doesNotCollide(player) && player.getY() < 255.0) {
+                player.updatePosition(player.getX(), player.getY() + 1.0, player.getZ());
             }
         }
-        for (ServerWorld serverWorld : this.getWorlds()) {
-            if (serverWorld != null) {
-                try {
-                    ((FastCloseable) serverWorld.getChunkManager().threadedAnvilChunkStorage).worldpreview$fastClose();
-                } catch (IOException ignored) {
-                }
-            }
-        }
-        if (this.snooper.isActive()) {
-            this.snooper.cancel();
-        }
-        this.serverResourceManager.close();
-        try {
-            this.session.close();
-        } catch (IOException var4) {
-            LOGGER.error("Failed to unlock level {}", this.session.getDirectoryName(), var4);
-        }
+        return null;
     }
 
     @Inject(method = "prepareStartRegion", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkManager;getTotalChunksLoadedCount()I", shift = At.Shift.AFTER), cancellable = true)
-    private void worldpreview_kill(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci) {
+    private void killWorldGen(CallbackInfo ci) {
         if (this.killed) {
+            ci.cancel();
+        }
+    }
+
+    @ModifyExpressionValue(method = "runServer", at = @At(value = "FIELD", target = "Lnet/minecraft/server/MinecraftServer;running:Z"))
+    private boolean killServer(boolean original) {
+        if (!this.loading && this.killed) {
+            return false;
+        }
+        return original;
+    }
+
+    @Inject(method = "shutdown", at = @At("HEAD"), cancellable = true)
+    private void shutdownWithoutSave(CallbackInfo ci) {
+        if (this.killed) {
+            LOGGER.info("Stopping server");
+            if (this.getNetworkIo() != null) {
+                this.getNetworkIo().stop();
+            }
+            for (ServerWorld serverWorld : this.getWorlds()) {
+                if (serverWorld != null) {
+                    serverWorld.savingDisabled = false;
+                }
+            }
+            for (ServerWorld serverWorld : this.getWorlds()) {
+                if (serverWorld != null) {
+                    try {
+                        ((FastCloseable) serverWorld.getChunkManager().threadedAnvilChunkStorage).worldpreview$fastClose();
+                    } catch (IOException ignored) {
+                    }
+                }
+            }
+            if (this.snooper.isActive()) {
+                this.snooper.cancel();
+            }
+            this.serverResourceManager.close();
+            try {
+                this.session.close();
+            } catch (IOException var4) {
+                LOGGER.error("Failed to unlock level {}", this.session.getDirectoryName(), var4);
+            }
             ci.cancel();
         }
     }

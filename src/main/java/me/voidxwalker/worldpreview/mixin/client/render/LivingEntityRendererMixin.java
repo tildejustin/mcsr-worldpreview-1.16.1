@@ -13,7 +13,7 @@ public abstract class LivingEntityRendererMixin {
 
     @ModifyExpressionValue(method = "*", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;player:Lnet/minecraft/client/network/ClientPlayerEntity;", opcode = Opcodes.GETFIELD))
     private ClientPlayerEntity modifyPlayer(ClientPlayerEntity player) {
-        if (WorldPreview.isPreview() || player == null) {
+        if (WorldPreview.inPreview) {
             return WorldPreview.player;
         }
         return player;
