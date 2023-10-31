@@ -11,6 +11,7 @@ import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.GameMode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -62,9 +63,12 @@ public class WorldPreview implements ClientModInitializer {
             WorldPreview.gameMode = gameMode;
 
             if (player != null && camera != null) {
-                player.refreshPositionAndAngles(player.getX(), player.getEyeY(), player.getZ(), 0.0F, 0.0F);
+                player.chunkX = MathHelper.floor(player.getX() / 16.0);
+                player.chunkY = MathHelper.clamp(MathHelper.floor(player.getY() / 16.0), 0, 16);
+                player.chunkZ = MathHelper.floor(player.getZ() / 16.0);
+
                 int perspective = MinecraftClient.getInstance().options.perspective;
-                camera.update(world, player, perspective > 0, perspective == 2, 0.0F);
+                camera.update(world, player, perspective > 0, perspective == 2, 1.0F);
             }
 
             kill = false;
