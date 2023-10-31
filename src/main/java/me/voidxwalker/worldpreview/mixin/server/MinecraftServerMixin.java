@@ -1,6 +1,10 @@
 package me.voidxwalker.worldpreview.mixin.server;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.injector.WrapWithCondition;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import me.voidxwalker.worldpreview.WorldPreview;
 import me.voidxwalker.worldpreview.interfaces.FastCloseable;
 import me.voidxwalker.worldpreview.interfaces.WPMinecraftServer;
@@ -10,18 +14,13 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.resource.ServerResourceManager;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.ServerNetworkIo;
+import net.minecraft.server.PlayerManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.snooper.Snooper;
 import net.minecraft.world.GameMode;
-import net.minecraft.world.level.storage.LevelStorage;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -37,32 +36,14 @@ import java.util.Random;
 public abstract class MinecraftServerMixin implements WPMinecraftServer {
 
     @Shadow
-    @Final
-    private static Logger LOGGER;
-    @Shadow
-    @Final
-    protected LevelStorage.Session session;
-    @Shadow
-    @Final
-    private Snooper snooper;
-    @Shadow
-    private ServerResourceManager serverResourceManager;
-    @Shadow
     private volatile boolean loading;
 
     @Unique
     private Integer spawnPos;
     @Unique
-    private boolean killed;
+    private volatile boolean killed;
     @Unique
-    private boolean isNewWorld;
-
-
-    @Shadow
-    public abstract Iterable<ServerWorld> getWorlds();
-
-    @Shadow
-    public abstract @Nullable ServerNetworkIo getNetworkIo();
+    private volatile boolean isNewWorld;
 
     @Shadow
     public abstract int getSpawnRadius(@Nullable ServerWorld world);
@@ -112,45 +93,39 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
         }
     }
 
+    @ModifyReturnValue(method = "shouldKeepTicking", at = @At("RETURN"))
+    private boolean killRunningTasks(boolean shouldKeepTicking) {
+        return shouldKeepTicking && !this.killed;
+    }
+
     @ModifyExpressionValue(method = "runServer", at = @At(value = "FIELD", target = "Lnet/minecraft/server/MinecraftServer;running:Z"))
-    private boolean killServer(boolean original) {
+    private boolean killServer(boolean running) {
         if (!this.loading && this.killed) {
             return false;
         }
-        return original;
+        return running;
     }
 
-    @Inject(method = "shutdown", at = @At("HEAD"), cancellable = true)
-    private void shutdownWithoutSave(CallbackInfo ci) {
+    @ModifyExpressionValue(method = "shutdown", at = @At(value = "FIELD", target = "Lnet/minecraft/server/MinecraftServer;playerManager:Lnet/minecraft/server/PlayerManager;", ordinal = 0))
+    private PlayerManager killPlayerSave(PlayerManager playerManager) {
         if (this.killed) {
-            LOGGER.info("Stopping server");
-            if (this.getNetworkIo() != null) {
-                this.getNetworkIo().stop();
-            }
-            for (ServerWorld serverWorld : this.getWorlds()) {
-                if (serverWorld != null) {
-                    serverWorld.savingDisabled = false;
-                }
-            }
-            for (ServerWorld serverWorld : this.getWorlds()) {
-                if (serverWorld != null) {
-                    try {
-                        ((FastCloseable) serverWorld.getChunkManager().threadedAnvilChunkStorage).worldpreview$fastClose();
-                    } catch (IOException ignored) {
-                    }
-                }
-            }
-            if (this.snooper.isActive()) {
-                this.snooper.cancel();
-            }
-            this.serverResourceManager.close();
-            try {
-                this.session.close();
-            } catch (IOException var4) {
-                LOGGER.error("Failed to unlock level {}", this.session.getDirectoryName(), var4);
-            }
-            ci.cancel();
+            return null;
         }
+        return playerManager;
+    }
+
+    @WrapOperation(method = "shutdown", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;close()V"))
+    private void killServerWorldClose(ServerWorld serverWorld, Operation<Void> original) throws IOException {
+        if (this.killed) {
+            ((FastCloseable) serverWorld.getChunkManager().threadedAnvilChunkStorage).worldpreview$fastClose();
+            return;
+        }
+        original.call(serverWorld);
+    }
+
+    @WrapWithCondition(method = "shutdown", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;save(ZZZ)Z"))
+    private boolean killSave(MinecraftServer server, boolean bl, boolean bl2, boolean bl3) {
+        return !this.killed;
     }
 
     /**
