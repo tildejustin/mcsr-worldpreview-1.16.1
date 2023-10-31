@@ -21,6 +21,7 @@ import net.minecraft.util.registry.RegistryTracker;
 import net.minecraft.world.SaveProperties;
 import net.minecraft.world.level.storage.LevelStorage;
 import org.jetbrains.annotations.Nullable;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -73,6 +74,14 @@ public abstract class MinecraftClientMixin {
     @WrapWithCondition(method = "reset", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;openScreen(Lnet/minecraft/client/gui/screen/Screen;)V"))
     private boolean smoothTransition(MinecraftClient client, Screen screen) {
         return !(this.currentScreen instanceof LevelLoadingScreen);
+    }
+
+    @ModifyExpressionValue(method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;world:Lnet/minecraft/client/world/ClientWorld;", opcode = Opcodes.GETFIELD))
+    private ClientWorld waitOnKilledServers(ClientWorld world) {
+        if (world == null && WorldPreview.inPreview) {
+            return WorldPreview.world;
+        }
+        return world;
     }
 
     @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/resource/ReloadableResourceManager;registerListener(Lnet/minecraft/resource/ResourceReloadListener;)V", ordinal = 11))
