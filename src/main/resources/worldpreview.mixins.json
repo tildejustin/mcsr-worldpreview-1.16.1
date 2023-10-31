@@ -11,7 +11,6 @@
     "access.SpawnLocatingAccessor",
     "access.ThreadedAnvilChunkStorageAccessor",
     "access.VersionedChunkStorageAccessor",
-    "access.WorldRendererAccessor",
     "client.AbstractClientPlayerEntityMixin",
     "client.CameraMixin",
     "client.ClientPlayerInteractionManagerMixin",
