@@ -74,7 +74,7 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
     public abstract GameMode getDefaultGameMode();
 
     @ModifyVariable(method = "prepareStartRegion", at = @At("STORE"))
-    private ServerWorld worldpreview_getWorld(ServerWorld serverWorld) {
+    private ServerWorld configureWorldPreview(ServerWorld serverWorld) {
         if (this.isNewWorld) {
             ClientWorld world = new ClientWorld(
                     WorldPreview.DUMMY_NETWORK_HANDLER,
@@ -103,53 +103,6 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
             WorldPreview.configure(world, player, new Camera(), this.getDefaultGameMode());
         }
         return serverWorld;
-    }
-
-    /**
-     * Copied from ServerPlayerEntity#moveToSpawn.
-     */
-    @SuppressWarnings("all")
-    @Unique
-    private @Nullable Integer worldpreview$calculateSpawn(ServerWorld world, PlayerEntity player) {
-        BlockPos blockPos = world.getSpawnPos();
-        if (world.getDimension().hasSkyLight() && world.getServer().getSaveProperties().getGameMode() != GameMode.ADVENTURE) {
-            int i = Math.max(0, this.getSpawnRadius(world));
-            int j = MathHelper.floor(world.getWorldBorder().getDistanceInsideBorder((double)blockPos.getX(), (double)blockPos.getZ()));
-            if (j < i) {
-                i = j;
-            }
-
-            if (j <= 1) {
-                i = 1;
-            }
-
-            long l = (long)(i * 2 + 1);
-            long m = l * l;
-            int k = m > 2147483647L ? Integer.MAX_VALUE : (int)m;
-            int n = k <= 16 ? k - 1 : 17;;
-            int o = (new Random()).nextInt(k);
-
-            for (int p = 0; p < k; ++p) {
-                int q = (o + n * p) % k;
-                int r = q % (i * 2 + 1);
-                int s = q / (i * 2 + 1);
-                BlockPos blockPos2 = SpawnLocatingAccessor.callFindOverworldSpawn(world, blockPos.getX() + r - i, blockPos.getZ() + s - i, false);
-                if (blockPos2 != null) {
-                    player.refreshPositionAndAngles(blockPos2, 0.0F, 0.0F);
-                    if (world.doesNotCollide(player)) {
-                        break;
-                    }
-                }
-            }
-            return o;
-        } else {
-            player.refreshPositionAndAngles(blockPos, 0.0F, 0.0F);
-
-            while(!world.doesNotCollide(player) && player.getY() < 255.0) {
-                player.updatePosition(player.getX(), player.getY() + 1.0, player.getZ());
-            }
-        }
-        return null;
     }
 
     @Inject(method = "prepareStartRegion", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkManager;getTotalChunksLoadedCount()I", shift = At.Shift.AFTER), cancellable = true)
@@ -198,6 +151,53 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
             }
             ci.cancel();
         }
+    }
+
+    /**
+     * Copied from ServerPlayerEntity#moveToSpawn.
+     */
+    @SuppressWarnings("all")
+    @Unique
+    private @Nullable Integer worldpreview$calculateSpawn(ServerWorld world, PlayerEntity player) {
+        BlockPos blockPos = world.getSpawnPos();
+        if (world.getDimension().hasSkyLight() && world.getServer().getSaveProperties().getGameMode() != GameMode.ADVENTURE) {
+            int i = Math.max(0, this.getSpawnRadius(world));
+            int j = MathHelper.floor(world.getWorldBorder().getDistanceInsideBorder((double)blockPos.getX(), (double)blockPos.getZ()));
+            if (j < i) {
+                i = j;
+            }
+
+            if (j <= 1) {
+                i = 1;
+            }
+
+            long l = (long)(i * 2 + 1);
+            long m = l * l;
+            int k = m > 2147483647L ? Integer.MAX_VALUE : (int)m;
+            int n = k <= 16 ? k - 1 : 17;;
+            int o = (new Random()).nextInt(k);
+
+            for (int p = 0; p < k; ++p) {
+                int q = (o + n * p) % k;
+                int r = q % (i * 2 + 1);
+                int s = q / (i * 2 + 1);
+                BlockPos blockPos2 = SpawnLocatingAccessor.callFindOverworldSpawn(world, blockPos.getX() + r - i, blockPos.getZ() + s - i, false);
+                if (blockPos2 != null) {
+                    player.refreshPositionAndAngles(blockPos2, 0.0F, 0.0F);
+                    if (world.doesNotCollide(player)) {
+                        break;
+                    }
+                }
+            }
+            return o;
+        } else {
+            player.refreshPositionAndAngles(blockPos, 0.0F, 0.0F);
+
+            while(!world.doesNotCollide(player) && player.getY() < 255.0) {
+                player.updatePosition(player.getX(), player.getY() + 1.0, player.getZ());
+            }
+        }
+        return null;
     }
 
     @Override

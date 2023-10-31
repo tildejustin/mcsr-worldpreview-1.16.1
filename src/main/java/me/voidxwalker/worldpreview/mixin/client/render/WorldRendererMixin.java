@@ -30,17 +30,17 @@ public abstract class WorldRendererMixin {
     private MinecraftClient client;
 
     @WrapWithCondition(method = "setupTerrain", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/chunk/ChunkBuilder$BuiltChunk;cancelRebuild()V"))
-    private boolean worldpreview_modifyChunkRebuilding(ChunkBuilder.BuiltChunk builtChunk) {
+    private boolean fixWorldPreviewChunkRebuilding(ChunkBuilder.BuiltChunk builtChunk) {
         return !this.isWorldPreview();
     }
 
     @WrapWithCondition(method = "setupTerrain", at = @At(value = "INVOKE", target = "Ljava/util/Set;addAll(Ljava/util/Collection;)Z"))
-    private boolean worldpreview_modifyChunkRebuilding(Set<ChunkBuilder.BuiltChunk> set, Collection<ChunkBuilder.BuiltChunk> collection) {
+    private boolean fixWorldPreviewChunkRebuilding(Set<ChunkBuilder.BuiltChunk> set, Collection<ChunkBuilder.BuiltChunk> collection) {
         return !this.isWorldPreview();
     }
 
     @ModifyExpressionValue(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;getViewDistance()F"))
-    private float worldpreview_getViewDistance(float original) {
+    private float modifyViewDistance(float original) {
         if (this.isWorldPreview()) {
             return this.client.options.viewDistance * 16;
         }
@@ -48,7 +48,7 @@ public abstract class WorldRendererMixin {
     }
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/debug/DebugRenderer;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;DDD)V"))
-    private boolean worldpreview_stopDebugRenderer(DebugRenderer instance, MatrixStack matrices, VertexConsumerProvider.Immediate vertexConsumers, double cameraX, double cameraY, double cameraZ) {
+    private boolean stopDebugRenderer(DebugRenderer instance, MatrixStack matrices, VertexConsumerProvider.Immediate vertexConsumers, double cameraX, double cameraY, double cameraZ) {
         return !this.isWorldPreview();
     }
 

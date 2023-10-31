@@ -43,7 +43,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
     }
 
     @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/LevelLoadingScreen;renderBackground(Lnet/minecraft/client/util/math/MatrixStack;)V"))
-    private boolean worldpreview_stopBackgroundRender(LevelLoadingScreen screen, MatrixStack matrixStack) {
+    private boolean stopRenderingBackground(LevelLoadingScreen screen, MatrixStack matrixStack) {
         return !WorldPreview.inPreview;
     }
 
@@ -59,7 +59,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
 
     @SuppressWarnings("deprecation")
     @Inject(method = "render", at = @At("HEAD"))
-    private void worldpreview_render(MatrixStack matrices, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+    private void renderWorldPreview(MatrixStack matrices, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (!WorldPreview.inPreview) {
             synchronized (WorldPreview.LOCK) {
                 WorldPreview.inPreview = WorldPreview.world != null && WorldPreview.player != null && WorldPreview.camera != null && WorldPreview.gameMode != null;
@@ -84,7 +84,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
 
         gameRenderer.getLightmapTextureManager().update(0.0F);
         MatrixStack matrixStack = new MatrixStack();
-        matrixStack.peek().getModel().multiply(this.worldpreview_getBasicProjectionMatrix());
+        matrixStack.peek().getModel().multiply(this.worldpreview$getBasicProjectionMatrix(this.client));
         Matrix4f matrix4f = matrixStack.peek().getModel();
         gameRenderer.loadProjectionMatrix(matrix4f);
         MatrixStack m = new MatrixStack();
@@ -106,11 +106,11 @@ public abstract class LevelLoadingScreenMixin extends Screen {
         this.client.inGameHud.render(matrices, 0.0F);
         RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
 
-        this.worldpreview_renderPauseMenu(matrices, mouseX, mouseY, delta);
+        this.worldpreview$renderPauseMenu(matrices, mouseX, mouseY, delta);
     }
 
     @Unique
-    private void worldpreview_renderPauseMenu(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    private void worldpreview$renderPauseMenu(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         if (this.showMenu) {
             this.fillGradient(matrices, 0, 0, this.width, this.height, -1072689136, -804253680);
             super.render(matrices, mouseX, mouseY, delta);
@@ -120,15 +120,15 @@ public abstract class LevelLoadingScreenMixin extends Screen {
     }
 
     @Unique
-    private Matrix4f worldpreview_getBasicProjectionMatrix() {
+    private Matrix4f worldpreview$getBasicProjectionMatrix(MinecraftClient client) {
         MatrixStack matrixStack = new MatrixStack();
         matrixStack.peek().getModel().loadIdentity();
-        matrixStack.peek().getModel().multiply(Matrix4f.viewboxMatrix(this.client.options.fov, (float) this.client.getWindow().getFramebufferWidth() / (float) this.client.getWindow().getFramebufferHeight(), 0.05F, this.client.options.viewDistance * 16 * 4.0F));
+        matrixStack.peek().getModel().multiply(Matrix4f.viewboxMatrix(client.options.fov, (float) client.getWindow().getFramebufferWidth() / (float) client.getWindow().getFramebufferHeight(), 0.05F, client.options.viewDistance * 16 * 4.0F));
         return matrixStack.peek().getModel();
     }
 
     @Unique
-    private void worldpreview_initWidgets() {
+    private void worldpreview$initPauseMenuWidgets() {
         this.addButton(new ButtonWidget(this.width / 2 - 102, this.height / 4 + 24 - 16, 204, 20, new TranslatableText("menu.returnToGame"), button -> {
             this.showMenu = false;
             this.children.clear();
@@ -158,7 +158,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
                 }
             } else {
                 this.showMenu = true;
-                this.worldpreview_initWidgets();
+                this.worldpreview$initPauseMenuWidgets();
             }
             return true;
         }
@@ -177,7 +177,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
     protected void init() {
         super.init();
         if (this.showMenu) {
-            this.worldpreview_initWidgets();
+            this.worldpreview$initPauseMenuWidgets();
         }
     }
 

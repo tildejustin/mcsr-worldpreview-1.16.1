@@ -30,7 +30,7 @@ public abstract class ServerChunkManagerMixin {
     public abstract @Nullable WorldChunk getWorldChunk(int chunkX, int chunkZ);
 
     @Inject(method = "tick()Z", at = @At("TAIL"))
-    private void worldpreview_getChunks(CallbackInfoReturnable<Boolean> cir) {
+    private void worldpreview$getChunks(CallbackInfoReturnable<Boolean> cir) {
         synchronized (WorldPreview.LOCK) {
             if (WorldPreview.world != null) {
                 ClientChunkMapAccessor map = (ClientChunkMapAccessor) (Object) Objects.requireNonNull(((ClientChunkManagerAccessor) WorldPreview.world.getChunkManager()).getChunks());
