@@ -1,6 +1,7 @@
 package me.voidxwalker.worldpreview.mixin.client;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.mojang.datafixers.util.Function4;
 import me.voidxwalker.worldpreview.WorldPreview;
@@ -25,7 +26,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.function.Function;
 
@@ -39,19 +39,18 @@ public abstract class MinecraftClientMixin {
     @Nullable
     public Screen currentScreen;
     @Shadow
-    private @Nullable IntegratedServer server;
+    @Nullable
+    private IntegratedServer server;
 
     @Shadow
     public abstract void disconnect();
 
     @Shadow
     public abstract void openScreen(@Nullable Screen screen);
-    
-    @Inject(method = "isFabulousGraphicsOrBetter", at = @At("RETURN"), cancellable = true)
-    private static void stopFabulousDuringPreview(CallbackInfoReturnable<Boolean> cir) {
-        if (WorldPreview.inPreview) {
-            cir.setReturnValue(false);
-        }
+
+    @ModifyReturnValue(method = "isFabulousGraphicsOrBetter", at = @At("RETURN"))
+    private static boolean stopFabulousDuringPreview(boolean isFabulousGraphicsOrBetter) {
+        return isFabulousGraphicsOrBetter && !WorldPreview.inPreview;
     }
 
     @Inject(method = "startIntegratedServer(Ljava/lang/String;Lnet/minecraft/util/registry/RegistryTracker$Modifiable;Ljava/util/function/Function;Lcom/mojang/datafixers/util/Function4;ZLnet/minecraft/client/MinecraftClient$WorldLoadAction;)V", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/integrated/IntegratedServer;isLoading()Z"), cancellable = true)
