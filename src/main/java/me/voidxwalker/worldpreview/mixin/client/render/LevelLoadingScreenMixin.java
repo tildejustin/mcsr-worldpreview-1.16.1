@@ -82,6 +82,9 @@ public abstract class LevelLoadingScreenMixin extends Screen {
         Camera camera = WorldPreview.camera;
         Window window = this.client.getWindow();
 
+        int perspective = this.client.options.perspective;
+        camera.update(WorldPreview.world, WorldPreview.player, perspective > 0, perspective == 2, 0.0F);
+
         gameRenderer.getLightmapTextureManager().update(0.0F);
         MatrixStack matrixStack = new MatrixStack();
         matrixStack.peek().getModel().multiply(this.worldpreview$getBasicProjectionMatrix(this.client));

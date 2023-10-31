@@ -68,7 +68,7 @@ public class WorldPreview implements ClientModInitializer {
                 player.chunkZ = MathHelper.floor(player.getZ() / 16.0);
 
                 int perspective = MinecraftClient.getInstance().options.perspective;
-                camera.update(world, player, perspective > 0, perspective == 2, 1.0F);
+                camera.update(world, player, perspective > 0, perspective == 2, 0.0F);
             }
 
             kill = false;
