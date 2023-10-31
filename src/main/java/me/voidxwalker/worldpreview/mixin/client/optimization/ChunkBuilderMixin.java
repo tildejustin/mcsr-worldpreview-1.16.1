@@ -13,7 +13,8 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(ChunkBuilder.class)
 public abstract class ChunkBuilderMixin {
 
-    @Shadow @Final private WorldRenderer worldRenderer;
+    @Shadow @Final
+    private WorldRenderer worldRenderer;
 
     // Override vanilla logic because 1 buffer thread is just better for multi instance, faster world gen and less memory usage (Author @jojoe77777)
     @ModifyVariable(method = "<init>", at = @At("STORE"), ordinal = 2)

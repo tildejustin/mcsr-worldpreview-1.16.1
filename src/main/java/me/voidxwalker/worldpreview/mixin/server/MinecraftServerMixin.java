@@ -67,9 +67,11 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
     @Shadow
     public abstract int getSpawnRadius(@Nullable ServerWorld world);
 
-    @Shadow public abstract boolean isHardcore();
+    @Shadow
+    public abstract boolean isHardcore();
 
-    @Shadow public abstract GameMode getDefaultGameMode();
+    @Shadow
+    public abstract GameMode getDefaultGameMode();
 
     @ModifyVariable(method = "prepareStartRegion", at = @At("STORE"))
     private ServerWorld worldpreview_getWorld(ServerWorld serverWorld) {

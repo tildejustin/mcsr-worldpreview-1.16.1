@@ -12,7 +12,8 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(ServerPlayerEntity.class)
 public abstract class ServerPlayerEntityMixin {
 
-    @Shadow @Final public MinecraftServer server;
+    @Shadow @Final
+    public MinecraftServer server;
 
     @ModifyExpressionValue(method = "moveToSpawn", at = @At(value = "INVOKE", target = "Ljava/util/Random;nextInt(I)I"))
     private int setSpawnPos(int original) {

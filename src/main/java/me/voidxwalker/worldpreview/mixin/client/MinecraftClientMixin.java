@@ -42,9 +42,11 @@ public abstract class MinecraftClientMixin {
     @Shadow
     private @Nullable IntegratedServer server;
 
-    @Shadow public abstract void disconnect();
+    @Shadow
+    public abstract void disconnect();
 
-    @Shadow public abstract void openScreen(@Nullable Screen screen);
+    @Shadow
+    public abstract void openScreen(@Nullable Screen screen);
     
     @Inject(method = "isFabulousGraphicsOrBetter", at = @At("RETURN"), cancellable = true)
     private static void stopFabulousDuringPreview(CallbackInfoReturnable<Boolean> cir) {
