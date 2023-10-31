@@ -4,7 +4,6 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import me.voidxwalker.worldpreview.WorldPreview;
 import me.voidxwalker.worldpreview.interfaces.FastCloseable;
 import me.voidxwalker.worldpreview.interfaces.WPMinecraftServer;
-import me.voidxwalker.worldpreview.mixin.access.MinecraftClientAccessor;
 import me.voidxwalker.worldpreview.mixin.access.SpawnLocatingAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -14,7 +13,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.resource.ServerResourceManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerNetworkIo;
-import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -34,7 +32,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.io.IOException;
 import java.util.Random;
-import java.util.concurrent.locks.LockSupport;
 
 @Mixin(MinecraftServer.class)
 public abstract class MinecraftServerMixin implements WPMinecraftServer {
