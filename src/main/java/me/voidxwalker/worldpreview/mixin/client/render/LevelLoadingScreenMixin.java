@@ -89,10 +89,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
         MatrixStack matrixStack = new MatrixStack();
         matrixStack.peek().getModel().multiply(this.worldpreview_getBasicProjectionMatrix());
         Matrix4f matrix4f = matrixStack.peek().getModel();
-        RenderSystem.matrixMode(5889);
-        RenderSystem.loadIdentity();
-        RenderSystem.multMatrix(matrix4f);
-        RenderSystem.matrixMode(5888);
+        gameRenderer.loadProjectionMatrix(matrix4f);
         MatrixStack m = new MatrixStack();
         m.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(camera.getPitch()));
         m.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(camera.getYaw() + 180.0F));
