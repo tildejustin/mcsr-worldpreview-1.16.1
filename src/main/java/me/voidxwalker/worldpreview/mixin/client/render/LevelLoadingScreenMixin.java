@@ -86,6 +86,9 @@ public abstract class LevelLoadingScreenMixin extends Screen {
         camera.update(WorldPreview.world, WorldPreview.player, perspective > 0, perspective == 2, 0.0F);
 
         gameRenderer.getLightmapTextureManager().update(0.0F);
+        // TODO: get the targeted block outline to render
+        //gameRenderer.updateTargetedEntity(0.0F);
+
         MatrixStack matrixStack = new MatrixStack();
         matrixStack.peek().getModel().multiply(this.worldpreview$getBasicProjectionMatrix(this.client));
         Matrix4f matrix4f = matrixStack.peek().getModel();

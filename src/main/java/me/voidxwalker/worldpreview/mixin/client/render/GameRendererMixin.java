@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(GameRenderer.class)
 public abstract class GameRendererMixin {
 
-    @ModifyExpressionValue(method = "shouldRenderBlockOutline", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;world:Lnet/minecraft/client/world/ClientWorld;", opcode = Opcodes.GETFIELD))
+    @ModifyExpressionValue(method = {"shouldRenderBlockOutline", "updateTargetedEntity"}, at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;world:Lnet/minecraft/client/world/ClientWorld;", opcode = Opcodes.GETFIELD))
     private ClientWorld modifyWorld(ClientWorld world) {
         if (WorldPreview.inPreview) {
             return WorldPreview.world;
