@@ -55,15 +55,6 @@ public abstract class WorldRendererMixin {
         return !this.isWorldPreview();
     }
 
-    // TODO: this does successfully add the player entity, the rendering is just fucked
-    @ModifyExpressionValue(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld;getEntities()Ljava/lang/Iterable;"))
-    private Iterable<Entity> modifyEntities(Iterable<Entity> original) {
-        if (this.isWorldPreview()) {
-            return Collections.singleton(WorldPreview.player);
-        }
-        return original;
-    }
-
     @ModifyExpressionValue(method = "*", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;world:Lnet/minecraft/client/world/ClientWorld;", opcode = Opcodes.GETFIELD))
     private ClientWorld modifyWorld(ClientWorld world) {
         if (this.isWorldPreview()) {

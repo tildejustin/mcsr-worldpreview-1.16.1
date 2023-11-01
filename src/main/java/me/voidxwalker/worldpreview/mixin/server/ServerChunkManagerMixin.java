@@ -4,9 +4,11 @@ import me.voidxwalker.worldpreview.WorldPreview;
 import me.voidxwalker.worldpreview.mixin.access.ClientChunkManagerAccessor;
 import me.voidxwalker.worldpreview.mixin.access.ClientChunkMapAccessor;
 import me.voidxwalker.worldpreview.mixin.access.ThreadedAnvilChunkStorageAccessor;
+import net.minecraft.entity.Entity;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ServerChunkManager;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
+import net.minecraft.util.collection.TypeFilterableList;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.chunk.WorldChunk;
 import org.jetbrains.annotations.Nullable;
@@ -45,6 +47,12 @@ public abstract class ServerChunkManagerMixin {
                         WorldChunk chunk = this.getWorldChunk(pos.x, pos.z);
                         if (chunk != null) {
                             map.callSet(index, chunk);
+                            // TODO: make entities actually render
+                            for (TypeFilterableList<Entity> section : chunk.getEntitySectionArray()) {
+                                for (Entity entity : section.method_29903()) {
+                                    WorldPreview.world.addEntity(entity.getEntityId(), entity);
+                                }
+                            }
                         }
                     }
                 }
