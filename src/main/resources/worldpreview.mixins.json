@@ -23,6 +23,9 @@
     "client.render.LevelLoadingScreenMixin",
     "client.render.LivingEntityRendererMixin",
     "client.render.WorldRendererMixin",
+    "compat.sodium.BuiltChunkStorageAccessor",
+    "compat.sodium.ChunkInfoAccessor",
+    "compat.sodium.WorldRendererMixin",
     "server.MinecraftServerMixin",
     "server.ServerChunkManagerMixin",
     "server.ServerPlayerEntityMixin",
@@ -31,5 +34,6 @@
   ],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "plugin": "me.voidxwalker.worldpreview.WorldPreviewMixinConfigPlugin"
 }

@@ -11,9 +11,9 @@ base {
 }
 
 repositories {
-    maven { url "https://jitpack.io" }
-//    flatDir { dirs "libs" }
-//    mavenLocal()
+    maven {
+        url "https://jitpack.io"
+    }
 }
 
 loom {
@@ -29,6 +29,9 @@ dependencies {
     modImplementation "com.github.KingContaria:SpeedrunAPI:95bbd497f5"
     modImplementation "net.fabricmc.fabric-api:fabric-key-binding-api-v1:1.0.36+fb8d95da77"
     implementation(annotationProcessor "com.github.llamalad7.mixinextras:mixinextras-fabric:0.2.0")
+
+    // Sodium
+    //modImplementation files("libs/sodium-1.16.1-v2.jar") // the jitpack build unfortunately failed
 }
 
 processResources {

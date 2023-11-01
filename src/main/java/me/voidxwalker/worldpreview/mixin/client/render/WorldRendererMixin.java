@@ -23,19 +23,20 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
-@Mixin(WorldRenderer.class)
+// Priority is set to 1500 so the fixWorldPreviewChunkRebuilding mixins don't get applied if sodiums overwrite is present
+@Mixin(value = WorldRenderer.class, priority = 1500)
 public abstract class WorldRendererMixin {
 
     @Shadow
     @Final
     private MinecraftClient client;
 
-    @WrapWithCondition(method = "setupTerrain", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/chunk/ChunkBuilder$BuiltChunk;cancelRebuild()V"))
+    @WrapWithCondition(method = "setupTerrain", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/chunk/ChunkBuilder$BuiltChunk;cancelRebuild()V"), require = 0)
     private boolean fixWorldPreviewChunkRebuilding(ChunkBuilder.BuiltChunk builtChunk) {
         return !this.isWorldPreview();
     }
 
-    @WrapWithCondition(method = "setupTerrain", at = @At(value = "INVOKE", target = "Ljava/util/Set;addAll(Ljava/util/Collection;)Z"))
+    @WrapWithCondition(method = "setupTerrain", at = @At(value = "INVOKE", target = "Ljava/util/Set;addAll(Ljava/util/Collection;)Z"), require = 0)
     private boolean fixWorldPreviewChunkRebuilding(Set<ChunkBuilder.BuiltChunk> set, Collection<ChunkBuilder.BuiltChunk> collection) {
         return !this.isWorldPreview();
     }
