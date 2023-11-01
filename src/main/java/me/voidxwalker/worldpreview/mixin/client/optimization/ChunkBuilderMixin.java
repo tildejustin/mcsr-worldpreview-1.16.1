@@ -24,7 +24,6 @@ public abstract class ChunkBuilderMixin {
     @ModifyVariable(method = "<init>", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/Lists;newArrayListWithExpectedSize(I)Ljava/util/ArrayList;", remap = false), ordinal = 2)
     private int modifyBufferThreads(int threads) {
         if (this.isWorldPreview()) {
-            System.out.println(threads);
             return 1;
         }
         return threads;
