@@ -4,6 +4,7 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import me.voidxwalker.worldpreview.WorldPreview;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
+import net.minecraft.entity.Entity;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,5 +18,13 @@ public abstract class LivingEntityRendererMixin {
             return WorldPreview.player;
         }
         return player;
+    }
+
+    @ModifyExpressionValue(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getCameraEntity()Lnet/minecraft/entity/Entity;"))
+    private Entity modifyCameraEntity(Entity entity) {
+        if (WorldPreview.inPreview) {
+            return WorldPreview.player;
+        }
+        return entity;
     }
 }

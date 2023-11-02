@@ -62,16 +62,8 @@ public class WorldPreview implements ClientModInitializer {
             WorldPreview.camera = camera;
             WorldPreview.gameMode = gameMode;
 
-            if (world != null && player != null && camera != null) {
-                player.chunkX = MathHelper.floor(player.getX() / 16.0);
-                player.chunkY = MathHelper.clamp(MathHelper.floor(player.getY() / 16.0), 0, 16);
-                player.chunkZ = MathHelper.floor(player.getZ() / 16.0);
-
-                // TODO: make the player actually render
+            if (world != null && player != null) {
                 world.addPlayer(player.getEntityId(), player);
-
-                int perspective = MinecraftClient.getInstance().options.perspective;
-                camera.update(world, player, perspective > 0, perspective == 2, 0.0F);
             }
 
             kill = false;

@@ -82,8 +82,13 @@ public abstract class LevelLoadingScreenMixin extends Screen {
         Camera camera = WorldPreview.camera;
         Window window = this.client.getWindow();
 
-        int perspective = this.client.options.perspective;
-        camera.update(WorldPreview.world, WorldPreview.player, perspective > 0, perspective == 2, 0.0F);
+
+        RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
+        RenderSystem.loadIdentity();
+        RenderSystem.ortho(0.0, window.getFramebufferWidth(), window.getFramebufferHeight(), 0.0, 1000.0, 3000.0);
+        RenderSystem.loadIdentity();
+        RenderSystem.translatef(0.0F, 0.0F, 0.0F);
+        DiffuseLighting.disableGuiDepthLighting();
 
         gameRenderer.getLightmapTextureManager().update(0.0F);
         // TODO: get the targeted block outline to render
@@ -93,6 +98,8 @@ public abstract class LevelLoadingScreenMixin extends Screen {
         matrixStack.peek().getModel().multiply(this.worldpreview$getBasicProjectionMatrix(this.client));
         Matrix4f matrix4f = matrixStack.peek().getModel();
         gameRenderer.loadProjectionMatrix(matrix4f);
+        int perspective = this.client.options.perspective;
+        camera.update(WorldPreview.world, WorldPreview.player, perspective > 0, perspective == 2, 0.0F);
         MatrixStack m = new MatrixStack();
         m.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(camera.getPitch()));
         m.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(camera.getYaw() + 180.0F));

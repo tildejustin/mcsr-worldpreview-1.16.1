@@ -34,25 +34,26 @@ public abstract class ServerChunkManagerMixin {
     @Inject(method = "tick()Z", at = @At("TAIL"))
     private void worldpreview$getChunks(CallbackInfoReturnable<Boolean> cir) {
         synchronized (WorldPreview.LOCK) {
-            if (WorldPreview.world != null) {
-                ClientChunkMapAccessor map = (ClientChunkMapAccessor) (Object) Objects.requireNonNull(((ClientChunkManagerAccessor) WorldPreview.world.getChunkManager()).getChunks());
-                for (ChunkHolder holder : ((ThreadedAnvilChunkStorageAccessor) this.threadedAnvilChunkStorage).getChunkHolders().values()) {
-                    if (holder == null) {
-                        // idk if this ever happens, but it was in the original WorldPreview, and I'd rather not break this
-                        continue;
-                    }
-                    ChunkPos pos = holder.getPos();
-                    int index = map.callGetIndex(pos.x, pos.z);
-                    if (map.callGetChunk(index) == null) {
-                        WorldChunk chunk = this.getWorldChunk(pos.x, pos.z);
-                        if (chunk != null) {
-                            map.callSet(index, chunk);
-                            // TODO: make entities actually render
-                            for (TypeFilterableList<Entity> section : chunk.getEntitySectionArray()) {
-                                for (Entity entity : section.method_29903()) {
-                                    WorldPreview.world.addEntity(entity.getEntityId(), entity);
-                                }
-                            }
+            if (WorldPreview.world == null) {
+                return;
+            }
+            ClientChunkMapAccessor map = (ClientChunkMapAccessor) (Object) Objects.requireNonNull(((ClientChunkManagerAccessor) WorldPreview.world.getChunkManager()).getChunks());
+            for (ChunkHolder holder : ((ThreadedAnvilChunkStorageAccessor) this.threadedAnvilChunkStorage).getChunkHolders().values()) {
+                if (holder == null) {
+                    // idk if this ever happens, but it was in the original WorldPreview, and I'd rather not break this
+                    continue;
+                }
+                ChunkPos pos = holder.getPos();
+                int index = map.callGetIndex(pos.x, pos.z);
+                if (map.callGetChunk(index) != null) {
+                    continue;
+                }
+                WorldChunk chunk = this.getWorldChunk(pos.x, pos.z);
+                if (chunk != null) {
+                    map.callSet(index, chunk);
+                    for (TypeFilterableList<Entity> section : chunk.getEntitySectionArray()) {
+                        for (Entity entity : section.method_29903()) {
+                            WorldPreview.world.addEntity(entity.getEntityId(), entity);
                         }
                     }
                 }
