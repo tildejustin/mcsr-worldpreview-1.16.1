@@ -172,8 +172,11 @@ public abstract class LevelLoadingScreenMixin extends Screen {
     @Override
     public void removed() {
         WorldPreview.clear();
+
         WorldPreview.kill = false;
         WorldPreview.inPreview = false;
         WorldPreview.renderingPreview = false;
+
+        WorldPreview.worldRenderer.setWorld(null);
     }
 }
