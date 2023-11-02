@@ -90,8 +90,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
         DiffuseLighting.disableGuiDepthLighting();
 
         gameRenderer.getLightmapTextureManager().update(0.0F);
-        // TODO: get the targeted block outline to render
-        //gameRenderer.updateTargetedEntity(0.0F);
+        gameRenderer.updateTargetedEntity(0.0F);
 
         MatrixStack matrixStack = new MatrixStack();
         matrixStack.peek().getModel().multiply(this.worldpreview$getBasicProjectionMatrix(this.client));
@@ -102,10 +101,13 @@ public abstract class LevelLoadingScreenMixin extends Screen {
         MatrixStack m = new MatrixStack();
         m.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(camera.getPitch()));
         m.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(camera.getYaw() + 180.0F));
+
         worldRenderer.render(m, 0.0F, 1000000, ((GameRendererAccessor) gameRenderer).callShouldRenderBlockOutline(), camera, gameRenderer, gameRenderer.getLightmapTextureManager(), matrix4f);
         RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
         ((GameRendererAccessor) gameRenderer).callRenderHand(matrices, camera, 0.0F);
+
         worldRenderer.drawEntityOutlinesFramebuffer();
+
         RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
         RenderSystem.matrixMode(5889);
         RenderSystem.loadIdentity();
@@ -115,7 +117,9 @@ public abstract class LevelLoadingScreenMixin extends Screen {
         RenderSystem.translatef(0.0F, 0.0F, -2000.0F);
         DiffuseLighting.enableGuiDepthLighting();
         RenderSystem.defaultAlphaFunc();
+
         this.client.inGameHud.render(matrices, 0.0F);
+
         RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
 
         this.worldpreview$renderPauseMenu(matrices, mouseX, mouseY, delta);
