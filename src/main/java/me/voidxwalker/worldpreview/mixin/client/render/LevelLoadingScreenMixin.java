@@ -3,6 +3,7 @@ package me.voidxwalker.worldpreview.mixin.client.render;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.voidxwalker.worldpreview.WorldPreview;
+import me.voidxwalker.worldpreview.mixin.access.PlayerEntityAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.LevelLoadingScreen;
 import net.minecraft.client.gui.screen.Screen;
@@ -13,6 +14,7 @@ import net.minecraft.client.util.Window;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Util;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -71,6 +73,9 @@ public abstract class LevelLoadingScreenMixin extends Screen {
 
         assert this.client != null;
 
+        // clip the player into swimming/crawling mode if necessary
+        ((PlayerEntityAccessor) WorldPreview.player).callUpdateSize();
+
         Window window = this.client.getWindow();
 
         RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
@@ -80,7 +85,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
         RenderSystem.translatef(0.0F, 0.0F, 0.0F);
         DiffuseLighting.disableGuiDepthLighting();
 
-        this.client.gameRenderer.renderWorld(0.0F, 1000000, new MatrixStack());
+        this.client.gameRenderer.renderWorld(0.0F, Util.getMeasuringTimeNano(), new MatrixStack());
         WorldPreview.worldRenderer.drawEntityOutlinesFramebuffer();
 
         RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
