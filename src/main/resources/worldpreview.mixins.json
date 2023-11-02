@@ -6,7 +6,6 @@
   "client": [
     "access.ClientChunkManagerAccessor",
     "access.ClientChunkMapAccessor",
-    "access.GameRendererAccessor",
     "access.SerializingRegionBasedStorageAccessor",
     "access.SpawnLocatingAccessor",
     "access.ThreadedAnvilChunkStorageAccessor",
