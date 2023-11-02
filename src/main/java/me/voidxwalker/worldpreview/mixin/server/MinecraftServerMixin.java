@@ -11,9 +11,11 @@ import me.voidxwalker.worldpreview.interfaces.WPMinecraftServer;
 import me.voidxwalker.worldpreview.mixin.access.SpawnLocatingAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.world.ServerWorld;
@@ -80,10 +82,19 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
                     false,
                     false
             );
+            Camera camera = new Camera();
+            PlayerListEntry playerListEntry = new PlayerListEntry(
+                    new PlayerListS2CPacket().new Entry(
+                            WorldPreview.DUMMY_NETWORK_HANDLER.getProfile(),
+                            0,
+                            this.getDefaultGameMode(),
+                            player.getDisplayName()
+                    )
+            );
 
             this.spawnPos = this.worldpreview$calculateSpawn(serverWorld, player);
 
-            WorldPreview.configure(world, player, new Camera(), this.getDefaultGameMode());
+            WorldPreview.configure(world, player, camera, playerListEntry);
         }
         return serverWorld;
     }

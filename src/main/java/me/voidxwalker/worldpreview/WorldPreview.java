@@ -1,18 +1,20 @@
 package me.voidxwalker.worldpreview;
 
+import me.voidxwalker.worldpreview.mixin.access.PlayerEntityAccessor;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
+import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.WorldRenderer;
+import net.minecraft.client.render.entity.PlayerModelPart;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.GameMode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
@@ -29,7 +31,7 @@ public class WorldPreview implements ClientModInitializer {
     public static ClientPlayerEntity player;
     public static ClientWorld world;
     public static Camera camera;
-    public static GameMode gameMode;
+    public static PlayerListEntry playerListEntry;
 
     public static boolean inPreview;
     public static boolean renderingPreview;
@@ -55,17 +57,27 @@ public class WorldPreview implements ClientModInitializer {
         ));
     }
 
-    public static void configure(ClientWorld world, ClientPlayerEntity player, Camera camera, GameMode gameMode) {
+    public static void configure(ClientWorld world, ClientPlayerEntity player, Camera camera, PlayerListEntry playerListEntry) {
         synchronized (LOCK) {
             WorldPreview.world = world;
             WorldPreview.player = player;
             WorldPreview.camera = camera;
-            WorldPreview.gameMode = gameMode;
+            WorldPreview.playerListEntry = playerListEntry;
 
             if (world != null && player != null) {
                 player.chunkX = MathHelper.floor(player.getX() / 16.0);
                 player.chunkY = MathHelper.clamp(MathHelper.floor(player.getY() / 16.0), 0, 16);
                 player.chunkZ = MathHelper.floor(player.getZ() / 16.0);
+
+                int playerModelPartsBitMask = 0;
+                for (PlayerModelPart playerModelPart : MinecraftClient.getInstance().options.getEnabledPlayerModelParts()) {
+                    playerModelPartsBitMask |= playerModelPart.getBitFlag();
+                }
+                player.getDataTracker().set(PlayerEntityAccessor.getPLAYER_MODEL_PARTS(), (byte) playerModelPartsBitMask);
+
+                player.prevCapeX = player.capeX = player.getX();
+                player.prevCapeY = player.capeY = player.getY();
+                player.prevCapeZ = player.capeZ = player.getZ();
 
                 world.addPlayer(player.getEntityId(), player);
             }

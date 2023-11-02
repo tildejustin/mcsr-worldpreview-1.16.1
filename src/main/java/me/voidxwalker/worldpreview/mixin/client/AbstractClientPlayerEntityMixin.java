@@ -1,18 +1,24 @@
 package me.voidxwalker.worldpreview.mixin.client;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.mojang.authlib.GameProfile;
 import me.voidxwalker.worldpreview.WorldPreview;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.world.GameMode;
+import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(AbstractClientPlayerEntity.class)
-public abstract class AbstractClientPlayerEntityMixin {
+public abstract class AbstractClientPlayerEntityMixin extends PlayerEntity {
+
+    public AbstractClientPlayerEntityMixin(World world, BlockPos blockPos, GameProfile gameProfile) {
+        super(world, blockPos, gameProfile);
+    }
 
     @ModifyExpressionValue(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getNetworkHandler()Lnet/minecraft/client/network/ClientPlayNetworkHandler;"))
     private ClientPlayNetworkHandler modifyNetworkHandler(ClientPlayNetworkHandler networkHandler) {
@@ -22,18 +28,12 @@ public abstract class AbstractClientPlayerEntityMixin {
         return networkHandler;
     }
 
-    @Inject(method = "isSpectator", at = @At("HEAD"), cancellable = true)
-    private void modifyIsSpectator(CallbackInfoReturnable<Boolean> cir) {
+    @ModifyExpressionValue(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayNetworkHandler;getPlayerListEntry(Ljava/util/UUID;)Lnet/minecraft/client/network/PlayerListEntry;"))
+    private PlayerListEntry modifyPlayerListEntry(PlayerListEntry playerListEntry) {
         if (this.isWorldPreview()) {
-            cir.setReturnValue(GameMode.SPECTATOR == WorldPreview.gameMode);
+            return WorldPreview.playerListEntry;
         }
-    }
-
-    @Inject(method = "isCreative", at = @At("HEAD"), cancellable = true)
-    private void modifyIsCreative(CallbackInfoReturnable<Boolean> cir) {
-        if (this.isWorldPreview()) {
-            cir.setReturnValue(GameMode.CREATIVE == WorldPreview.gameMode);
-        }
+        return playerListEntry;
     }
 
     @Unique

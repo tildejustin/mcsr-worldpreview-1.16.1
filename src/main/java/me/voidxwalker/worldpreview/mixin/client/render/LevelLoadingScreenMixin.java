@@ -56,7 +56,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
     private void renderWorldPreview(MatrixStack matrices, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (!WorldPreview.inPreview) {
             synchronized (WorldPreview.LOCK) {
-                WorldPreview.inPreview = WorldPreview.world != null && WorldPreview.player != null && WorldPreview.camera != null && WorldPreview.gameMode != null;
+                WorldPreview.inPreview = WorldPreview.world != null && WorldPreview.player != null && WorldPreview.camera != null && WorldPreview.playerListEntry != null;
 
                 if (WorldPreview.inPreview) {
                     WorldPreview.worldRenderer.setWorld(WorldPreview.world);

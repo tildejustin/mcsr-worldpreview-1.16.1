@@ -6,6 +6,7 @@
   "client": [
     "access.ClientChunkManagerAccessor",
     "access.ClientChunkMapAccessor",
+    "access.PlayerEntityAccessor",
     "access.SerializingRegionBasedStorageAccessor",
     "access.SpawnLocatingAccessor",
     "access.ThreadedAnvilChunkStorageAccessor",
@@ -14,6 +15,7 @@
     "client.CameraMixin",
     "client.ClientPlayerInteractionManagerMixin",
     "client.MinecraftClientMixin",
+    "client.PlayerListEntryMixin",
     "client.optimization.ChunkBuilderMixin",
     "client.render.GameRendererMixin",
     "client.render.HeldItemRendererMixin",

@@ -33,7 +33,7 @@ public abstract class ClientPlayerInteractionManagerMixin {
     @ModifyExpressionValue(method = "*", at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;gameMode:Lnet/minecraft/world/GameMode;", opcode = Opcodes.GETFIELD))
     private GameMode modifyGameMode(GameMode gameMode) {
         if (this.isWorldPreview()) {
-            return WorldPreview.gameMode;
+            return WorldPreview.playerListEntry.getGameMode();
         }
         return gameMode;
     }
