@@ -5,11 +5,8 @@ import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import me.voidxwalker.worldpreview.WorldPreview;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.chunk.ChunkBuilder;
-import net.minecraft.client.render.debug.DebugRenderer;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import org.objectweb.asm.Opcodes;
@@ -20,7 +17,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Set;
 
 // Priority is set to 1500 so the fixWorldPreviewChunkRebuilding mixins don't get applied if sodiums overwrite is present
@@ -47,12 +43,6 @@ public abstract class WorldRendererMixin {
             return this.client.options.viewDistance * 16;
         }
         return original;
-    }
-
-    // TODO: removing this doesn't crash, but chunkborders just don't render
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/debug/DebugRenderer;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;DDD)V"))
-    private boolean stopDebugRenderer(DebugRenderer instance, MatrixStack matrices, VertexConsumerProvider.Immediate vertexConsumers, double cameraX, double cameraY, double cameraZ) {
-        return !this.isWorldPreview();
     }
 
     @ModifyExpressionValue(method = "*", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;world:Lnet/minecraft/client/world/ClientWorld;", opcode = Opcodes.GETFIELD))

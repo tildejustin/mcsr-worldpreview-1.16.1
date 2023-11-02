@@ -63,6 +63,10 @@ public class WorldPreview implements ClientModInitializer {
             WorldPreview.gameMode = gameMode;
 
             if (world != null && player != null) {
+                player.chunkX = MathHelper.floor(player.getX() / 16.0);
+                player.chunkY = MathHelper.clamp(MathHelper.floor(player.getY() / 16.0), 0, 16);
+                player.chunkZ = MathHelper.floor(player.getZ() / 16.0);
+
                 world.addPlayer(player.getEntityId(), player);
             }
 

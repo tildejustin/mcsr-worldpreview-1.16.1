@@ -82,7 +82,6 @@ public abstract class LevelLoadingScreenMixin extends Screen {
         Camera camera = WorldPreview.camera;
         Window window = this.client.getWindow();
 
-
         RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
         RenderSystem.loadIdentity();
         RenderSystem.ortho(0.0, window.getFramebufferWidth(), window.getFramebufferHeight(), 0.0, 1000.0, 3000.0);
@@ -105,7 +104,6 @@ public abstract class LevelLoadingScreenMixin extends Screen {
         m.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(camera.getYaw() + 180.0F));
         worldRenderer.render(m, 0.0F, 1000000, ((GameRendererAccessor) gameRenderer).callShouldRenderBlockOutline(), camera, gameRenderer, gameRenderer.getLightmapTextureManager(), matrix4f);
         RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
-        // TODO: get the hand to actually render (this call does render some other stuff as well, so it's not useless right now)
         ((GameRendererAccessor) gameRenderer).callRenderHand(matrices, camera, 0.0F);
         worldRenderer.drawEntityOutlinesFramebuffer();
         RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
