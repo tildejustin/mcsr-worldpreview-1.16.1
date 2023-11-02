@@ -57,36 +57,40 @@ public class WorldPreview implements ClientModInitializer {
         ));
     }
 
-    public static void configure(ClientWorld world, ClientPlayerEntity player, Camera camera, PlayerListEntry playerListEntry) {
+    public static void set(ClientWorld world, ClientPlayerEntity player, Camera camera, PlayerListEntry playerListEntry) {
         synchronized (LOCK) {
             WorldPreview.world = world;
             WorldPreview.player = player;
             WorldPreview.camera = camera;
             WorldPreview.playerListEntry = playerListEntry;
+        }
+    }
 
-            if (world != null && player != null) {
-                player.chunkX = MathHelper.floor(player.getX() / 16.0);
-                player.chunkY = MathHelper.clamp(MathHelper.floor(player.getY() / 16.0), 0, 16);
-                player.chunkZ = MathHelper.floor(player.getZ() / 16.0);
+    public static void configure(ClientWorld world, ClientPlayerEntity player, Camera camera, PlayerListEntry playerListEntry) {
+        synchronized (LOCK) {
+            set(world, player, camera, playerListEntry);
 
-                int playerModelPartsBitMask = 0;
-                for (PlayerModelPart playerModelPart : MinecraftClient.getInstance().options.getEnabledPlayerModelParts()) {
-                    playerModelPartsBitMask |= playerModelPart.getBitFlag();
-                }
-                player.getDataTracker().set(PlayerEntityAccessor.getPLAYER_MODEL_PARTS(), (byte) playerModelPartsBitMask);
+            player.chunkX = MathHelper.floor(player.getX() / 16.0);
+            player.chunkY = MathHelper.clamp(MathHelper.floor(player.getY() / 16.0), 0, 16);
+            player.chunkZ = MathHelper.floor(player.getZ() / 16.0);
 
-                player.prevCapeX = player.capeX = player.getX();
-                player.prevCapeY = player.capeY = player.getY();
-                player.prevCapeZ = player.capeZ = player.getZ();
-
-                world.addPlayer(player.getEntityId(), player);
+            int playerModelPartsBitMask = 0;
+            for (PlayerModelPart playerModelPart : MinecraftClient.getInstance().options.getEnabledPlayerModelParts()) {
+                playerModelPartsBitMask |= playerModelPart.getBitFlag();
             }
+            player.getDataTracker().set(PlayerEntityAccessor.getPLAYER_MODEL_PARTS(), (byte) playerModelPartsBitMask);
+
+            player.prevCapeX = player.capeX = player.getX();
+            player.prevCapeY = player.capeY = player.getY();
+            player.prevCapeZ = player.capeZ = player.getZ();
+
+            world.addPlayer(player.getEntityId(), player);
 
             kill = false;
         }
     }
 
     public static void clear() {
-        configure(null, null, null, null);
+        set(null, null, null, null);
     }
 }
