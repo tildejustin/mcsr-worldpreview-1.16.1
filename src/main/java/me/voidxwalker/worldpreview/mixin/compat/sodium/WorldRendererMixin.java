@@ -128,6 +128,7 @@ public abstract class WorldRendererMixin {
         if (!this.isWorldPreview()) {
             return;
         }
+        ci.cancel();
         
         Vec3d vec3d = camera.getPos();
         if (this.client.options.viewDistance != this.renderDistance) {
@@ -228,8 +229,6 @@ public abstract class WorldRendererMixin {
         // WorldRendererMixin#fixWorldPreviewChunkRebuilding
         //this.chunksToRebuild.addAll(set);
         this.client.getProfiler().pop();
-
-        ci.cancel();
     }
 
     @Inject(method = "renderLayer", at = @At("HEAD"), cancellable = true)
@@ -237,6 +236,7 @@ public abstract class WorldRendererMixin {
         if (!this.isWorldPreview()) {
             return;
         }
+        ci.cancel();
 
         renderLayer.startDrawing();
         if (renderLayer == RenderLayer.getTranslucent()) {
@@ -278,8 +278,6 @@ public abstract class WorldRendererMixin {
         this.vertexFormat.endDrawing();
         this.client.getProfiler().pop();
         renderLayer.endDrawing();
-
-        ci.cancel();
     }
 
     @Unique

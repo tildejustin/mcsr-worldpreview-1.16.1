@@ -3,22 +3,16 @@ package me.voidxwalker.worldpreview.mixin.client.render;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.voidxwalker.worldpreview.WorldPreview;
-import me.voidxwalker.worldpreview.mixin.access.GameRendererAccessor;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.LevelLoadingScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.DiffuseLighting;
-import net.minecraft.client.render.GameRenderer;
-import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
-import net.minecraft.util.math.Matrix4f;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -77,9 +71,6 @@ public abstract class LevelLoadingScreenMixin extends Screen {
 
         assert this.client != null;
 
-        GameRenderer gameRenderer = this.client.gameRenderer;
-        WorldRenderer worldRenderer = WorldPreview.worldRenderer;
-        Camera camera = WorldPreview.camera;
         Window window = this.client.getWindow();
 
         RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
@@ -89,24 +80,8 @@ public abstract class LevelLoadingScreenMixin extends Screen {
         RenderSystem.translatef(0.0F, 0.0F, 0.0F);
         DiffuseLighting.disableGuiDepthLighting();
 
-        gameRenderer.getLightmapTextureManager().update(0.0F);
-        gameRenderer.updateTargetedEntity(0.0F);
-
-        MatrixStack matrixStack = new MatrixStack();
-        matrixStack.peek().getModel().multiply(this.worldpreview$getBasicProjectionMatrix(this.client));
-        Matrix4f matrix4f = matrixStack.peek().getModel();
-        gameRenderer.loadProjectionMatrix(matrix4f);
-        int perspective = this.client.options.perspective;
-        camera.update(WorldPreview.world, WorldPreview.player, perspective > 0, perspective == 2, 0.0F);
-        MatrixStack m = new MatrixStack();
-        m.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(camera.getPitch()));
-        m.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(camera.getYaw() + 180.0F));
-
-        worldRenderer.render(m, 0.0F, 1000000, ((GameRendererAccessor) gameRenderer).callShouldRenderBlockOutline(), camera, gameRenderer, gameRenderer.getLightmapTextureManager(), matrix4f);
-        RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
-        ((GameRendererAccessor) gameRenderer).callRenderHand(matrices, camera, 0.0F);
-
-        worldRenderer.drawEntityOutlinesFramebuffer();
+        this.client.gameRenderer.renderWorld(0.0F, 1000000, new MatrixStack());
+        WorldPreview.worldRenderer.drawEntityOutlinesFramebuffer();
 
         RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
         RenderSystem.matrixMode(5889);
@@ -133,14 +108,6 @@ public abstract class LevelLoadingScreenMixin extends Screen {
         } else {
             this.drawCenteredText(matrices, this.textRenderer, new TranslatableText("menu.paused"), this.width / 2, 10, 16777215);
         }
-    }
-
-    @Unique
-    private Matrix4f worldpreview$getBasicProjectionMatrix(MinecraftClient client) {
-        MatrixStack matrixStack = new MatrixStack();
-        matrixStack.peek().getModel().loadIdentity();
-        matrixStack.peek().getModel().multiply(Matrix4f.viewboxMatrix(client.options.fov, (float) client.getWindow().getFramebufferWidth() / (float) client.getWindow().getFramebufferHeight(), 0.05F, client.options.viewDistance * 16 * 4.0F));
-        return matrixStack.peek().getModel();
     }
 
     @Unique

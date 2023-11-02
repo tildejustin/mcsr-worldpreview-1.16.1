@@ -3,16 +3,13 @@ package me.voidxwalker.worldpreview.mixin.client.render;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import me.voidxwalker.worldpreview.WorldPreview;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.chunk.ChunkBuilder;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import org.objectweb.asm.Opcodes;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -23,10 +20,6 @@ import java.util.Set;
 @Mixin(value = WorldRenderer.class, priority = 1500)
 public abstract class WorldRendererMixin {
 
-    @Shadow
-    @Final
-    private MinecraftClient client;
-
     @WrapWithCondition(method = "setupTerrain", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/chunk/ChunkBuilder$BuiltChunk;cancelRebuild()V"), require = 0)
     private boolean fixWorldPreviewChunkRebuilding(ChunkBuilder.BuiltChunk builtChunk) {
         return !this.isWorldPreview();
@@ -35,14 +28,6 @@ public abstract class WorldRendererMixin {
     @WrapWithCondition(method = "setupTerrain", at = @At(value = "INVOKE", target = "Ljava/util/Set;addAll(Ljava/util/Collection;)Z"), require = 0)
     private boolean fixWorldPreviewChunkRebuilding(Set<ChunkBuilder.BuiltChunk> set, Collection<ChunkBuilder.BuiltChunk> collection) {
         return !this.isWorldPreview();
-    }
-
-    @ModifyExpressionValue(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/GameRenderer;getViewDistance()F"))
-    private float modifyViewDistance(float original) {
-        if (this.isWorldPreview()) {
-            return this.client.options.viewDistance * 16;
-        }
-        return original;
     }
 
     @ModifyExpressionValue(method = "*", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;world:Lnet/minecraft/client/world/ClientWorld;", opcode = Opcodes.GETFIELD))
