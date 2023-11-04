@@ -191,11 +191,12 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
     }
 
     @Override
-    public synchronized void worldpreview$kill() {
+    public synchronized boolean worldpreview$kill() {
         if (this.tooLateToKill) {
-            return;
+            return false;
         }
         this.killed = true;
+        return true;
     }
 
     @Override

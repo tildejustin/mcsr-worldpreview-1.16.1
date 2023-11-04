@@ -59,8 +59,10 @@ public abstract class MinecraftClientMixin {
     @Inject(method = "startIntegratedServer(Ljava/lang/String;Lnet/minecraft/util/registry/RegistryTracker$Modifiable;Ljava/util/function/Function;Lcom/mojang/datafixers/util/Function4;ZLnet/minecraft/client/MinecraftClient$WorldLoadAction;)V", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/integrated/IntegratedServer;isLoading()Z"), cancellable = true)
     private void resetPreview(CallbackInfo ci) {
         if (WorldPreview.inPreview && WorldPreview.kill && this.server != null) {
+            if (!((WPMinecraftServer) this.server).worldpreview$kill()) {
+                return;
+            }
             WorldPreview.LOGGER.info("Leaving world generation");
-            ((WPMinecraftServer) this.server).worldpreview$kill();
             this.disconnect();
             this.openScreen(new TitleScreen());
             ci.cancel();
