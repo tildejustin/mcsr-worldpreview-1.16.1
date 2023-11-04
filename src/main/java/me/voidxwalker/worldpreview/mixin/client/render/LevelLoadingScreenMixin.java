@@ -61,6 +61,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
                 WorldPreview.inPreview = WorldPreview.world != null && WorldPreview.player != null && WorldPreview.camera != null && WorldPreview.playerListEntry != null;
 
                 if (WorldPreview.inPreview) {
+                    // we set the worldRenderer here instead of WorldPreview#configure because doing it from the server thread can cause issues
                     WorldPreview.worldRenderer.setWorld(WorldPreview.world);
                     WorldPreview.renderingPreview = false;
                 }
@@ -137,6 +138,9 @@ public abstract class LevelLoadingScreenMixin extends Screen {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
+        }
+        if (!WorldPreview.inPreview) {
+            return false;
         }
         if (keyCode == GLFW.GLFW_KEY_ESCAPE) {
             if (this.showMenu) {
