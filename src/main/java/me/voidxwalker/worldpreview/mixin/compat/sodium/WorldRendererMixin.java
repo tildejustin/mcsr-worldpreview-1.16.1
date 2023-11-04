@@ -18,10 +18,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
@@ -29,8 +26,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.*;
 
-@SuppressWarnings("deprecation")
-@Mixin(WorldRenderer.class)
+// we set the priority to 500 so our "doNotSetSodiumRendererToNull" inject gets injected in front of sodiums inject
+@Mixin(value = WorldRenderer.class, priority = 500)
 public abstract class WorldRendererMixin {
 
     @Shadow
@@ -231,6 +228,7 @@ public abstract class WorldRendererMixin {
         this.client.getProfiler().pop();
     }
 
+    @SuppressWarnings("deprecation")
     @Inject(method = "renderLayer", at = @At("HEAD"), cancellable = true)
     private void useVanillaRenderLayer(RenderLayer renderLayer, MatrixStack matrixStack, double d, double e, double f, CallbackInfo ci) {
         if (!this.isWorldPreview()) {
@@ -278,6 +276,14 @@ public abstract class WorldRendererMixin {
         this.vertexFormat.endDrawing();
         this.client.getProfiler().pop();
         renderLayer.endDrawing();
+    }
+
+    // this cancels sodiums "onWorldChanged" inject when the worldpreview worldrenderer gets reset while the vanilla worldrenderer is active
+    @Inject(method = "setWorld", at = @At("RETURN"), cancellable = true)
+    private void doNotSetSodiumRendererToNull(ClientWorld clientWorld, CallbackInfo ci) {
+        if (this.isWorldPreview() && this.client.world != null && clientWorld == null) {
+            ci.cancel();
+        }
     }
 
     @Unique
