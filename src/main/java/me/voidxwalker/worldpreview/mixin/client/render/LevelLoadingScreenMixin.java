@@ -68,7 +68,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
             }
         }
 
-        if (!WorldPreview.inPreview || this.freezePreview) {
+        if (!WorldPreview.inPreview || WorldPreview.kill || this.freezePreview) {
             return;
         }
 
