@@ -37,15 +37,12 @@ import java.util.Random;
 @Mixin(MinecraftServer.class)
 public abstract class MinecraftServerMixin implements WPMinecraftServer {
 
-    @Shadow
-    private volatile boolean loading;
-
     @Unique
     private Integer spawnPos;
     @Unique
     private volatile boolean killed;
     @Unique
-    private boolean tooLateToKill;
+    private volatile boolean tooLateToKill;
     @Unique
     private volatile boolean isNewWorld;
 
@@ -111,15 +108,10 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
         return shouldKeepTicking && !this.killed;
     }
 
-    @ModifyExpressionValue(method = "runServer", at = @At(value = "FIELD", target = "Lnet/minecraft/server/MinecraftServer;running:Z"))
-    private synchronized boolean killServer(boolean running) {
-        if (!this.loading) {
-            if (this.killed) {
-                return false;
-            }
-            this.tooLateToKill = true;
-        }
-        return running;
+    @ModifyExpressionValue(method = "runServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;setupServer()Z"))
+    private synchronized boolean killServer(boolean original) {
+        this.tooLateToKill = true;
+        return original && !this.killed;
     }
 
     @ModifyExpressionValue(method = "shutdown", at = @At(value = "FIELD", target = "Lnet/minecraft/server/MinecraftServer;playerManager:Lnet/minecraft/server/PlayerManager;", ordinal = 0))
