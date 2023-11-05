@@ -51,6 +51,7 @@ public abstract class ServerChunkManagerMixin {
                 WorldChunk chunk = this.getWorldChunk(pos.x, pos.z);
                 if (chunk != null) {
                     map.callSet(index, chunk);
+                    WorldPreview.world.resetChunkColor(pos.x, pos.z);
                     for (TypeFilterableList<Entity> section : chunk.getEntitySectionArray()) {
                         for (Entity entity : section.method_29903()) {
                             WorldPreview.world.addEntity(entity.getEntityId(), entity);
