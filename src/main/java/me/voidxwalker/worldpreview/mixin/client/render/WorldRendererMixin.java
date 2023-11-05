@@ -68,7 +68,10 @@ public abstract class WorldRendererMixin {
     // fixes threading concurrency issues with adding entities to the world while rendering
     @ModifyExpressionValue(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld;getEntities()Ljava/lang/Iterable;"))
     private Iterable<Entity> fixEntityIteration(Iterable<Entity> entities) {
-        return ImmutableSet.copyOf(entities);
+        if (this.isWorldPreview()) {
+            return ImmutableSet.copyOf(entities);
+        }
+        return entities;
     }
 
     // fixes an issue where the vanilla WorldRenderer gets loaded while still in Preview,
