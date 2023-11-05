@@ -64,6 +64,8 @@ public abstract class LevelLoadingScreenMixin extends Screen {
                     // we set the worldRenderer here instead of WorldPreview#configure because doing it from the server thread can cause issues
                     WorldPreview.worldRenderer.setWorld(WorldPreview.world);
                     WorldPreview.renderingPreview = false;
+
+                    this.worldpreview$updatePauseMenuWidgets();
                 }
             }
         }
@@ -111,17 +113,17 @@ public abstract class LevelLoadingScreenMixin extends Screen {
     private void worldpreview$renderPauseMenu(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         if (this.showMenu) {
             this.fillGradient(matrices, 0, 0, this.width, this.height, -1072689136, -804253680);
-            super.render(matrices, mouseX, mouseY, delta);
         } else {
             this.drawCenteredText(matrices, this.textRenderer, new TranslatableText("menu.paused"), this.width / 2, 10, 16777215);
         }
+        super.render(matrices, mouseX, mouseY, delta);
     }
 
     @Unique
     private void worldpreview$initPauseMenuWidgets() {
         this.addButton(new ButtonWidget(this.width / 2 - 102, this.height / 4 + 24 - 16, 204, 20, new TranslatableText("menu.returnToGame"), button -> {
             this.showMenu = false;
-            this.children.clear();
+            this.worldpreview$updatePauseMenuWidgets();
         }));
         this.addButton(new ButtonWidget(this.width / 2 - 102, this.height / 4 + 48 - 16, 98, 20, new TranslatableText("gui.advancements"), NO_OP));
         this.addButton(new ButtonWidget(this.width / 2 + 4, this.height / 4 + 48 - 16, 98, 20, new TranslatableText("gui.stats"), NO_OP));
@@ -133,6 +135,11 @@ public abstract class LevelLoadingScreenMixin extends Screen {
             WorldPreview.kill = true;
             button.active = false;
         }));
+    }
+
+    @Unique
+    private void worldpreview$updatePauseMenuWidgets() {
+        this.children.stream().filter(e -> e instanceof ButtonWidget).forEach(e -> ((ButtonWidget) e).visible = this.showMenu && WorldPreview.inPreview);
     }
 
     @Override
@@ -147,12 +154,11 @@ public abstract class LevelLoadingScreenMixin extends Screen {
             if (this.showMenu) {
                 if (InputUtil.isKeyPressed(MinecraftClient.getInstance().getWindow().getHandle(), GLFW.GLFW_KEY_F3)) {
                     this.showMenu = false;
-                    this.children.clear();
                 }
             } else {
                 this.showMenu = true;
-                this.worldpreview$initPauseMenuWidgets();
             }
+            this.worldpreview$updatePauseMenuWidgets();
             return true;
         }
         if (WorldPreview.freezeKey.matchesKey(keyCode, scanCode)) {
@@ -168,10 +174,8 @@ public abstract class LevelLoadingScreenMixin extends Screen {
 
     @Override
     protected void init() {
-        super.init();
-        if (this.showMenu) {
-            this.worldpreview$initPauseMenuWidgets();
-        }
+        this.worldpreview$initPauseMenuWidgets();
+        this.worldpreview$updatePauseMenuWidgets();
     }
 
     @Override
