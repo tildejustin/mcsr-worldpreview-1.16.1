@@ -109,8 +109,8 @@ public abstract class WorldRendererMixin {
     @Shadow
     public abstract void reload();
 
-    @Shadow @Nullable
-    protected abstract ChunkBuilder.BuiltChunk getAdjacentChunk(BlockPos pos, ChunkBuilder.BuiltChunk chunk, Direction direction);
+    @Shadow
+    protected abstract @Nullable ChunkBuilder.BuiltChunk getAdjacentChunk(BlockPos pos, ChunkBuilder.BuiltChunk chunk, Direction direction);
 
     @ModifyArg(method = "reload", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/BuiltChunkStorage;<init>(Lnet/minecraft/client/render/chunk/ChunkBuilder;Lnet/minecraft/world/World;ILnet/minecraft/client/render/WorldRenderer;)V"), index = 2)
     private int useVanillaBuiltChunkStorage(int viewDistance) {

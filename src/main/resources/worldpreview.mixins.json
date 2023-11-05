@@ -22,6 +22,7 @@
     "client.render.InGameHudMixin",
     "client.render.InGameOverlayRendererMixin",
     "client.render.LevelLoadingScreenMixin",
+    "client.render.LightmapTextureManagerMixin",
     "client.render.LivingEntityRendererMixin",
     "client.render.WorldRendererMixin",
     "compat.sodium.BuiltChunkStorageAccessor",

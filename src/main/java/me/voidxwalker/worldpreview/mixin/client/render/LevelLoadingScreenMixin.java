@@ -86,6 +86,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
         RenderSystem.translatef(0.0F, 0.0F, 0.0F);
         DiffuseLighting.disableGuiDepthLighting();
 
+        this.client.gameRenderer.getLightmapTextureManager().tick();
         this.client.gameRenderer.renderWorld(0.0F, Util.getMeasuringTimeNano(), new MatrixStack());
         WorldPreview.worldRenderer.drawEntityOutlinesFramebuffer();
 
