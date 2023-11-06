@@ -86,6 +86,8 @@ public class WorldPreview implements ClientModInitializer {
 
             world.addPlayer(player.getEntityId(), player);
 
+            world.getChunkManager().setChunkMapCenter(player.chunkX, player.chunkZ);
+
             kill = false;
         }
     }
