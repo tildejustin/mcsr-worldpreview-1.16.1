@@ -8,6 +8,7 @@ import me.voidxwalker.worldpreview.WorldPreview;
 import me.voidxwalker.worldpreview.interfaces.WPMinecraftServer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.LevelLoadingScreen;
+import net.minecraft.client.gui.screen.ProgressScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.render.BufferBuilderStorage;
@@ -49,8 +50,6 @@ public abstract class MinecraftClientMixin {
     @Shadow
     public abstract void openScreen(@Nullable Screen screen);
 
-    @Shadow private volatile boolean running;
-
     @ModifyReturnValue(method = "isFabulousGraphicsOrBetter", at = @At("RETURN"))
     private static boolean stopFabulousDuringPreview(boolean isFabulousGraphicsOrBetter) {
         return isFabulousGraphicsOrBetter && !WorldPreview.inPreview;
@@ -77,7 +76,7 @@ public abstract class MinecraftClientMixin {
 
     @WrapWithCondition(method = "reset", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;openScreen(Lnet/minecraft/client/gui/screen/Screen;)V"))
     private boolean smoothTransition(MinecraftClient client, Screen screen) {
-        return !(this.currentScreen instanceof LevelLoadingScreen && this.running);
+        return !(this.currentScreen instanceof LevelLoadingScreen && screen instanceof ProgressScreen);
     }
 
     @ModifyExpressionValue(method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;world:Lnet/minecraft/client/world/ClientWorld;", opcode = Opcodes.GETFIELD))
