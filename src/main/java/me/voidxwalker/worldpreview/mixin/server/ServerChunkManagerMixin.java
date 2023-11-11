@@ -3,6 +3,7 @@ package me.voidxwalker.worldpreview.mixin.server;
 import me.voidxwalker.worldpreview.WorldPreview;
 import me.voidxwalker.worldpreview.mixin.access.ClientChunkManagerAccessor;
 import me.voidxwalker.worldpreview.mixin.access.ClientChunkMapAccessor;
+import me.voidxwalker.worldpreview.mixin.access.ClientWorldAccessor;
 import me.voidxwalker.worldpreview.mixin.access.ThreadedAnvilChunkStorageAccessor;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
@@ -57,7 +58,7 @@ public abstract class ServerChunkManagerMixin {
             world.resetChunkColor(pos.x, pos.z);
             for (TypeFilterableList<Entity> section : chunk.getEntitySectionArray()) {
                 for (Entity entity : section.method_29903()) {
-                    world.addEntity(entity.getEntityId(), entity);
+                    ((ClientWorldAccessor) world).getRegularEntities().put(entity.getEntityId(), entity);
                 }
             }
         }

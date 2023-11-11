@@ -6,6 +6,7 @@
   "client": [
     "access.ClientChunkManagerAccessor",
     "access.ClientChunkMapAccessor",
+    "access.ClientWorldAccessor",
     "access.PlayerEntityAccessor",
     "access.SerializingRegionBasedStorageAccessor",
     "access.SpawnLocatingAccessor",
