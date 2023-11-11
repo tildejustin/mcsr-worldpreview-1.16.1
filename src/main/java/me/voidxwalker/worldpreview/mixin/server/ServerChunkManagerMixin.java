@@ -35,7 +35,10 @@ public abstract class ServerChunkManagerMixin {
 
     @Inject(method = "tick()Z", at = @At("TAIL"))
     private void getChunks(CallbackInfoReturnable<Boolean> cir) {
-        ClientWorld world = WorldPreview.world;
+        ClientWorld world;
+        synchronized (WorldPreview.LOCK) {
+            world = WorldPreview.world;
+        }
         if (world == null) {
             return;
         }
