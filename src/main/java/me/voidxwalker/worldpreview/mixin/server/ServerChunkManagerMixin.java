@@ -33,7 +33,7 @@ public abstract class ServerChunkManagerMixin {
     @Shadow
     public abstract @Nullable WorldChunk getWorldChunk(int chunkX, int chunkZ);
 
-    @Inject(method = "tick()Z", at = @At("TAIL"))
+    @Inject(method = "tick()Z", at = @At("RETURN"))
     private void getChunks(CallbackInfoReturnable<Boolean> cir) {
         ClientWorld world;
         synchronized (WorldPreview.LOCK) {
