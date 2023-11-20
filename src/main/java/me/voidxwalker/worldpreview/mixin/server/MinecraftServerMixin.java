@@ -55,6 +55,12 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
     @Shadow
     public abstract GameMode getDefaultGameMode();
 
+    @ModifyExpressionValue(method = "createWorlds", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/ServerWorldProperties;isInitialized()Z"))
+    private boolean setIsNewWorld(boolean isInitialized) {
+        this.isNewWorld = !isInitialized;
+        return isInitialized;
+    }
+
     @ModifyVariable(method = "prepareStartRegion", at = @At("STORE"))
     private ServerWorld configureWorldPreview(ServerWorld serverWorld) {
         if (this.isNewWorld) {
@@ -197,10 +203,5 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
         }
         this.killed = true;
         return true;
-    }
-
-    @Override
-    public void worldpreview$setIsNewWorld(boolean isNewWorld) {
-        this.isNewWorld = isNewWorld;
     }
 }

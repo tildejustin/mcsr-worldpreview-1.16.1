@@ -5,6 +5,4 @@ public interface WPMinecraftServer {
     Integer worldpreview$getSpawnPos();
 
     boolean worldpreview$kill();
-
-    void worldpreview$setIsNewWorld(boolean isNewWorld);
 }
