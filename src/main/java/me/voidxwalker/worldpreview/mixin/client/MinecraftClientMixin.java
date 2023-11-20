@@ -57,7 +57,7 @@ public abstract class MinecraftClientMixin {
 
     @Inject(method = "startIntegratedServer(Ljava/lang/String;Lnet/minecraft/util/registry/RegistryTracker$Modifiable;Ljava/util/function/Function;Lcom/mojang/datafixers/util/Function4;ZLnet/minecraft/client/MinecraftClient$WorldLoadAction;)V", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/integrated/IntegratedServer;isLoading()Z"), cancellable = true)
     private void resetPreview(CallbackInfo ci) {
-        if (WorldPreview.inPreview && WorldPreview.kill && this.server != null) {
+        if (this.server != null && WorldPreview.inPreview && WorldPreview.kill) {
             if (!((WPMinecraftServer) this.server).worldpreview$kill()) {
                 return;
             }
@@ -76,12 +76,12 @@ public abstract class MinecraftClientMixin {
 
     @WrapWithCondition(method = "reset", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;openScreen(Lnet/minecraft/client/gui/screen/Screen;)V"))
     private boolean smoothTransition(MinecraftClient client, Screen screen) {
-        return !(this.currentScreen instanceof LevelLoadingScreen && screen instanceof ProgressScreen);
+        return !(WorldPreview.inPreview && this.currentScreen instanceof LevelLoadingScreen && screen instanceof ProgressScreen);
     }
 
     @ModifyExpressionValue(method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;world:Lnet/minecraft/client/world/ClientWorld;", opcode = Opcodes.GETFIELD))
     private ClientWorld waitOnKilledServers(ClientWorld world) {
-        if (world == null && WorldPreview.inPreview) {
+        if (world == null && WorldPreview.inPreview && WorldPreview.kill) {
             return WorldPreview.world;
         }
         return world;
@@ -96,7 +96,7 @@ public abstract class MinecraftClientMixin {
     private void logWorldPreviewStart(CallbackInfo ci) {
         if (WorldPreview.inPreview && !WorldPreview.renderingPreview) {
             WorldPreview.renderingPreview = true;
-            WorldPreview.LOGGER.info("Starting Preview at (" + WorldPreview.player.getX() + ", " + Math.floor(WorldPreview.player.getY()) + ", " + WorldPreview.player.getZ() + ")");
+            WorldPreview.LOGGER.info("Starting Preview at (" + WorldPreview.player.getX() + ", " + WorldPreview.player.getY() + ", " + WorldPreview.player.getZ() + ")");
         }
     }
 }
