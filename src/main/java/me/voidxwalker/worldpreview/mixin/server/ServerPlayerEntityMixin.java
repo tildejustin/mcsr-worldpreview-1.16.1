@@ -18,7 +18,7 @@ public abstract class ServerPlayerEntityMixin {
 
     @ModifyExpressionValue(method = "moveToSpawn", at = @At(value = "INVOKE", target = "Ljava/util/Random;nextInt(I)I"))
     private int setSpawnPos(int original) {
-        Integer spawnPos = ((WPMinecraftServer) this.server).worldpreview$getSpawnPos();
+        Integer spawnPos = ((WPMinecraftServer) this.server).worldpreview$getAndResetSpawnPos();
         if (spawnPos != null) {
             return spawnPos;
         }

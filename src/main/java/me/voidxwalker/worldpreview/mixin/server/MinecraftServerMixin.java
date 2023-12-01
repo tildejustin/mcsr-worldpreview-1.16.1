@@ -190,7 +190,7 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
     }
 
     @Override
-    public Integer worldpreview$getSpawnPos() {
+    public Integer worldpreview$getAndResetSpawnPos() {
         Integer spawnPos = this.spawnPos;
         this.spawnPos = null;
         return spawnPos;
@@ -201,7 +201,6 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
         if (this.tooLateToKill) {
             return false;
         }
-        this.killed = true;
-        return true;
+        return this.killed = true;
     }
 }
