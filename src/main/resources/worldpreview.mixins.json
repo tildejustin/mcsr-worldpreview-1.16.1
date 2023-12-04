@@ -8,10 +8,8 @@
     "access.ClientChunkMapAccessor",
     "access.ClientWorldAccessor",
     "access.PlayerEntityAccessor",
-    "access.SerializingRegionBasedStorageAccessor",
     "access.SpawnLocatingAccessor",
     "access.ThreadedAnvilChunkStorageAccessor",
-    "access.VersionedChunkStorageAccessor",
     "client.AbstractClientPlayerEntityMixin",
     "client.CameraMixin",
     "client.ClientPlayerInteractionManagerMixin",
@@ -31,12 +29,10 @@
     "compat.sodium.WorldRendererMixin",
     "server.MinecraftServerMixin",
     "server.ServerChunkManagerMixin",
-    "server.ServerPlayerEntityMixin",
-    "server.shutdown.StorageIoWorkerMixin",
-    "server.shutdown.ThreadedAnvilChunkStorageMixin"
+    "server.ServerPlayerEntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1
   },
-  "plugin": "me.voidxwalker.worldpreview.WorldPreviewMixinConfigPlugin"
+  "plugin": "org.mcsr.speedrunapi.mixin_plugin.SpeedrunMixinConfigPlugin"
 }
