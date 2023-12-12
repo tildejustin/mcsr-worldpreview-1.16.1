@@ -61,15 +61,17 @@ public abstract class ServerChunkManagerMixin {
             world.resetChunkColor(pos.x, pos.z);
             for (TypeFilterableList<Entity> section : chunk.getEntitySectionArray()) {
                 for (Entity entity : section.method_29903()) {
-                    Entity copy = entity.getType().create(world);
+                    Entity copy = entity.getType().create(entity.world);
                     if (copy == null) {
                         WorldPreview.LOGGER.warn("Failed to copy entity {}.", entity);
                         continue;
                     }
                     copy.setEntityId(entity.getEntityId());
                     copy.setUuid(entity.getUuid());
+                    copy.copyFrom(entity);
                     copy.copyPositionAndRotation(entity);
                     copy.setVelocity(entity.getVelocity());
+                    copy.setWorld(world);
                     // we can't use "world.addEntity(copy.getEntityId(), copy);" because it would add the entity to the chunk a second time
                     // this could be fixed by instead of directly putting the server chunks into the client chunkmap, making a client copy
                     // unsure how that would affect memory usage and performance tho
