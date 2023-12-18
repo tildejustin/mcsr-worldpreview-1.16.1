@@ -1,5 +1,6 @@
 package me.voidxwalker.worldpreview.mixin.client.render;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import me.voidxwalker.worldpreview.WorldPreview;
@@ -26,6 +27,14 @@ public abstract class BlockEntityRenderDispatcherMixin {
             return WorldPreview.world.getBlockState(blockEntity.getPos());
         }
         return original.call(blockEntity);
+    }
+
+    @ModifyExpressionValue(method = "render(Lnet/minecraft/client/render/block/entity/BlockEntityRenderer;Lnet/minecraft/block/entity/BlockEntity;FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/entity/BlockEntity;getWorld()Lnet/minecraft/world/World;"))
+    private static World fixOffThreadGetLightmapCalls(World world) {
+        if (WorldPreview.inPreview) {
+            return WorldPreview.world;
+        }
+        return world;
     }
 
     @Unique
