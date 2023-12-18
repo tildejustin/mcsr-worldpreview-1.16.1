@@ -48,17 +48,47 @@ public abstract class ServerChunkManagerMixin {
                 // idk if this ever happens, but it was in the original WorldPreview, and I'd rather not break this
                 continue;
             }
+
             ChunkPos pos = holder.getPos();
             int index = map.callGetIndex(pos.x, pos.z);
             if (map.callGetChunk(index) != null) {
                 continue;
             }
+
             WorldChunk chunk = this.getWorldChunk(pos.x, pos.z);
             if (chunk == null) {
                 continue;
             }
             map.callSet(index, chunk);
             world.resetChunkColor(pos.x, pos.z);
+/*
+
+            // failed attempt at copying chunks instead of using the serverside ones for rendering (lighting was not working, especially bad with starlight)
+            // getting this to work would remove the need for BlockEntityRenderDispatcherMixin#fixOffThreadGetBlockStateCalls
+
+            ChunkDataS2CPacket packet = new ChunkDataS2CPacket(chunk, 65535, true);
+            WorldChunk clientChunk = world.getChunkManager().loadChunkFromPacket(packet.getX(), packet.getZ(), packet.getBiomeArray(), packet.getReadBuffer(), packet.getHeightmaps(), packet.getVerticalStripBitmask(), packet.isFullChunk());
+            if (clientChunk == null) {
+                continue;
+            }
+            packet.getBlockEntityTagList().forEach(clientChunk::addPendingBlockEntityTag);
+
+            LightingProvider lightingProvider;
+            synchronized (lightingProvider = world.getLightingProvider()) {
+                lightingProvider.setLightEnabled(clientChunk.getPos(), false);
+                int verticalStripBitmask = packet.getVerticalStripBitmask();
+                for (int l = -1; l < 17; ++l) {
+                    if ((verticalStripBitmask & 1 << l) == 0) continue;
+                    ChunkSectionPos chunkSectionPos = ChunkSectionPos.from(clientChunk.getPos(), l);
+                    lightingProvider.queueData(LightType.BLOCK, chunkSectionPos, lightingProvider.get(LightType.BLOCK).getLightArray(chunkSectionPos), false);
+                    lightingProvider.queueData(LightType.SKY, chunkSectionPos, lightingProvider.get(LightType.SKY).getLightArray(chunkSectionPos), false);
+                }
+                lightingProvider.setLightEnabled(clientChunk.getPos(), true);
+                clientChunk.getLightSourcesStream().forEach(blockPos -> lightingProvider.addLightSource(blockPos, clientChunk.getLuminance(blockPos)));
+            }
+
+ */
+
             for (TypeFilterableList<Entity> section : chunk.getEntitySectionArray()) {
                 for (Entity entity : section.method_29903()) {
                     Entity copy = entity.getType().create(entity.world);
@@ -72,9 +102,9 @@ public abstract class ServerChunkManagerMixin {
                     copy.copyPositionAndRotation(entity);
                     copy.setVelocity(entity.getVelocity());
                     copy.setWorld(world);
+
                     // we can't use "world.addEntity(copy.getEntityId(), copy);" because it would add the entity to the chunk a second time
                     // this could be fixed by instead of directly putting the server chunks into the client chunkmap, making a client copy
-                    // unsure how that would affect memory usage and performance tho
                     ((ClientWorldAccessor) world).getRegularEntities().put(copy.getEntityId(), copy);
                 }
             }
