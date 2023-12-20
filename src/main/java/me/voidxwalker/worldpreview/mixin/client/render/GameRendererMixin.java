@@ -51,7 +51,7 @@ public abstract class GameRendererMixin {
     @ModifyExpressionValue(method = "*", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;interactionManager:Lnet/minecraft/client/network/ClientPlayerInteractionManager;", opcode = Opcodes.GETFIELD))
     private ClientPlayerInteractionManager modifyInteractionManager(ClientPlayerInteractionManager manager) {
         if (WorldPreview.inPreview) {
-            return WorldPreview.DUMMY_INTERACTION_MANAGER;
+            return WorldPreview.INTERACTION_MANAGER;
         }
         return manager;
     }

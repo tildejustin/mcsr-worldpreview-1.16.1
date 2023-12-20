@@ -40,6 +40,6 @@ public abstract class ClientPlayerInteractionManagerMixin {
 
     @Unique
     private boolean isWorldPreview() {
-        return (Object) this == WorldPreview.DUMMY_INTERACTION_MANAGER;
+        return (Object) this == WorldPreview.INTERACTION_MANAGER;
     }
 }

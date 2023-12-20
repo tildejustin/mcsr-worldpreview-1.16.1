@@ -1,5 +1,6 @@
 package me.voidxwalker.worldpreview.mixin.client.render;
 
+import com.google.common.collect.ImmutableSet;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.voidxwalker.worldpreview.WorldPreview;
@@ -12,6 +13,8 @@ import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.network.Packet;
+import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Util;
@@ -22,6 +25,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.Set;
 
 @Mixin(LevelLoadingScreen.class)
 public abstract class LevelLoadingScreenMixin extends Screen {
@@ -58,7 +63,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
     private void renderWorldPreview(MatrixStack matrices, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (!WorldPreview.inPreview) {
             synchronized (WorldPreview.LOCK) {
-                WorldPreview.inPreview = WorldPreview.world != null && WorldPreview.player != null && WorldPreview.camera != null && WorldPreview.playerListEntry != null;
+                WorldPreview.inPreview = WorldPreview.world != null && WorldPreview.player != null && WorldPreview.camera != null && WorldPreview.playerListEntry != null && WorldPreview.packetQueue != null;
 
                 if (WorldPreview.inPreview) {
                     // we set the worldRenderer here instead of WorldPreview#configure because doing it from the server thread can cause issues
@@ -75,6 +80,13 @@ public abstract class LevelLoadingScreenMixin extends Screen {
         }
 
         assert this.client != null;
+
+        Set<Packet<?>> packetsToApply = ImmutableSet.copyOf(WorldPreview.packetQueue);
+        for (Packet<?> packet : packetsToApply) {
+            //noinspection unchecked
+            ((Packet<ClientPlayPacketListener>) packet).apply(WorldPreview.NETWORK_HANDLER);
+        }
+        WorldPreview.packetQueue.removeAll(packetsToApply);
 
         // clip the player into swimming/crawling mode if necessary
         ((PlayerEntityAccessor) WorldPreview.player).callUpdateSize();

@@ -14,24 +14,30 @@ import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.entity.PlayerModelPart;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.network.Packet;
 import net.minecraft.util.math.MathHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
+
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 public class WorldPreview implements ClientModInitializer {
 
     public static final Object LOCK = new Object();
     public static Logger LOGGER = LogManager.getLogger();
 
-    public static final ClientPlayNetworkHandler DUMMY_NETWORK_HANDLER = new ClientPlayNetworkHandler(MinecraftClient.getInstance(), null, null, MinecraftClient.getInstance().getSession().getProfile());
-    public static final ClientPlayerInteractionManager DUMMY_INTERACTION_MANAGER = new ClientPlayerInteractionManager(MinecraftClient.getInstance(), DUMMY_NETWORK_HANDLER);
+    public static final ClientPlayNetworkHandler NETWORK_HANDLER = new ClientPlayNetworkHandler(MinecraftClient.getInstance(), null, null, MinecraftClient.getInstance().getSession().getProfile());
+    public static final ClientPlayerInteractionManager INTERACTION_MANAGER = new ClientPlayerInteractionManager(MinecraftClient.getInstance(), NETWORK_HANDLER);
 
     public static WorldRenderer worldRenderer;
     public static ClientPlayerEntity player;
     public static ClientWorld world;
     public static Camera camera;
     public static PlayerListEntry playerListEntry;
+    public static Set<Packet<?>> packetQueue;
 
     public static boolean inPreview;
     public static boolean renderingPreview;
@@ -57,18 +63,19 @@ public class WorldPreview implements ClientModInitializer {
         ));
     }
 
-    public static void set(ClientWorld world, ClientPlayerEntity player, Camera camera, PlayerListEntry playerListEntry) {
+    public static void set(ClientWorld world, ClientPlayerEntity player, Camera camera, PlayerListEntry playerListEntry, Set<Packet<?>> packetQueue) {
         synchronized (LOCK) {
             WorldPreview.world = world;
             WorldPreview.player = player;
             WorldPreview.camera = camera;
             WorldPreview.playerListEntry = playerListEntry;
+            WorldPreview.packetQueue = packetQueue;
         }
     }
 
     public static void configure(ClientWorld world, ClientPlayerEntity player, Camera camera, PlayerListEntry playerListEntry) {
         synchronized (LOCK) {
-            set(world, player, camera, playerListEntry);
+            set(world, player, camera, playerListEntry, Collections.synchronizedSet(new HashSet<>()));
 
             player.chunkX = MathHelper.floor(player.getX() / 16.0);
             player.chunkY = MathHelper.clamp(MathHelper.floor(player.getY() / 16.0), 0, 16);
@@ -93,6 +100,6 @@ public class WorldPreview implements ClientModInitializer {
     }
 
     public static void clear() {
-        set(null, null, null, null);
+        set(null, null, null, null, null);
     }
 }

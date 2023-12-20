@@ -67,7 +67,7 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
     private ServerWorld configureWorldPreview(ServerWorld serverWorld) {
         if (this.isNewWorld) {
             ClientWorld world = new ClientWorld(
-                    WorldPreview.DUMMY_NETWORK_HANDLER,
+                    WorldPreview.NETWORK_HANDLER,
                     new ClientWorld.Properties(serverWorld.getDifficulty(), this.isHardcore(), serverWorld.isFlat()),
                     serverWorld.getRegistryKey(),
                     serverWorld.getDimensionRegistryKey(),
@@ -81,7 +81,7 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
             ClientPlayerEntity player = new ClientPlayerEntity(
                     MinecraftClient.getInstance(),
                     world,
-                    WorldPreview.DUMMY_NETWORK_HANDLER,
+                    WorldPreview.NETWORK_HANDLER,
                     null,
                     null,
                     false,
@@ -90,7 +90,7 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
             Camera camera = new Camera();
             PlayerListEntry playerListEntry = new PlayerListEntry(
                     new PlayerListS2CPacket().new Entry(
-                            WorldPreview.DUMMY_NETWORK_HANDLER.getProfile(),
+                            WorldPreview.NETWORK_HANDLER.getProfile(),
                             0,
                             this.getDefaultGameMode(),
                             player.getDisplayName()

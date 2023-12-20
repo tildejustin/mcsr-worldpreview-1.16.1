@@ -15,7 +15,7 @@ public abstract class AbstractClientPlayerEntityMixin {
     @ModifyExpressionValue(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getNetworkHandler()Lnet/minecraft/client/network/ClientPlayNetworkHandler;"))
     private ClientPlayNetworkHandler modifyNetworkHandler(ClientPlayNetworkHandler networkHandler) {
         if (this.isWorldPreview()) {
-            return WorldPreview.DUMMY_NETWORK_HANDLER;
+            return WorldPreview.NETWORK_HANDLER;
         }
         return networkHandler;
     }
