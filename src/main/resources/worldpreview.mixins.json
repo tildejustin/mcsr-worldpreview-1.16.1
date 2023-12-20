@@ -10,6 +10,7 @@
     "access.PlayerEntityAccessor",
     "access.SpawnLocatingAccessor",
     "access.ThreadedAnvilChunkStorageAccessor",
+    "access.ThreadedAnvilChunkStorageAccessor$EntityTrackerAccessor",
     "client.AbstractClientPlayerEntityMixin",
     "client.CameraMixin",
     "client.ClientChunkManagerMixin",

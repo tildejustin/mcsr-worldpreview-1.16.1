@@ -97,7 +97,7 @@ public abstract class ServerChunkManagerMixin {
 
             for (TypeFilterableList<Entity> section : chunk.getEntitySectionArray()) {
                 for (Entity entity : section.method_29903()) {
-                    packetQueue.add(entity.createSpawnPacket());
+                    ((ThreadedAnvilChunkStorageAccessor.EntityTrackerAccessor) ((ThreadedAnvilChunkStorageAccessor) this.threadedAnvilChunkStorage).getEntityTrackers().get(entity.getEntityId())).getEntry().sendPackets(packetQueue::add);
                 }
             }
         }
