@@ -12,6 +12,8 @@ import net.minecraft.entity.Entity;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(GameRenderer.class)
 public abstract class GameRendererMixin {
@@ -22,6 +24,11 @@ public abstract class GameRendererMixin {
             return WorldPreview.worldRenderer;
         }
         return worldRenderer;
+    }
+
+    @Inject(method = "onResized", at = @At("TAIL"))
+    private void resizeWorldRenderer(int i, int j, CallbackInfo ci) {
+        WorldPreview.worldRenderer.onResized(i, j);
     }
 
     @ModifyExpressionValue(method = {"shouldRenderBlockOutline", "updateTargetedEntity", "renderWorld"}, at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;world:Lnet/minecraft/client/world/ClientWorld;", opcode = Opcodes.GETFIELD))
