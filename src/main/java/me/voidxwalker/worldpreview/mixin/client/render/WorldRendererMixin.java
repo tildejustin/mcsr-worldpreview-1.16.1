@@ -2,8 +2,6 @@ package me.voidxwalker.worldpreview.mixin.client.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import me.voidxwalker.worldpreview.WorldPreview;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.WorldRenderer;
@@ -62,19 +60,6 @@ public abstract class WorldRendererMixin {
             return null;
         }
         return entity;
-    }
-
-    // fixes an issue where the vanilla WorldRenderer gets loaded while still in Preview,
-    // causing transparency shaders required by fabulous graphics not to be loaded because of MinecraftClientMixin#stopFabulousDuringPreview
-    @WrapOperation(method = {"apply", "reload"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;isFabulousGraphicsOrBetter()Z"))
-    private boolean fixFabulousGraphicsInitialization(Operation<Boolean> original) {
-        boolean inPreview = WorldPreview.inPreview;
-        try {
-            WorldPreview.inPreview = this.isWorldPreview();
-            return original.call();
-        } finally {
-            WorldPreview.inPreview = inPreview;
-        }
     }
 
     @Unique

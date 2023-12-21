@@ -23,6 +23,7 @@
     "client.render.LevelLoadingScreenMixin",
     "client.render.LightmapTextureManagerMixin",
     "client.render.LivingEntityRendererMixin",
+    "client.render.RenderPhaseMixin",
     "client.render.WorldRendererMixin",
     "compat.sodium.BuiltChunkStorageAccessor",
     "compat.sodium.ChunkInfoAccessor",

@@ -1,7 +1,6 @@
 package me.voidxwalker.worldpreview.mixin.client;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
-import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import me.voidxwalker.worldpreview.WorldPreview;
 import me.voidxwalker.worldpreview.interfaces.WPMinecraftServer;
@@ -40,11 +39,6 @@ public abstract class MinecraftClientMixin {
 
     @Shadow
     public abstract void openScreen(@Nullable Screen screen);
-
-    @ModifyReturnValue(method = "isFabulousGraphicsOrBetter", at = @At("RETURN"))
-    private static boolean stopFabulousDuringPreview(boolean isFabulousGraphicsOrBetter) {
-        return isFabulousGraphicsOrBetter && !WorldPreview.inPreview;
-    }
 
     @Inject(method = "startIntegratedServer(Ljava/lang/String;Lnet/minecraft/util/registry/RegistryTracker$Modifiable;Ljava/util/function/Function;Lcom/mojang/datafixers/util/Function4;ZLnet/minecraft/client/MinecraftClient$WorldLoadAction;)V", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/integrated/IntegratedServer;isLoading()Z"), cancellable = true)
     private void resetPreview(CallbackInfo ci) {
