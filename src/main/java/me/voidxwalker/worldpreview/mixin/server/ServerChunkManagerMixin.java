@@ -1,6 +1,5 @@
 package me.voidxwalker.worldpreview.mixin.server;
 
-import com.google.common.collect.ImmutableSet;
 import me.voidxwalker.worldpreview.WorldPreview;
 import me.voidxwalker.worldpreview.mixin.access.ThreadedAnvilChunkStorageAccessor;
 import net.minecraft.client.world.ClientWorld;
@@ -23,6 +22,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Mixin(ServerChunkManager.class)
@@ -35,6 +36,9 @@ public abstract class ServerChunkManagerMixin {
     @Shadow
     @Nullable
     public abstract WorldChunk getWorldChunk(int chunkX, int chunkZ);
+
+    @Unique
+    private final Set<ChunkPos> sentChunks = new HashSet<>();
 
     @Inject(method = "tick()Z", at = @At("RETURN"))
     private void getChunks(CallbackInfoReturnable<Boolean> cir) {
@@ -54,7 +58,7 @@ public abstract class ServerChunkManagerMixin {
             }
 
             ChunkPos pos = holder.getPos();
-            if (this.isWorldPreviewChunkLoaded(pos, world, packetQueue)) {
+            if (this.sentChunks.contains(pos)) {
                 continue;
             }
 
@@ -85,7 +89,7 @@ public abstract class ServerChunkManagerMixin {
                     continue;
                 }
                 ChunkPos neighbourChunkPos = new ChunkPos(pos.x + xOffset, pos.z + zOffset);
-                if (!this.isWorldPreviewChunkLoaded(neighbourChunkPos, world, packetQueue)) {
+                if (!this.sentChunks.contains(neighbourChunkPos)) {
                     continue;
                 }
                 WorldChunk neighbourChunk = this.getWorldChunk(neighbourChunkPos.x, neighbourChunkPos.z);
@@ -100,19 +104,8 @@ public abstract class ServerChunkManagerMixin {
                     ((ThreadedAnvilChunkStorageAccessor.EntityTrackerAccessor) ((ThreadedAnvilChunkStorageAccessor) this.threadedAnvilChunkStorage).getEntityTrackers().get(entity.getEntityId())).getEntry().sendPackets(packetQueue::add);
                 }
             }
-        }
-    }
 
-    @Unique
-    private boolean isWorldPreviewChunkLoaded(ChunkPos pos, ClientWorld world, Set<Packet<?>> packetQueue) {
-        for (Packet<?> packet : ImmutableSet.copyOf(packetQueue)) {
-            if (packet instanceof ChunkDataS2CPacket) {
-                ChunkDataS2CPacket chunk = ((ChunkDataS2CPacket) packet);
-                if (chunk.getX() == pos.x && chunk.getZ() == pos.z) {
-                    return true;
-                }
-            }
+            this.sentChunks.add(pos);
         }
-        return world.getChunkManager().isChunkLoaded(pos.x, pos.z);
     }
 }
