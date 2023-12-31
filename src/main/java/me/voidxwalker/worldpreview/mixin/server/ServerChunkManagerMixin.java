@@ -80,6 +80,7 @@ public abstract class ServerChunkManagerMixin {
              */
 
             packetQueue.add(new ChunkDataS2CPacket(chunk, 65535, true));
+            packetQueue.add(new LightUpdateS2CPacket(chunk.getPos(), chunk.getLightingProvider(), true));
 
             for (int i = 0; i < 9; i++) {
                 int xOffset = i % 3 - 1;
