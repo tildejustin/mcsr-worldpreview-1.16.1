@@ -38,14 +38,6 @@ public abstract class WorldRendererMixin {
         return entity;
     }
 
-    @ModifyExpressionValue(method = "*", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;targetedEntity:Lnet/minecraft/entity/Entity;", opcode = Opcodes.GETFIELD))
-    private Entity modifyTargetedEntity(Entity entity) {
-        if (this.isWorldPreview()) {
-            return null;
-        }
-        return entity;
-    }
-
     @Unique
     private boolean isWorldPreview() {
         return (Object) this == WorldPreview.worldRenderer;
