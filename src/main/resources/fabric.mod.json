@@ -18,7 +18,6 @@
       "me.voidxwalker.worldpreview.WorldPreview"
     ]
   },
-  "accessWidener": "worldpreview.accesswidener",
   "mixins": [
     "worldpreview.mixins.json"
   ],

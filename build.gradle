@@ -17,7 +17,7 @@ repositories {
 }
 
 loom {
-    accessWidenerPath = file("src/main/resources/worldpreview.accesswidener")
+    //accessWidenerPath = file("src/main/resources/worldpreview.accesswidener")
 }
 
 dependencies {
@@ -32,7 +32,7 @@ dependencies {
     implementation(annotationProcessor "com.github.llamalad7.mixinextras:mixinextras-fabric:0.2.0")
 
     // Sodium
-    //modImplementation files("libs/sodium-1.16.1-v2.jar") // the jitpack build unfortunately failed
+    modCompileOnly files("libs/sodium-1.16.1-v2.jar") // the jitpack build unfortunately failed
 }
 
 processResources {
