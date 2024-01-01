@@ -17,7 +17,7 @@ public abstract class SodiumWorldRendererMixin {
 
     @Shadow
     private ClientWorld world;
-
+/*
     // since we create a second WorldRenderer, we rely on "change: Eliminate the assumption that only one client world exists"
     // https://github.com/CaffeineMC/sodium-fabric/commit/9396ff103037e1b34b2818b21f87d6593a3f7748
     // without this change present, this mixin will fail and give us a nice hard crash instead of a lot of issues arising from the same SodiumWorldRenderer being used in both the vanilla and worldpreview WorldRenderer
@@ -36,6 +36,8 @@ public abstract class SodiumWorldRendererMixin {
         }
         return player;
     }
+
+ */
 
     @Unique
     private boolean isWorldPreview() {

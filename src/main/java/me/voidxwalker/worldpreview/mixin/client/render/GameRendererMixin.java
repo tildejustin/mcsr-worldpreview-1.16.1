@@ -18,62 +18,22 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(GameRenderer.class)
 public abstract class GameRendererMixin {
 
-    @ModifyExpressionValue(method = "renderWorld", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;worldRenderer:Lnet/minecraft/client/render/WorldRenderer;"))
-    private WorldRenderer modifyWorldRenderer(WorldRenderer worldRenderer) {
-        if (WorldPreview.inPreview) {
-            return WorldPreview.worldRenderer;
-        }
-        return worldRenderer;
-    }
-
     @Inject(method = "onResized", at = @At("TAIL"))
     private void resizeWorldRenderer(int i, int j, CallbackInfo ci) {
         WorldPreview.worldRenderer.onResized(i, j);
     }
 
-    @ModifyExpressionValue(method = {"shouldRenderBlockOutline", "updateTargetedEntity", "renderWorld"}, at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;world:Lnet/minecraft/client/world/ClientWorld;", opcode = Opcodes.GETFIELD))
-    private ClientWorld modifyWorld(ClientWorld world) {
-        if (WorldPreview.inPreview) {
-            return WorldPreview.world;
-        }
-        return world;
-    }
-
-    @ModifyExpressionValue(method = "*", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;player:Lnet/minecraft/client/network/ClientPlayerEntity;", opcode = Opcodes.GETFIELD))
-    private ClientPlayerEntity modifyPlayer(ClientPlayerEntity player) {
-        if (WorldPreview.inPreview) {
-            return WorldPreview.player;
-        }
-        return player;
-    }
-
     @ModifyExpressionValue(method = "*", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/GameRenderer;camera:Lnet/minecraft/client/render/Camera;", opcode = Opcodes.GETFIELD))
     private Camera modifyCamera(Camera camera) {
-        if (WorldPreview.inPreview) {
+        if (WorldPreview.renderingPreview) {
             return WorldPreview.camera;
         }
         return camera;
     }
 
-    @ModifyExpressionValue(method = "*", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;interactionManager:Lnet/minecraft/client/network/ClientPlayerInteractionManager;", opcode = Opcodes.GETFIELD))
-    private ClientPlayerInteractionManager modifyInteractionManager(ClientPlayerInteractionManager manager) {
-        if (WorldPreview.inPreview) {
-            return WorldPreview.INTERACTION_MANAGER;
-        }
-        return manager;
-    }
-
-    @ModifyExpressionValue(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getCameraEntity()Lnet/minecraft/entity/Entity;"))
-    private Entity modifyCameraEntity(Entity entity) {
-        if (WorldPreview.inPreview) {
-            return WorldPreview.player;
-        }
-        return entity;
-    }
-
     @ModifyExpressionValue(method = "getFov", at = {@At(value = "FIELD", target = "Lnet/minecraft/client/render/GameRenderer;lastMovementFovMultiplier:F"), @At(value = "FIELD", target = "Lnet/minecraft/client/render/GameRenderer;movementFovMultiplier:F")})
     private float modifyMovementFovMultiplier(float movementFovMultiplier) {
-        if (WorldPreview.inPreview) {
+        if (WorldPreview.renderingPreview) {
             return 1.0f;
         }
         return movementFovMultiplier;

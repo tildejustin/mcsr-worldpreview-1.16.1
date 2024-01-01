@@ -16,7 +16,7 @@ public abstract class ClientPlayNetworkHandlerMixin {
     @Shadow
     private ClientWorld world;
 
-    @ModifyExpressionValue(method = "*", at = {@At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;world:Lnet/minecraft/client/world/ClientWorld;", opcode = Opcodes.GETFIELD), @At(value = "FIELD", target = "Lnet/minecraft/client/network/ClientPlayNetworkHandler;world:Lnet/minecraft/client/world/ClientWorld;", opcode = Opcodes.GETFIELD)})
+    @ModifyExpressionValue(method = "*", at = {@At(value = "FIELD", target = "Lnet/minecraft/client/network/ClientPlayNetworkHandler;world:Lnet/minecraft/client/world/ClientWorld;", opcode = Opcodes.GETFIELD)})
     private ClientWorld modifyWorld(ClientWorld world) {
         if (this.isWorldPreview()) {
             // we set the world field for compatibility with starlight's mixin (ClientPacketListenerMixin)

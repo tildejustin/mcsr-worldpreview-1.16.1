@@ -73,9 +73,9 @@ public abstract class MinecraftClientMixin {
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/Window;swapBuffers()V", shift = At.Shift.AFTER))
     private void logWorldPreviewStart(CallbackInfo ci) {
-        if (WorldPreview.inPreview && !WorldPreview.renderingPreview) {
-            WorldPreview.renderingPreview = true;
+        if (WorldPreview.logPreviewStart) {
             WorldPreview.LOGGER.info("Starting Preview at (" + WorldPreview.player.getX() + ", " + WorldPreview.player.getY() + ", " + WorldPreview.player.getZ() + ")");
+            WorldPreview.logPreviewStart = false;
         }
     }
 }

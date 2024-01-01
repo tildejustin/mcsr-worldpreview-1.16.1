@@ -12,14 +12,6 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(AbstractClientPlayerEntity.class)
 public abstract class AbstractClientPlayerEntityMixin {
 
-    @ModifyExpressionValue(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getNetworkHandler()Lnet/minecraft/client/network/ClientPlayNetworkHandler;"))
-    private ClientPlayNetworkHandler modifyNetworkHandler(ClientPlayNetworkHandler networkHandler) {
-        if (this.isWorldPreview()) {
-            return WorldPreview.NETWORK_HANDLER;
-        }
-        return networkHandler;
-    }
-
     @ModifyExpressionValue(method = "*", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayNetworkHandler;getPlayerListEntry(Ljava/util/UUID;)Lnet/minecraft/client/network/PlayerListEntry;"))
     private PlayerListEntry modifyPlayerListEntry(PlayerListEntry playerListEntry) {
         if (this.isWorldPreview()) {
