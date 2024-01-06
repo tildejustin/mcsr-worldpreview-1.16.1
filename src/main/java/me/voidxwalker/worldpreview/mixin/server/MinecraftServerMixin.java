@@ -136,6 +136,9 @@ public abstract class MinecraftServerMixin  extends ReentrantThreadExecutor<Serv
 
     @Inject(method="runServer",at=@At(value="INVOKE",target="Lnet/minecraft/server/MinecraftServer;setupServer()Z",shift = At.Shift.AFTER), cancellable = true)
     public void worldpreview_kill2(CallbackInfo ci){
+        synchronized (WorldPreview.shutdownLock) {
+            WorldPreview.tooLateToKill = true;
+        }
         WorldPreview.inPreview=false;
         WorldPreview.renderingPreview=false;
         LockSupport.unpark(((MinecraftClientMixin)MinecraftClient.getInstance()).invokeGetThread());

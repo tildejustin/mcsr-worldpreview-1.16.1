@@ -58,18 +58,20 @@ public abstract class MinecraftClientMixin {
                 worldpreview_cycleCooldown=0;
                 WorldPreview.chunkMapPos= WorldPreview.chunkMapPos<5? WorldPreview.chunkMapPos+1:1;
             }
-            if(WorldPreview.resetKey.wasPressed()|| WorldPreview.kill==-1){
+            synchronized (WorldPreview.shutdownLock) {
+                if(!WorldPreview.tooLateToKill && (WorldPreview.resetKey.wasPressed()|| WorldPreview.kill==-1)){
 
-                WorldPreview.log(Level.INFO,"Leaving world generation");
-                WorldPreview.kill = 1;
-                while(WorldPreview.inPreview){
-                    LockSupport.park(); // I am at a loss to emphasize how bad of an idea Thread.yield() here is.
+                    WorldPreview.log(Level.INFO,"Leaving world generation");
+                    WorldPreview.kill = 1;
+                    while(WorldPreview.inPreview){
+                        LockSupport.park(); // I am at a loss to emphasize how bad of an idea Thread.yield() here is.
+                    }
+                    this.server.shutdown();
+                    MinecraftClient.getInstance().disconnect();
+                    WorldPreview.kill=0;
+                    MinecraftClient.getInstance().openScreen(new TitleScreen());
+                    ci.cancel();
                 }
-                this.server.shutdown();
-                MinecraftClient.getInstance().disconnect();
-                WorldPreview.kill=0;
-                MinecraftClient.getInstance().openScreen(new TitleScreen());
-                ci.cancel();
             }
             if(WorldPreview.freezeKey.wasPressed()){
                 WorldPreview.freezePreview=!WorldPreview.freezePreview;

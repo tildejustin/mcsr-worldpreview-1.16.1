@@ -37,6 +37,8 @@ public class WorldPreview  implements ClientModInitializer {
    public static int chunkMapPos;
    public static boolean freezePreview;
    public static final Object lock= new Object();
+   public static final Object shutdownLock = new Object();
+   public static volatile boolean tooLateToKill;
    public static Logger LOGGER = LogManager.getLogger();
    public static void log(Level level, String message) {
       LOGGER.log(level, message);
