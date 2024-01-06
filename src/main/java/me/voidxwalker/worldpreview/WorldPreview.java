@@ -106,6 +106,9 @@ public class WorldPreview implements ClientModInitializer {
             player.prevYaw = player.yaw;
             player.prevBodyYaw = player.bodyYaw;
             player.prevHeadYaw = player.headYaw;
+            player.lastRenderX = player.prevX = player.getX();
+            player.lastRenderY = player.prevY = player.getY();
+            player.lastRenderZ = player.prevZ = player.getZ();
             player.lastRenderYaw = player.yaw;
             player.lastRenderPitch = player.pitch;
 
