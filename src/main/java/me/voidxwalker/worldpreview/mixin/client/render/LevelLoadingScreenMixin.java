@@ -128,6 +128,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
                 for (Entity passenger : entity.getPassengerList()) {
                     entity.updatePassengerPosition(passenger);
                     passenger.calculateDimensions();
+                    passenger.baseTick();
                 }
                 tickedEntities++;
             }
