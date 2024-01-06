@@ -140,6 +140,11 @@ public abstract class ServerChunkManagerMixin {
                 return;
             }
 
+            Entity vehicle = entity.getVehicle();
+            if (vehicle != null && !this.sentEntities.contains(entity.getVehicle().getEntityId())) {
+                return;
+            }
+
             Set<Packet<?>> entityPackets = new LinkedHashSet<>();
 
             entityTrackerEntry.sendPackets(entityPackets::add);
