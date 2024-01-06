@@ -20,5 +20,8 @@
   },
   "mixins": [
     "worldpreview.mixins.json"
-  ]
+  ],
+  "depends": {
+    "speedrunapi": "*"
+  }
 }
