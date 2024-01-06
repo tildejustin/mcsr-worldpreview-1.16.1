@@ -8,11 +8,10 @@ import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-
 @Mixin(HeldItemRenderer.class)
 public abstract class HeldItemRendererMixin {
 
-    @ModifyExpressionValue(method = {"renderItem(FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;Lnet/minecraft/client/network/ClientPlayerEntity;I)V", "renderMapInBothHands"}, at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/item/HeldItemRenderer;mainHand:Lnet/minecraft/item/ItemStack;", opcode = Opcodes.GETFIELD))
+    @ModifyExpressionValue(method = {"renderItem(FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;Lnet/minecraft/client/network/ClientPlayerEntity;I)V", "renderMapInBothHands"}, at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/item/HeldItemRenderer;mainHand:Lnet/minecraft/item/ItemStack;", opcode = Opcodes.GETFIELD), require = 2)
     private ItemStack modifyMainHand(ItemStack mainHand) {
         if (WorldPreview.renderingPreview) {
             return WorldPreview.player.getMainHandStack();
