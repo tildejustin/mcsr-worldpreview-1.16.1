@@ -42,6 +42,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
     public void worldpreview_init(WorldGenerationProgressTracker progressProvider, CallbackInfo ci){
         WorldPreview.calculatedSpawn=true;
         WorldPreview.freezePreview=false;
+        WorldPreview.tooLateToKill = false;
         KeyBinding.unpressAll();
         StateOutputHelper.loadingProgress = 0;
         StateOutputHelper.outputState("generating,0");

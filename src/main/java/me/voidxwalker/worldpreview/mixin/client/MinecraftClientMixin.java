@@ -68,7 +68,6 @@ public abstract class MinecraftClientMixin {
                     }
                     this.server.shutdown();
                     MinecraftClient.getInstance().disconnect();
-                    WorldPreview.kill=0;
                     MinecraftClient.getInstance().openScreen(new TitleScreen());
                     ci.cancel();
                 }
