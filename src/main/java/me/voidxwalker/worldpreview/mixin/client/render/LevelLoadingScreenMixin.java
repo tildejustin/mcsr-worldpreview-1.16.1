@@ -104,12 +104,21 @@ public abstract class LevelLoadingScreenMixin extends Screen {
 
             Set<Entity> oldEntities = ImmutableSet.copyOf(WorldPreview.world.getEntities());
 
+            long start = System.currentTimeMillis();
+
             Set<Packet<?>> packetsToApply = ImmutableSet.copyOf(WorldPreview.packetQueue);
             for (Packet<?> packet : packetsToApply) {
                 //noinspection unchecked
                 ((Packet<ClientPlayPacketListener>) packet).apply(WorldPreview.player.networkHandler);
             }
             WorldPreview.packetQueue.removeAll(packetsToApply);
+
+            if (!packetsToApply.isEmpty()) {
+                WorldPreview.debug("Took " + (System.currentTimeMillis() - start) + " ms to load " + packetsToApply.size() + " packets.");
+            }
+
+            start = System.currentTimeMillis();
+            int tickedEntities = 0;
 
             for (Entity entity : WorldPreview.world.getEntities()) {
                 if (oldEntities.contains(entity)) {
@@ -120,6 +129,11 @@ public abstract class LevelLoadingScreenMixin extends Screen {
                     entity.updatePassengerPosition(passenger);
                     passenger.calculateDimensions();
                 }
+                tickedEntities++;
+            }
+
+            if (tickedEntities != 0) {
+                WorldPreview.debug("Took " + (System.currentTimeMillis() - start) + " ms to tick " + tickedEntities + " new entities.");
             }
 
             // clip the player into swimming/crawling mode if necessary

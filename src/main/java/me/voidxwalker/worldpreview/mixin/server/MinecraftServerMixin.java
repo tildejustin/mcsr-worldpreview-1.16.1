@@ -16,7 +16,6 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Packet;
@@ -71,7 +70,9 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
 
     @ModifyVariable(method = "prepareStartRegion", at = @At("STORE"))
     private ServerWorld configureWorldPreview(ServerWorld serverWorld) {
-        if (this.isNewWorld) {
+        if (this.isNewWorld || true) {
+            long start = System.currentTimeMillis();
+
             ClientPlayNetworkHandler networkHandler = new ClientPlayNetworkHandler(
                     MinecraftClient.getInstance(),
                     null,
@@ -167,6 +168,8 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
             }
 
             WorldPreview.configure(world, player, interactionManager, camera, packetQueue);
+
+            WorldPreview.debug("Took " + (System.currentTimeMillis() - start) + " ms to configure preview.");
         }
         return serverWorld;
     }
