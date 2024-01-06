@@ -128,7 +128,6 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
             Set<Packet<?>> packetQueue = Collections.synchronizedSet(new LinkedHashSet<>());
             packetQueue.add(new PlayerListS2CPacket(PlayerListS2CPacket.Action.ADD_PLAYER, fakePlayer));
             packetQueue.add(new GameStateChangeS2CPacket(GameStateChangeS2CPacket.GAME_MODE_CHANGED, fakePlayer.interactionManager.getGameMode().getId()));
-            packetQueue.add(new PlayerAbilitiesS2CPacket(fakePlayer.abilities));
 
             // see PlayerManager#sendWorldInfo
             packetQueue.add(new WorldBorderS2CPacket(serverWorld.getWorldBorder(), WorldBorderS2CPacket.Type.INITIALIZE));

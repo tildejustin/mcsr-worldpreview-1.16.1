@@ -29,7 +29,7 @@ public abstract class GameRendererMixin {
     @ModifyExpressionValue(method = "getFov", at = {@At(value = "FIELD", target = "Lnet/minecraft/client/render/GameRenderer;lastMovementFovMultiplier:F"), @At(value = "FIELD", target = "Lnet/minecraft/client/render/GameRenderer;movementFovMultiplier:F")})
     private float modifyMovementFovMultiplier(float movementFovMultiplier) {
         if (WorldPreview.renderingPreview) {
-            return 1.0f;
+            return WorldPreview.player.getSpeed();
         }
         return movementFovMultiplier;
     }
