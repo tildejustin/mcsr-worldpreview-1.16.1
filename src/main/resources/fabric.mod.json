@@ -8,11 +8,11 @@
     "Void_X_Walker"
   ],
   "contact": {
-    "repo": "https://github.com/VoidXWalker/WorldPreview"
+    "sources": "https://github.com/KingContaria/mcsr-worldpreview-1.16.1"
   },
   "license": "MIT",
   "icon": "assets/worldpreview/icon.png",
-  "environment": "*",
+  "environment": "client",
   "entrypoints": {
     "client": [
       "me.voidxwalker.worldpreview.WorldPreview"
