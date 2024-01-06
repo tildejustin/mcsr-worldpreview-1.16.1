@@ -16,6 +16,8 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.s2c.play.*;
@@ -40,10 +42,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 @Mixin(MinecraftServer.class)
 public abstract class MinecraftServerMixin implements WPMinecraftServer {
@@ -105,8 +104,6 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
             );
 
             player.copyPositionAndRotation(fakePlayer);
-            player.bodyYaw = player.prevBodyYaw = fakePlayer.bodyYaw;
-            player.headYaw = player.prevHeadYaw = fakePlayer.headYaw;
 
             GameMode gameMode = GameMode.NOT_SET;
 
@@ -116,8 +113,36 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
             CompoundTag playerData = this.getSaveProperties().getPlayerData();
             if (playerData != null) {
                 player.fromTag(playerData);
+
+                // see ServerPlayerEntity#readCustomDataFromTag
                 if (playerData.contains("playerGameType", 99)) {
                     gameMode = GameMode.byId(playerData.getInt("playerGameType"));
+                }
+
+                // see PlayerManager#onPlayerConnect
+                if (playerData.contains("RootVehicle", 10)) {
+                    CompoundTag vehicleData = playerData.getCompound("RootVehicle");
+                    Entity rootVehicle = EntityType.loadEntityWithPassengers(vehicleData.getCompound("Entity"), world, entity -> {
+                        world.addEntity(entity.getEntityId(), entity);
+                        return entity;
+                    });
+                    if (rootVehicle != null) {
+                        UUID uUID = vehicleData.containsUuid("Attach") ? vehicleData.getUuid("Attach") : null;
+                        if (rootVehicle.getUuid().equals(uUID)) {
+                            player.startRiding(rootVehicle, true);
+                            rootVehicle.updatePassengerPosition(player);
+                        } else {
+                            for (Entity entity : rootVehicle.getPassengersDeep()) {
+                                if (entity.getUuid().equals(uUID)) {
+                                    player.startRiding(entity, true);
+                                }
+                                for (Entity passenger : entity.getPassengerList()) {
+                                    entity.updatePassengerPosition(passenger);
+                                    passenger.calculateDimensions();
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
