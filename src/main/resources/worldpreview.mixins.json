@@ -15,13 +15,11 @@
     "client.render.GameRendererMixin",
     "client.render.HeldItemRendererMixin",
     "client.render.LevelLoadingScreenMixin",
-    "compat.sodium.SodiumWorldRendererMixin",
     "server.MinecraftServerMixin",
     "server.ServerChunkManagerMixin",
     "server.ServerPlayerEntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1
-  },
-  "plugin": "org.mcsr.speedrunapi.mixin_plugin.SpeedrunMixinConfigPlugin"
+  }
 }
