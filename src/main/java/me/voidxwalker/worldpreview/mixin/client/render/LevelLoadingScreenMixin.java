@@ -69,7 +69,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
     private void renderWorldPreview(MatrixStack matrices, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (!WorldPreview.inPreview) {
             synchronized (WorldPreview.LOCK) {
-                WorldPreview.inPreview = WorldPreview.world != null && WorldPreview.player != null && WorldPreview.camera != null && WorldPreview.playerListEntry != null && WorldPreview.packetQueue != null;
+                WorldPreview.inPreview = WorldPreview.world != null && WorldPreview.player != null && WorldPreview.interactionManager != null && WorldPreview.camera != null && WorldPreview.packetQueue != null;
 
                 if (WorldPreview.inPreview) {
                     // we set the worldRenderer here instead of WorldPreview#configure because doing it from the server thread can cause issues
@@ -100,14 +100,23 @@ public abstract class LevelLoadingScreenMixin extends Screen {
             this.client.player = WorldPreview.player;
             this.client.world = WorldPreview.world;
             this.client.cameraEntity = WorldPreview.player;
-            this.client.interactionManager = WorldPreview.INTERACTION_MANAGER;
+            this.client.interactionManager = WorldPreview.interactionManager;
+
+            Set<Entity> oldEntities = ImmutableSet.copyOf(WorldPreview.world.getEntities());
 
             Set<Packet<?>> packetsToApply = ImmutableSet.copyOf(WorldPreview.packetQueue);
             for (Packet<?> packet : packetsToApply) {
                 //noinspection unchecked
-                ((Packet<ClientPlayPacketListener>) packet).apply(WorldPreview.NETWORK_HANDLER);
+                ((Packet<ClientPlayPacketListener>) packet).apply(WorldPreview.player.networkHandler);
             }
             WorldPreview.packetQueue.removeAll(packetsToApply);
+
+            for (Entity entity : WorldPreview.world.getEntities()) {
+                if (oldEntities.contains(entity)) {
+                    continue;
+                }
+                entity.baseTick();
+            }
 
             // clip the player into swimming/crawling mode if necessary
             ((PlayerEntityAccessor) WorldPreview.player).callUpdateSize();
@@ -136,6 +145,11 @@ public abstract class LevelLoadingScreenMixin extends Screen {
             RenderSystem.defaultAlphaFunc();
 
             this.client.inGameHud.render(matrices, 0.0F);
+
+            if (WorldPreview.player.isDead()) {
+                // copied from DeathScreen#render
+                this.fillGradient(matrices, 0, 0, this.width, this.height, 0x60500000, -1602211792);
+            }
 
             RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
         } finally {

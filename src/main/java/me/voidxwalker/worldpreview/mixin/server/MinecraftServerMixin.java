@@ -1,31 +1,37 @@
 package me.voidxwalker.worldpreview.mixin.server;
 
+import com.google.common.collect.Sets;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
+import me.voidxwalker.worldpreview.WPFakeServerPlayerEntity;
 import me.voidxwalker.worldpreview.WorldPreview;
 import me.voidxwalker.worldpreview.interfaces.WPMinecraftServer;
-import me.voidxwalker.worldpreview.mixin.access.SpawnLocatingAccessor;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Packet;
+import net.minecraft.network.packet.s2c.play.*;
+import net.minecraft.scoreboard.ScoreboardObjective;
+import net.minecraft.scoreboard.ServerScoreboard;
+import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.WorldGenerationProgressListener;
+import net.minecraft.server.network.ServerPlayerInteractionManager;
 import net.minecraft.server.world.ChunkTicketType;
 import net.minecraft.server.world.ServerChunkManager;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.GameMode;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.world.GameRules;
+import net.minecraft.world.SaveProperties;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -34,13 +40,14 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.Random;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Mixin(MinecraftServer.class)
 public abstract class MinecraftServerMixin implements WPMinecraftServer {
 
-    @Unique
-    private Integer spawnPos;
     @Unique
     private volatile boolean killed;
     @Unique
@@ -49,13 +56,13 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
     private volatile boolean isNewWorld;
 
     @Shadow
-    public abstract int getSpawnRadius(@Nullable ServerWorld world);
-
-    @Shadow
     public abstract boolean isHardcore();
 
     @Shadow
     public abstract GameMode getDefaultGameMode();
+
+    @Shadow
+    public abstract SaveProperties getSaveProperties();
 
     @ModifyExpressionValue(method = "createWorlds", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/ServerWorldProperties;isInitialized()Z"))
     private boolean setIsNewWorld(boolean isInitialized) {
@@ -66,8 +73,21 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
     @ModifyVariable(method = "prepareStartRegion", at = @At("STORE"))
     private ServerWorld configureWorldPreview(ServerWorld serverWorld) {
         if (this.isNewWorld) {
+            ClientPlayNetworkHandler networkHandler = new ClientPlayNetworkHandler(
+                    MinecraftClient.getInstance(),
+                    null,
+                    null,
+                    MinecraftClient.getInstance().getSession().getProfile()
+            );
+            ClientPlayerInteractionManager interactionManager = new ClientPlayerInteractionManager(
+                    MinecraftClient.getInstance(),
+                    networkHandler
+            );
+
+            WPFakeServerPlayerEntity fakePlayer = new WPFakeServerPlayerEntity((MinecraftServer) (Object) this, serverWorld, networkHandler.getProfile(), new ServerPlayerInteractionManager(serverWorld));
+
             ClientWorld world = new ClientWorld(
-                    WorldPreview.NETWORK_HANDLER,
+                    networkHandler,
                     new ClientWorld.Properties(serverWorld.getDifficulty(), this.isHardcore(), serverWorld.isFlat()),
                     serverWorld.getRegistryKey(),
                     serverWorld.getDimensionRegistryKey(),
@@ -78,28 +98,64 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
                     serverWorld.isDebugWorld(),
                     serverWorld.getSeed()
             );
-            ClientPlayerEntity player = new ClientPlayerEntity(
-                    MinecraftClient.getInstance(),
+            ClientPlayerEntity player = interactionManager.method_29357(
                     world,
-                    WorldPreview.NETWORK_HANDLER,
                     null,
-                    null,
-                    false,
-                    false
+                    null
             );
+
+            player.copyPositionAndRotation(fakePlayer);
+            player.bodyYaw = player.prevBodyYaw = fakePlayer.bodyYaw;
+            player.headYaw = player.prevHeadYaw = fakePlayer.headYaw;
+
+            GameMode gameMode = GameMode.NOT_SET;
+
+            // This part is not actually relevant for previewing new worlds,
+            // I just personally like the idea of worldpreview principally being able to work on old worlds as well
+            // same with sending world info and scoreboard data
+            CompoundTag playerData = this.getSaveProperties().getPlayerData();
+            if (playerData != null) {
+                player.fromTag(playerData);
+                if (playerData.contains("playerGameType", 99)) {
+                    gameMode = GameMode.byId(playerData.getInt("playerGameType"));
+                }
+            }
+
+            fakePlayer.interactionManager.setGameMode(gameMode != GameMode.NOT_SET ? gameMode : this.getDefaultGameMode(), GameMode.NOT_SET);
+
             Camera camera = new Camera();
-            PlayerListEntry playerListEntry = new PlayerListEntry(
-                    new PlayerListS2CPacket().new Entry(
-                            WorldPreview.NETWORK_HANDLER.getProfile(),
-                            0,
-                            this.getDefaultGameMode(),
-                            player.getDisplayName()
-                    )
-            );
 
-            this.spawnPos = this.worldpreview$calculateSpawn(serverWorld, player);
+            Set<Packet<?>> packetQueue = Collections.synchronizedSet(new LinkedHashSet<>());
+            packetQueue.add(new PlayerListS2CPacket(PlayerListS2CPacket.Action.ADD_PLAYER, fakePlayer));
+            packetQueue.add(new GameStateChangeS2CPacket(GameStateChangeS2CPacket.GAME_MODE_CHANGED, fakePlayer.interactionManager.getGameMode().getId()));
+            packetQueue.add(new PlayerAbilitiesS2CPacket(fakePlayer.abilities));
 
-            WorldPreview.configure(world, player, camera, playerListEntry);
+            // see PlayerManager#sendWorldInfo
+            packetQueue.add(new WorldBorderS2CPacket(serverWorld.getWorldBorder(), WorldBorderS2CPacket.Type.INITIALIZE));
+            packetQueue.add(new WorldTimeUpdateS2CPacket(serverWorld.getTime(), serverWorld.getTimeOfDay(), serverWorld.getGameRules().getBoolean(GameRules.DO_DAYLIGHT_CYCLE)));
+            packetQueue.add(new PlayerSpawnPositionS2CPacket(serverWorld.getSpawnPos()));
+            if (serverWorld.isRaining()) {
+                packetQueue.add(new GameStateChangeS2CPacket(GameStateChangeS2CPacket.RAIN_STARTED, 0.0f));
+                packetQueue.add(new GameStateChangeS2CPacket(GameStateChangeS2CPacket.RAIN_GRADIENT_CHANGED, serverWorld.getRainGradient(1.0f)));
+                packetQueue.add(new GameStateChangeS2CPacket(GameStateChangeS2CPacket.THUNDER_GRADIENT_CHANGED, serverWorld.getThunderGradient(1.0f)));
+            }
+
+            // see PlayerManager#sendScoreboard
+            ServerScoreboard scoreboard = serverWorld.getScoreboard();
+            HashSet<ScoreboardObjective> set = Sets.newHashSet();
+            for (Team team : scoreboard.getTeams()) {
+                packetQueue.add(new TeamS2CPacket(team, 0));
+            }
+            for (int i = 0; i < 19; ++i) {
+                ScoreboardObjective scoreboardObjective = scoreboard.getObjectiveForSlot(i);
+                if (scoreboardObjective == null || set.contains(scoreboardObjective)) {
+                    continue;
+                }
+                packetQueue.addAll(scoreboard.createChangePackets(scoreboardObjective));
+                set.add(scoreboardObjective);
+            }
+
+            WorldPreview.configure(world, player, interactionManager, camera, packetQueue);
         }
         return serverWorld;
     }
@@ -128,60 +184,6 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
     private synchronized boolean killServer(boolean original) {
         this.tooLateToKill = true;
         return original && !this.killed;
-    }
-
-    /**
-     * Copied from ServerPlayerEntity#moveToSpawn.
-     */
-    @SuppressWarnings("all")
-    @Unique
-    private @Nullable Integer worldpreview$calculateSpawn(ServerWorld world, PlayerEntity player) {
-        BlockPos blockPos = world.getSpawnPos();
-        if (world.getDimension().hasSkyLight() && world.getServer().getSaveProperties().getGameMode() != GameMode.ADVENTURE) {
-            int i = Math.max(0, this.getSpawnRadius(world));
-            int j = MathHelper.floor(world.getWorldBorder().getDistanceInsideBorder((double)blockPos.getX(), (double)blockPos.getZ()));
-            if (j < i) {
-                i = j;
-            }
-
-            if (j <= 1) {
-                i = 1;
-            }
-
-            long l = (long)(i * 2 + 1);
-            long m = l * l;
-            int k = m > 2147483647L ? Integer.MAX_VALUE : (int)m;
-            int n = k <= 16 ? k - 1 : 17;
-            int o = (new Random()).nextInt(k);
-
-            for (int p = 0; p < k; ++p) {
-                int q = (o + n * p) % k;
-                int r = q % (i * 2 + 1);
-                int s = q / (i * 2 + 1);
-                BlockPos blockPos2 = SpawnLocatingAccessor.callFindOverworldSpawn(world, blockPos.getX() + r - i, blockPos.getZ() + s - i, false);
-                if (blockPos2 != null) {
-                    player.refreshPositionAndAngles(blockPos2, 0.0F, 0.0F);
-                    if (world.doesNotCollide(player)) {
-                        break;
-                    }
-                }
-            }
-            return o;
-        } else {
-            player.refreshPositionAndAngles(blockPos, 0.0F, 0.0F);
-
-            while (!world.doesNotCollide(player) && player.getY() < 255.0) {
-                player.updatePosition(player.getX(), player.getY() + 1.0, player.getZ());
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public Integer worldpreview$getAndResetSpawnPos() {
-        Integer spawnPos = this.spawnPos;
-        this.spawnPos = null;
-        return spawnPos;
     }
 
     @Override

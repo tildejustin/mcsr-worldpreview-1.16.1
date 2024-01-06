@@ -22,14 +22,9 @@ public abstract class PlayerListEntryMixin {
     // uses the same textures map for all previews, without this cache skins only get loaded at the end of the preview
     @ModifyExpressionValue(method = "*", at = @At(value = "FIELD", target = "Lnet/minecraft/client/network/PlayerListEntry;textures:Ljava/util/Map;", opcode = Opcodes.GETFIELD))
     private Map<MinecraftProfileTexture.Type, Identifier> modifyTextures(Map<MinecraftProfileTexture.Type, Identifier> textures) {
-        if (this.isWorldPreview()) {
+        if (WorldPreview.renderingPreview) {
             return TEXTURES_CACHE;
         }
         return textures;
-    }
-
-    @Unique
-    private boolean isWorldPreview() {
-        return (Object) this == WorldPreview.playerListEntry;
     }
 }

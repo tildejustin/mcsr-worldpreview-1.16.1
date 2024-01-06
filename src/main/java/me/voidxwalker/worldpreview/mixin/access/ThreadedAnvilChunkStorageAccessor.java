@@ -2,6 +2,7 @@ package me.voidxwalker.worldpreview.mixin.access;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
+import net.minecraft.entity.Entity;
 import net.minecraft.server.network.EntityTrackerEntry;
 import net.minecraft.server.world.ChunkHolder;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
@@ -20,5 +21,8 @@ public interface ThreadedAnvilChunkStorageAccessor {
     interface EntityTrackerAccessor {
         @Accessor
         EntityTrackerEntry getEntry();
+
+        @Accessor
+        Entity getEntity();
     }
 }

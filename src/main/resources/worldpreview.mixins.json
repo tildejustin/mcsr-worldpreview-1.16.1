@@ -4,14 +4,12 @@
   "package": "me.voidxwalker.worldpreview.mixin",
   "compatibilityLevel": "JAVA_8",
   "client": [
+    "access.ClientPlayNetworkHandlerAccessor",
+    "access.MinecraftClientAccessor",
     "access.PlayerEntityAccessor",
-    "access.SpawnLocatingAccessor",
     "access.ThreadedAnvilChunkStorageAccessor",
     "access.ThreadedAnvilChunkStorageAccessor$EntityTrackerAccessor",
-    "client.AbstractClientPlayerEntityMixin",
     "client.CameraMixin",
-    "client.ClientPlayerInteractionManagerMixin",
-    "client.ClientPlayNetworkHandlerMixin",
     "client.MinecraftClientMixin",
     "client.PlayerListEntryMixin",
     "client.render.GameRendererMixin",
@@ -25,8 +23,5 @@
   "injectors": {
     "defaultRequire": 1
   },
-  "plugin": "org.mcsr.speedrunapi.mixin_plugin.SpeedrunMixinConfigPlugin",
-  "mixins": [
-    "access.MinecraftClientAccessor"
-  ]
+  "plugin": "org.mcsr.speedrunapi.mixin_plugin.SpeedrunMixinConfigPlugin"
 }
