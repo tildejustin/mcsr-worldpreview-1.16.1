@@ -122,27 +122,14 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
                 // see PlayerManager#onPlayerConnect
                 if (playerData.contains("RootVehicle", 10)) {
                     CompoundTag vehicleData = playerData.getCompound("RootVehicle");
-                    Entity rootVehicle = EntityType.loadEntityWithPassengers(vehicleData.getCompound("Entity"), world, entity -> {
+                    UUID uUID = vehicleData.containsUuid("Attach") ? vehicleData.getUuid("Attach") : null;
+                    EntityType.loadEntityWithPassengers(vehicleData.getCompound("Entity"), world, entity -> {
                         world.addEntity(entity.getEntityId(), entity);
+                        if (entity.getUuid().equals(uUID)) {
+                            player.startRiding(entity, true);
+                        }
                         return entity;
                     });
-                    if (rootVehicle != null) {
-                        UUID uUID = vehicleData.containsUuid("Attach") ? vehicleData.getUuid("Attach") : null;
-                        if (rootVehicle.getUuid().equals(uUID)) {
-                            player.startRiding(rootVehicle, true);
-                            rootVehicle.updatePassengerPosition(player);
-                        } else {
-                            for (Entity entity : rootVehicle.getPassengersDeep()) {
-                                if (entity.getUuid().equals(uUID)) {
-                                    player.startRiding(entity, true);
-                                }
-                                for (Entity passenger : entity.getPassengerList()) {
-                                    entity.updatePassengerPosition(passenger);
-                                    passenger.calculateDimensions();
-                                }
-                            }
-                        }
-                    }
                 }
             }
 

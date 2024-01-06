@@ -116,6 +116,10 @@ public abstract class LevelLoadingScreenMixin extends Screen {
                     continue;
                 }
                 entity.baseTick();
+                for (Entity passenger : entity.getPassengerList()) {
+                    entity.updatePassengerPosition(passenger);
+                    passenger.calculateDimensions();
+                }
             }
 
             // clip the player into swimming/crawling mode if necessary

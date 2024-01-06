@@ -13,6 +13,7 @@ import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.entity.PlayerModelPart;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.entity.Entity;
 import net.minecraft.network.Packet;
 import net.minecraft.util.math.MathHelper;
 import org.apache.logging.log4j.LogManager;
@@ -71,6 +72,14 @@ public class WorldPreview implements ClientModInitializer {
     public static void configure(ClientWorld world, ClientPlayerEntity player, ClientPlayerInteractionManager interactionManager, Camera camera, Set<Packet<?>> packetQueue) {
         synchronized (LOCK) {
             set(world, player, interactionManager, camera, packetQueue);
+
+            for (Entity entity : WorldPreview.world.getEntities()) {
+                entity.baseTick();
+                for (Entity passenger : entity.getPassengerList()) {
+                    entity.updatePassengerPosition(passenger);
+                    entity.calculateDimensions();
+                }
+            }
 
             // set player chunk coordinates
             player.chunkX = MathHelper.floor(player.getX() / 16.0);
