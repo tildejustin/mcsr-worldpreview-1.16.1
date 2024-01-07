@@ -120,6 +120,11 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
                     gameMode = GameMode.byId(playerData.getInt("playerGameType"));
                 }
 
+                // see LivingEntity#readCustomDataFromTag, only gets read on server worlds
+                if (playerData.contains("Attributes", 9)) {
+                    player.getAttributes().fromTag(playerData.getList("Attributes", 10));
+                }
+
                 // see PlayerManager#onPlayerConnect
                 if (playerData.contains("RootVehicle", 10)) {
                     CompoundTag vehicleData = playerData.getCompound("RootVehicle");
