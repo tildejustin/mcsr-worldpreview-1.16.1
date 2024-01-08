@@ -102,7 +102,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
             this.client.cameraEntity = WorldPreview.player;
             this.client.interactionManager = WorldPreview.interactionManager;
 
-            Set<Entity> oldEntities = ImmutableSet.copyOf(WorldPreview.world.getEntities());
+            Set<Entity> oldEntities = WorldPreview.logPreviewStart ? ImmutableSet.of() : ImmutableSet.copyOf(WorldPreview.world.getEntities());
 
             long start = System.currentTimeMillis();
 
@@ -121,13 +121,17 @@ public abstract class LevelLoadingScreenMixin extends Screen {
             int tickedEntities = 0;
 
             for (Entity entity : WorldPreview.world.getEntities()) {
-                if (oldEntities.contains(entity)) {
+                if (oldEntities.contains(entity) || entity.hasVehicle()) {
                     continue;
                 }
                 entity.baseTick();
-                for (Entity passenger : entity.getPassengerList()) {
-                    entity.updatePassengerPosition(passenger);
-                    passenger.calculateDimensions();
+
+                for (Entity passenger : entity.getPassengersDeep()) {
+                    if (passenger.getVehicle() != null) {
+                        passenger.getVehicle().updatePassengerPosition(passenger);
+                        passenger.calculateDimensions();
+                        passenger.updatePositionAndAngles(passenger.getX(), passenger.getY(), passenger.getZ(), passenger.yaw, passenger.pitch);
+                    }
                     passenger.baseTick();
                 }
                 tickedEntities++;

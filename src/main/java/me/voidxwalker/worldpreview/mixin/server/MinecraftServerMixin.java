@@ -70,7 +70,7 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
 
     @ModifyVariable(method = "prepareStartRegion", at = @At("STORE"))
     private ServerWorld configureWorldPreview(ServerWorld serverWorld) {
-        if (this.isNewWorld || true) {
+        if (this.isNewWorld || WorldPreview.DEBUG) {
             long start = System.currentTimeMillis();
 
             ClientPlayNetworkHandler networkHandler = new ClientPlayNetworkHandler(
@@ -129,7 +129,8 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
                 if (playerData.contains("RootVehicle", 10)) {
                     CompoundTag vehicleData = playerData.getCompound("RootVehicle");
                     UUID uUID = vehicleData.containsUuid("Attach") ? vehicleData.getUuid("Attach") : null;
-                    EntityType.loadEntityWithPassengers(vehicleData.getCompound("Entity"), world, entity -> {
+                    EntityType.loadEntityWithPassengers(vehicleData.getCompound("Entity"), serverWorld, entity -> {
+                        entity.world = world;
                         world.addEntity(entity.getEntityId(), entity);
                         if (entity.getUuid().equals(uUID)) {
                             player.startRiding(entity, true);

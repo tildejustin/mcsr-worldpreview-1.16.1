@@ -14,7 +14,6 @@ import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.entity.PlayerModelPart;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.entity.Entity;
 import net.minecraft.network.Packet;
 import net.minecraft.util.math.MathHelper;
 import org.apache.logging.log4j.LogManager;
@@ -25,7 +24,7 @@ import java.util.Set;
 
 public class WorldPreview implements ClientModInitializer {
 
-    private static final boolean DEBUG = FabricLoader.getInstance().isDevelopmentEnvironment();
+    public static final boolean DEBUG = FabricLoader.getInstance().isDevelopmentEnvironment();
 
     public static final Object LOCK = new Object();
     public static Logger LOGGER = LogManager.getLogger();
@@ -82,19 +81,6 @@ public class WorldPreview implements ClientModInitializer {
         synchronized (LOCK) {
             set(world, player, interactionManager, camera, packetQueue);
 
-            for (Entity entity : WorldPreview.world.getEntities()) {
-                entity.baseTick();
-                for (Entity passenger : entity.getPassengerList()) {
-                    entity.updatePassengerPosition(passenger);
-                    entity.calculateDimensions();
-                }
-            }
-
-            // set player chunk coordinates
-            player.chunkX = MathHelper.floor(player.getX() / 16.0);
-            player.chunkY = MathHelper.clamp(MathHelper.floor(player.getY() / 16.0), 0, 16);
-            player.chunkZ = MathHelper.floor(player.getZ() / 16.0);
-
             // make player model parts visible
             int playerModelPartsBitMask = 0;
             for (PlayerModelPart playerModelPart : MinecraftClient.getInstance().options.getEnabledPlayerModelParts()) {
@@ -102,22 +88,19 @@ public class WorldPreview implements ClientModInitializer {
             }
             player.getDataTracker().set(PlayerEntityAccessor.getPLAYER_MODEL_PARTS(), (byte) playerModelPartsBitMask);
 
-            player.prevPitch = player.pitch;
-            player.prevYaw = player.yaw;
-            player.prevBodyYaw = player.bodyYaw;
-            player.prevHeadYaw = player.headYaw;
-            player.lastRenderX = player.prevX = player.getX();
-            player.lastRenderY = player.prevY = player.getY();
-            player.lastRenderZ = player.prevZ = player.getZ();
-            player.lastRenderYaw = player.yaw;
-            player.lastRenderPitch = player.pitch;
-
             // set cape to player position
             player.prevCapeX = player.capeX = player.getX();
             player.prevCapeY = player.capeY = player.getY();
             player.prevCapeZ = player.capeZ = player.getZ();
 
             world.addPlayer(player.getEntityId(), player);
+
+            // set player chunk coordinates,
+            // usually these get set when adding the entity to a chunk,
+            // however the chunk the player is in is not actually loaded yet
+            player.chunkX = MathHelper.floor(player.getX() / 16.0);
+            player.chunkY = MathHelper.clamp(MathHelper.floor(player.getY() / 16.0), 0, 16);
+            player.chunkZ = MathHelper.floor(player.getZ() / 16.0);
 
             ((ClientPlayNetworkHandlerAccessor) player.networkHandler).setWorld(world);
 
