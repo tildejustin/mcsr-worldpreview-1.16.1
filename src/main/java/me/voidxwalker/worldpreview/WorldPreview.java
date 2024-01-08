@@ -4,7 +4,6 @@ import me.voidxwalker.worldpreview.mixin.access.ClientPlayNetworkHandlerAccessor
 import me.voidxwalker.worldpreview.mixin.access.PlayerEntityAccessor;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
@@ -24,7 +23,7 @@ import java.util.Set;
 
 public class WorldPreview implements ClientModInitializer {
 
-    public static final boolean DEBUG = FabricLoader.getInstance().isDevelopmentEnvironment();
+    public static final boolean DEBUG = true;
 
     public static final Object LOCK = new Object();
     public static Logger LOGGER = LogManager.getLogger();
