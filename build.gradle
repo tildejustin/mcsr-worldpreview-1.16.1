@@ -4,7 +4,7 @@ plugins {
     id 'org.ajoberstar.grgit' version '5.2.0'
 }
 
-version = "${getVersionMetadata()}"
+version = project.version
 
 base {
     archivesName = archives_name
@@ -62,20 +62,4 @@ jar {
 
 vineflower {
     toolVersion = vineflower_version
-}
-
-@SuppressWarnings(["GrMethodMayBeStatic", "GrUnresolvedAccess"])
-def getVersionMetadata() {
-    // CI build version numbers
-    def build_id = System.getenv("RELEASE_TAG")
-    if (build_id != null) return build_id
-
-    // development builds
-    if (grgit == null) return "dev"
-
-    // named development builds
-    def id = grgit.head().getAbbreviatedId()
-    if (!grgit.status().clean) id += "-dirty"
-
-    return "rev.$id"
 }
