@@ -121,8 +121,14 @@ public abstract class LevelLoadingScreenMixin extends Screen {
             int tickedEntities = 0;
 
             for (Entity entity : WorldPreview.world.getEntities()) {
-                if (oldEntities.contains(entity) || entity.hasVehicle()) {
+                if (oldEntities.contains(entity) || (entity.hasVehicle() && !oldEntities.contains(entity.getVehicle()))) {
                     continue;
+                }
+
+                if (entity.getVehicle() != null) {
+                    entity.getVehicle().updatePassengerPosition(entity);
+                    entity.calculateDimensions();
+                    entity.updatePositionAndAngles(entity.getX(), entity.getY(), entity.getZ(), entity.yaw, entity.pitch);
                 }
                 entity.baseTick();
 
