@@ -9,6 +9,7 @@ import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import me.voidxwalker.worldpreview.WPFakeServerPlayerEntity;
 import me.voidxwalker.worldpreview.WorldPreview;
+import me.voidxwalker.worldpreview.WorldPreviewMissingChunkException;
 import me.voidxwalker.worldpreview.interfaces.WPMinecraftServer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -51,7 +52,9 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
     @Unique
     private volatile boolean tooLateToKill;
     @Unique
-    private volatile boolean isNewWorld;
+    private boolean shouldConfigurePreview;
+    @Unique
+    private boolean calculatingSpawn;
 
     @Shadow
     public abstract boolean isHardcore();
@@ -64,14 +67,25 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
 
     @ModifyExpressionValue(method = "createWorlds", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/ServerWorldProperties;isInitialized()Z"))
     private boolean setIsNewWorld(boolean isInitialized) {
-        this.isNewWorld = !isInitialized;
+        this.shouldConfigurePreview = !isInitialized || WorldPreview.DEBUG;
         return isInitialized;
     }
 
-    @ModifyVariable(method = "prepareStartRegion", at = @At("STORE"))
+    @ModifyVariable(method = "prepareStartRegion", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkManager;getTotalChunksLoadedCount()I"))
     private ServerWorld configureWorldPreview(ServerWorld serverWorld) {
-        if (this.isNewWorld || WorldPreview.DEBUG) {
+        if (this.shouldConfigurePreview) {
             long start = System.currentTimeMillis();
+
+            WPFakeServerPlayerEntity fakePlayer;
+            try {
+                this.calculatingSpawn = true;
+                fakePlayer = new WPFakeServerPlayerEntity(serverWorld.getServer(), serverWorld, MinecraftClient.getInstance().getSession().getProfile(), new ServerPlayerInteractionManager(serverWorld));
+            } catch (WorldPreviewMissingChunkException e) {
+                WorldPreview.debug("Waiting for more chunks to generate before calculating player spawn.");
+                return serverWorld;
+            } finally {
+                this.calculatingSpawn = false;
+            }
 
             ClientPlayNetworkHandler networkHandler = new ClientPlayNetworkHandler(
                     MinecraftClient.getInstance(),
@@ -83,8 +97,6 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
                     MinecraftClient.getInstance(),
                     networkHandler
             );
-
-            WPFakeServerPlayerEntity fakePlayer = new WPFakeServerPlayerEntity((MinecraftServer) (Object) this, serverWorld, networkHandler.getProfile(), new ServerPlayerInteractionManager(serverWorld));
 
             ClientWorld world = new ClientWorld(
                     networkHandler,
@@ -175,6 +187,8 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
 
             WorldPreview.configure(world, player, interactionManager, camera, packetQueue);
 
+            this.shouldConfigurePreview = false;
+
             WorldPreview.debug("Took " + (System.currentTimeMillis() - start) + " ms to configure preview.");
         }
         return serverWorld;
@@ -204,6 +218,11 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
     private synchronized boolean killServer(boolean original) {
         this.tooLateToKill = true;
         return original && !this.killed;
+    }
+
+    @Override
+    public boolean worldpreview$isCalculatingSpawn() {
+        return this.calculatingSpawn;
     }
 
     @Override

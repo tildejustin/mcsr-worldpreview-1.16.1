@@ -1,10 +1,6 @@
 plugins {
     id "fabric-loom" version "$loom_version"
-    id "io.github.juuxel.loom-vineflower" version "$loom_vineflower_version"
-    id 'org.ajoberstar.grgit' version '5.2.0'
 }
-
-version = project.version
 
 base {
     archivesName = archives_name
@@ -29,17 +25,16 @@ dependencies {
     // check for the latest versions at https://jitpack.io/#kingcontaria/speedrunapi
     modImplementation "com.github.KingContaria:SpeedrunAPI:8ab3380064"
     modImplementation "net.fabricmc.fabric-api:fabric-key-binding-api-v1:1.0.36+fb8d95da77"
-    implementation(annotationProcessor "com.github.llamalad7.mixinextras:mixinextras-fabric:0.2.0")
 
     // Sodium
     modCompileOnly files("libs/sodium-1.16.1-v2.jar") // the jitpack build unfortunately failed
 }
 
 processResources {
-    inputs.property "version", version
+    inputs.property "version", project.version
 
     filesMatching("fabric.mod.json") {
-        expand "version": version
+        expand "version": project.version
     }
 }
 
@@ -58,8 +53,4 @@ jar {
     from("LICENSE") {
         rename { "${it}_${base.archivesName.get()}" }
     }
-}
-
-vineflower {
-    toolVersion = vineflower_version
 }

@@ -19,7 +19,7 @@ public abstract class PlayerListEntryMixin {
     private static final EnumMap<MinecraftProfileTexture.Type, Identifier> TEXTURES_CACHE = Maps.newEnumMap(MinecraftProfileTexture.Type.class);
 
     // uses the same textures map for all previews, without this cache skins only get loaded at the end of the preview
-    @ModifyExpressionValue(method = "<init>", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/Maps;newEnumMap(Ljava/lang/Class;)Ljava/util/EnumMap;"))
+    @ModifyExpressionValue(method = "<init>", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/Maps;newEnumMap(Ljava/lang/Class;)Ljava/util/EnumMap;"), remap = false)
     private EnumMap<MinecraftProfileTexture.Type, Identifier> modifyTextures(EnumMap<MinecraftProfileTexture.Type, Identifier> textures) {
         if (WorldPreview.renderingPreview) {
             return TEXTURES_CACHE;

@@ -1,5 +1,6 @@
 package me.voidxwalker.worldpreview.mixin.server;
 
+import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import me.voidxwalker.worldpreview.WorldPreview;
 import me.voidxwalker.worldpreview.mixin.access.ThreadedAnvilChunkStorageAccessor;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -41,10 +42,6 @@ public abstract class ServerChunkManagerMixin {
     @Final
     public ThreadedAnvilChunkStorage threadedAnvilChunkStorage;
 
-    @Shadow
-    @Nullable
-    public abstract WorldChunk getWorldChunk(int chunkX, int chunkZ);
-
     @Unique
     private final Set<ChunkPos> sentChunks = new HashSet<>();
     @Unique
@@ -68,7 +65,8 @@ public abstract class ServerChunkManagerMixin {
             return;
         }
 
-        for (ChunkHolder holder : ((ThreadedAnvilChunkStorageAccessor) this.threadedAnvilChunkStorage).getChunkHolders().values()) {
+        Long2ObjectLinkedOpenHashMap<ChunkHolder> chunkHolders = ((ThreadedAnvilChunkStorageAccessor) this.threadedAnvilChunkStorage).getChunkHolders();
+        for (ChunkHolder holder : chunkHolders.values()) {
             if (holder == null) {
                 continue;
             }
@@ -82,7 +80,7 @@ public abstract class ServerChunkManagerMixin {
                 continue;
             }
 
-            WorldChunk chunk = this.getWorldChunk(pos.x, pos.z);
+            WorldChunk chunk = holder.getWorldChunk();
             if (chunk == null) {
                 continue;
             }
@@ -115,7 +113,7 @@ public abstract class ServerChunkManagerMixin {
                 if (!this.sentChunks.contains(neighbourChunkPos)) {
                     continue;
                 }
-                WorldChunk neighbourChunk = this.getWorldChunk(neighbourChunkPos.x, neighbourChunkPos.z);
+                WorldChunk neighbourChunk = chunkHolders.get(neighbourChunkPos.toLong()).getWorldChunk();
                 if (neighbourChunk == null) {
                     continue;
                 }

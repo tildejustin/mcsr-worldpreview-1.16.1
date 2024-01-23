@@ -18,7 +18,8 @@
     "client.render.LevelLoadingScreenMixin",
     "server.MinecraftServerMixin",
     "server.ServerChunkManagerMixin",
-    "server.ServerPlayerEntityMixin"
+    "server.ServerPlayerEntityMixin",
+    "server.SpawnLocatingMixin"
   ],
   "injectors": {
     "defaultRequire": 1
