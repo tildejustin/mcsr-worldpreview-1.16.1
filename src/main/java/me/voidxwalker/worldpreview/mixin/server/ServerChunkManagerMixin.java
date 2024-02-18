@@ -19,7 +19,6 @@ import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.chunk.WorldChunk;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -76,7 +75,8 @@ public abstract class ServerChunkManagerMixin {
                 continue;
             }
 
-            if (Math.abs(pos.x - player.chunkX) > 16 || Math.abs(pos.z - player.chunkZ) > 16) {
+            ChunkPos centerPos = new ChunkPos(player.getBlockPos());
+            if (centerPos.method_24022(pos) > 16) {
                 continue;
             }
 
