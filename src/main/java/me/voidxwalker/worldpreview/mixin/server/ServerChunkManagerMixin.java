@@ -60,7 +60,7 @@ public abstract class ServerChunkManagerMixin {
             player = WorldPreview.player;
             packetQueue = WorldPreview.packetQueue;
         }
-        if (world == null || packetQueue == null) {
+        if (world == null || player == null || packetQueue == null) {
             return;
         }
 
