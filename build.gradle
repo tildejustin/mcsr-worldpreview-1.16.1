@@ -27,7 +27,11 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-key-binding-api-v1:1.0.36+fb8d95da77"
 
     // Sodium
-    modCompileOnly files("libs/sodium-1.16.1-v2.jar") // the jitpack build unfortunately failed
+    // check for the latest versions at https://jitpack.io/#Minecraft-Java-Edition-Speedrunning/sodium
+    modCompileOnly "com.github.Minecraft-Java-Edition-Speedrunning:sodium:7e4905f134"
+
+    // State-Output
+    //modCompileOnly files("libs/state-output-1.1.1+1.16-1.17.1.jar")
 }
 
 processResources {
