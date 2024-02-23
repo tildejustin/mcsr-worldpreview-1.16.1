@@ -5,6 +5,7 @@
   "compatibilityLevel": "JAVA_8",
   "client": [
     "access.ClientPlayNetworkHandlerAccessor",
+    "access.EntityAccessor",
     "access.MinecraftClientAccessor",
     "access.PlayerEntityAccessor",
     "access.ThreadedAnvilChunkStorageAccessor",

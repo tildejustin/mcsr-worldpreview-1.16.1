@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.voidxwalker.worldpreview.WorldPreview;
+import me.voidxwalker.worldpreview.mixin.access.EntityAccessor;
 import me.voidxwalker.worldpreview.mixin.access.MinecraftClientAccessor;
 import me.voidxwalker.worldpreview.mixin.access.PlayerEntityAccessor;
 import net.minecraft.client.MinecraftClient;
@@ -34,8 +35,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.Set;
 
 @Mixin(LevelLoadingScreen.class)
 public abstract class LevelLoadingScreenMixin extends Screen {
@@ -105,8 +104,6 @@ public abstract class LevelLoadingScreenMixin extends Screen {
             this.client.cameraEntity = WorldPreview.player;
             this.client.interactionManager = WorldPreview.interactionManager;
 
-            Set<Entity> oldEntities = WorldPreview.logPreviewStart ? ImmutableSet.of() : ImmutableSet.copyOf(WorldPreview.world.getEntities());
-
             long start = System.currentTimeMillis();
 
             int appliedPackets = 0;
@@ -128,7 +125,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
             int tickedEntities = 0;
 
             for (Entity entity : WorldPreview.world.getEntities()) {
-                if (oldEntities.contains(entity) || (entity.hasVehicle() && !oldEntities.contains(entity.getVehicle()))) {
+                if (!((EntityAccessor) entity).isFirstUpdate() || entity.getVehicle() != null && ((EntityAccessor) entity.getVehicle()).isFirstUpdate()) {
                     continue;
                 }
 
@@ -146,6 +143,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
                         passenger.updatePositionAndAngles(passenger.getX(), passenger.getY(), passenger.getZ(), passenger.yaw, passenger.pitch);
                     }
                     passenger.baseTick();
+                    tickedEntities++;
                 }
                 tickedEntities++;
             }
