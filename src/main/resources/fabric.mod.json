@@ -18,6 +18,11 @@
       "me.voidxwalker.worldpreview.WorldPreview"
     ]
   },
+  "custom": {
+    "speedrunapi": {
+      "config": "me.voidxwalker.worldpreview.WorldPreviewConfig"
+    }
+  },
   "mixins": [
     "worldpreview.mixins.json"
   ],

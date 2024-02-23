@@ -66,8 +66,8 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
     public abstract SaveProperties getSaveProperties();
 
     @ModifyExpressionValue(method = "createWorlds", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/ServerWorldProperties;isInitialized()Z"))
-    private boolean setIsNewWorld(boolean isInitialized) {
-        this.shouldConfigurePreview = !isInitialized || WorldPreview.DEBUG;
+    private boolean setShouldConfigurePreview(boolean isInitialized) {
+        this.shouldConfigurePreview = !isInitialized || WorldPreview.config.previewOldWorlds;
         return isInitialized;
     }
 

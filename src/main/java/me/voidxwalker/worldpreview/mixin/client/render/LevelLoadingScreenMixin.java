@@ -21,6 +21,9 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.Packet;
 import net.minecraft.network.listener.ClientPlayPacketListener;
+import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
+import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
+import net.minecraft.network.packet.s2c.play.MobSpawnS2CPacket;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Util;
@@ -106,15 +109,19 @@ public abstract class LevelLoadingScreenMixin extends Screen {
 
             long start = System.currentTimeMillis();
 
-            Set<Packet<?>> packetsToApply = ImmutableSet.copyOf(WorldPreview.packetQueue);
-            for (Packet<?> packet : packetsToApply) {
+            int appliedPackets = 0;
+            for (Packet<?> packet : ImmutableSet.copyOf(WorldPreview.packetQueue)) {
+                if (WorldPreview.config.dataLimit < 100 && appliedPackets >= WorldPreview.config.dataLimit && (packet instanceof ChunkDataS2CPacket || packet instanceof MobSpawnS2CPacket || packet instanceof EntitySpawnS2CPacket)) {
+                    break;
+                }
                 //noinspection unchecked
                 ((Packet<ClientPlayPacketListener>) packet).apply(WorldPreview.player.networkHandler);
+                appliedPackets++;
+                WorldPreview.packetQueue.remove(packet);
             }
-            WorldPreview.packetQueue.removeAll(packetsToApply);
 
-            if (!packetsToApply.isEmpty()) {
-                WorldPreview.debug("Took " + (System.currentTimeMillis() - start) + " ms to load " + packetsToApply.size() + " packets.");
+            if (appliedPackets != 0) {
+                WorldPreview.debug("Took " + (System.currentTimeMillis() - start) + " ms to load " + appliedPackets + " packets.");
             }
 
             start = System.currentTimeMillis();

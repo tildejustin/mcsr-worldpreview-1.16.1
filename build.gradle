@@ -24,7 +24,7 @@ dependencies {
 
     // SpeedrunAPI
     // check for the latest versions at https://jitpack.io/#kingcontaria/speedrunapi
-    modImplementation "com.github.KingContaria:SpeedrunAPI:8ab3380064"
+    modImplementation "com.github.KingContaria:SpeedrunAPI:f4763c6227"
     modImplementation "net.fabricmc.fabric-api:fabric-key-binding-api-v1:1.0.36+fb8d95da77"
 
     // Sodium

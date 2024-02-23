@@ -1,5 +1,14 @@
 {
   "Leave Preview": "Reset Preview",
   "Freeze Preview": "Freeze Preview",
-  "key.categories.world_preview": "World Preview"
+  "key.categories.world_preview": "World Preview",
+
+  "speedrunapi.config.worldpreview.option.chunkDistance": "Chunk Distance",
+  "speedrunapi.config.worldpreview.option.chunkDistance.description": "Limits the radius around the player spawn in which chunks will be sent to the preview.",
+  "speedrunapi.config.worldpreview.option.dataLimit": "Data Limit",
+  "speedrunapi.config.worldpreview.option.dataLimit.description": "Limits the amount of packets that get processed each frame of the preview.",
+  "speedrunapi.config.worldpreview.option.dataLimit.value.100": "Unlimited",
+  "speedrunapi.config.worldpreview.option.previewOldWorlds": "Preview Old Worlds",
+  "speedrunapi.config.worldpreview.option.previewOldWorlds.description": "Start WorldPreview on existing worlds.",
+  "speedrunapi.config.worldpreview.option.debug": "Debug Mode"
 }

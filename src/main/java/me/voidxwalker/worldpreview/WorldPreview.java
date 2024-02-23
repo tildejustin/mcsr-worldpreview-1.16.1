@@ -26,7 +26,9 @@ public class WorldPreview implements ClientModInitializer {
     public static final boolean DEBUG = true;
 
     public static final Object LOCK = new Object();
-    public static Logger LOGGER = LogManager.getLogger();
+    public static final Logger LOGGER = LogManager.getLogger();
+
+    public static WorldPreviewConfig config;
 
     public static ClientPlayerInteractionManager interactionManager;
     public static WorldRenderer worldRenderer;
@@ -44,7 +46,7 @@ public class WorldPreview implements ClientModInitializer {
     public static KeyBinding freezeKey;
 
     public static void debug(String message) {
-        if (DEBUG) {
+        if (config.debug) {
             LOGGER.info("Worldpreview-DEBUG | " + message);
         }
     }
