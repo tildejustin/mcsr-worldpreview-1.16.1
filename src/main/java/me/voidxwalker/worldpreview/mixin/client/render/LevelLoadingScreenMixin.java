@@ -1,7 +1,7 @@
 package me.voidxwalker.worldpreview.mixin.client.render;
 
 import com.google.common.collect.ImmutableSet;
-import com.llamalad7.mixinextras.injector.WrapWithCondition;
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.voidxwalker.worldpreview.WorldPreview;
 import me.voidxwalker.worldpreview.mixin.access.EntityAccessor;
