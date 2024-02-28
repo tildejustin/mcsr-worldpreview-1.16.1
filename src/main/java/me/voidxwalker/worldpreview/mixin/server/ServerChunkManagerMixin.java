@@ -62,6 +62,10 @@ public abstract class ServerChunkManagerMixin {
     @Unique
     private Vec3d cameraPos;
     @Unique
+    private float pitch;
+    @Unique
+    private float yaw;
+    @Unique
     private double fov;
     @Unique
     private double aspectRatio;
@@ -93,13 +97,20 @@ public abstract class ServerChunkManagerMixin {
         MinecraftClient client = MinecraftClient.getInstance();
         double fov = Math.min(client.options.fov * player.getSpeed(), 180.0);
         double aspectRatio = (double) client.getWindow().getFramebufferWidth() / client.getWindow().getFramebufferHeight();
-        Vec3d cameraPos = camera.getPos();
-        if (this.frustum == null || !cameraPos.equals(this.cameraPos) || this.fov != fov || this.aspectRatio != aspectRatio) {
+        Vec3d cameraPos;
+        float pitch;
+        float yaw;
+        synchronized (camera) {
+            cameraPos = camera.getPos();
+            pitch = camera.getPitch();
+            yaw = camera.getYaw();
+        }
+        if (this.frustum == null || !cameraPos.equals(this.cameraPos) || this.yaw != yaw || this.pitch != pitch || this.fov != fov || this.aspectRatio != aspectRatio) {
             // see GameRenderer#renderWorld
             Matrix4f rotationMatrix = new Matrix4f();
             rotationMatrix.loadIdentity();
-            rotationMatrix.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(camera.getPitch()));
-            rotationMatrix.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(camera.getYaw() + 180.0f));
+            rotationMatrix.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(pitch));
+            rotationMatrix.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(yaw + 180.0f));
 
             // see GameRenderer#getBasicProjectionMatrix
             Matrix4f projectionMatrix = new Matrix4f();
@@ -109,6 +120,8 @@ public abstract class ServerChunkManagerMixin {
             this.frustum = new Frustum(rotationMatrix, projectionMatrix);
             this.frustum.setPosition(cameraPos.getX(), cameraPos.getY(), cameraPos.getZ());
             this.cameraPos = cameraPos;
+            this.yaw = yaw;
+            this.pitch = pitch;
             this.fov = fov;
             this.aspectRatio = aspectRatio;
 
@@ -116,7 +129,7 @@ public abstract class ServerChunkManagerMixin {
             this.borderChunks.clear();
             this.culledEntities.clear();
 
-            WorldPreview.debug("Created new Frustum (Camera: [" + cameraPos.getX() + ", " + cameraPos.getY() + ", " + cameraPos.getZ() + ", " + "], FOV: " + this.fov + ", Aspect Ratio: " + this.aspectRatio + ").");
+            WorldPreview.debug("Created new Frustum (Camera: [" + cameraPos.getX() + ", " + cameraPos.getY() + ", " + cameraPos.getZ() + ", " + yaw + ", " + pitch + "], FOV: " + fov + ", Aspect Ratio: " + aspectRatio + ").");
         }
 
         Long2ObjectLinkedOpenHashMap<ChunkHolder> chunkHolders = ((ThreadedAnvilChunkStorageAccessor) this.threadedAnvilChunkStorage).getChunkHolders();
