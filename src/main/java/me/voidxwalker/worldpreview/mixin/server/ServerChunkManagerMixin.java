@@ -162,19 +162,6 @@ public abstract class ServerChunkManagerMixin {
                 continue;
             }
 
-            /*
-            // instead of sending LightUpdateS2CPacket's to all the neighbour chunks we can also wait for all neighbours to be loaded before sending the ChunkDataS2CPacket
-            // this would mean chunks being sent later in exchange for only having to evaluate lighting once clientside
-            boolean allNeighboursLoaded = true;
-            for (int i = 0; i < 9; i++) {
-                allNeighboursLoaded &= this.isChunkLoaded(pos.x + (i % 3) - 1, pos.z + (i / 3) - 1);
-            }
-            if (!allNeighboursLoaded) {
-                continue;
-            }
-
-             */
-
             Set<Packet<?>> chunkPackets = new LinkedHashSet<>();
 
             chunkPackets.add(new ChunkDataS2CPacket(this.cullChunkSections(chunk), 65535, true));
