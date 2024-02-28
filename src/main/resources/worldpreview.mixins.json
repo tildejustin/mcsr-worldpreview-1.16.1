@@ -17,6 +17,7 @@
     "client.render.HeldItemRendererMixin",
     "client.render.InGameHudMixin",
     "client.render.LevelLoadingScreenMixin",
+    "server.ChunkHolderMixin",
     "server.MinecraftServerMixin",
     "server.ServerChunkManagerMixin",
     "server.ServerPlayerEntityMixin",

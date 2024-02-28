@@ -23,8 +23,6 @@ import java.util.Set;
 
 public class WorldPreview implements ClientModInitializer {
 
-    public static final boolean DEBUG = true;
-
     public static final Object LOCK = new Object();
     public static final Logger LOGGER = LogManager.getLogger();
 
@@ -104,6 +102,10 @@ public class WorldPreview implements ClientModInitializer {
             player.chunkZ = MathHelper.floor(player.getZ() / 16.0);
 
             ((ClientPlayNetworkHandlerAccessor) player.networkHandler).setWorld(world);
+
+            // camera has to be updated early for chunk/entity data culling to work
+            int perspective = MinecraftClient.getInstance().options.perspective;
+            camera.update(world, player, perspective > 0, perspective == 2, 0.0f);
 
             world.getChunkManager().setChunkMapCenter(player.chunkX, player.chunkZ);
 
