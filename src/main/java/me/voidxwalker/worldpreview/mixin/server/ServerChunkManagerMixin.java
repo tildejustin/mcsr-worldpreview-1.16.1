@@ -184,7 +184,7 @@ public abstract class ServerChunkManagerMixin {
                         chunkPackets.add(new LightUpdateS2CPacket(neighbor, neighborChunk.getLightingProvider(), lightUpdates[0], lightUpdates[1], false));
                     }
                 } else if (this.culledChunks.contains(neighbor.toLong()) && this.borderChunks.add(neighbor.toLong())) {
-                    chunkPackets.add(new ChunkDataS2CPacket(new WorldChunk(chunk.getWorld(), chunk.getPos(), chunk.getBiomeArray()), 65535, true));
+                    chunkPackets.add(new ChunkDataS2CPacket(new WorldChunk(neighborChunk.getWorld(), neighborChunk.getPos(), neighborChunk.getBiomeArray()), 65535, true));
                 }
             }
 
