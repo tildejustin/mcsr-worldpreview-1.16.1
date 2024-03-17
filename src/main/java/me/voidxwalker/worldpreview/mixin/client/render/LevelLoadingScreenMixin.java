@@ -181,11 +181,6 @@ public abstract class LevelLoadingScreenMixin extends Screen {
 
             this.client.inGameHud.render(matrices, 0.0F);
 
-            if (WorldPreview.player.isDead()) {
-                // copied from DeathScreen#render
-                this.fillGradient(matrices, 0, 0, this.width, this.height, 0x60500000, -1602211792);
-            }
-
             RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
         } finally {
             WorldPreview.renderingPreview = false;
