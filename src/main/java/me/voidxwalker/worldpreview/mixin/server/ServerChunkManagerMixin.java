@@ -94,6 +94,18 @@ public abstract class ServerChunkManagerMixin {
             return;
         }
 
+        this.updateFrustum(player, camera);
+
+        Long2ObjectLinkedOpenHashMap<ChunkHolder> chunkHolders = ((ThreadedAnvilChunkStorageAccessor) this.threadedAnvilChunkStorage).getChunkHolders();
+        for (ChunkHolder holder : chunkHolders.values()) {
+            this.processChunk(player, packetQueue, holder);
+        }
+
+        ((ThreadedAnvilChunkStorageAccessor) this.threadedAnvilChunkStorage).getEntityTrackers().forEach((id, tracker) -> this.processEntity(packetQueue, id, (ThreadedAnvilChunkStorageAccessor.EntityTrackerAccessor) tracker));
+    }
+
+    @Unique
+    private void updateFrustum(ClientPlayerEntity player, Camera camera) {
         MinecraftClient client = MinecraftClient.getInstance();
         double fov = Math.min(client.options.fov * player.getSpeed(), 180.0);
         double aspectRatio = (double) client.getWindow().getFramebufferWidth() / client.getWindow().getFramebufferHeight();
@@ -131,132 +143,71 @@ public abstract class ServerChunkManagerMixin {
 
             WorldPreview.debug("Created new Frustum (Camera: [" + cameraPos.getX() + ", " + cameraPos.getY() + ", " + cameraPos.getZ() + ", " + yaw + ", " + pitch + "], FOV: " + fov + ", Aspect Ratio: " + aspectRatio + ").");
         }
+    }
 
-        Long2ObjectLinkedOpenHashMap<ChunkHolder> chunkHolders = ((ThreadedAnvilChunkStorageAccessor) this.threadedAnvilChunkStorage).getChunkHolders();
-        for (ChunkHolder holder : chunkHolders.values()) {
-            WorldChunk chunk = holder.getWorldChunk();
-            if (chunk == null) {
-                continue;
-            }
+    @Unique
+    private void processChunk(ClientPlayerEntity player, Set<Packet<?>> packetQueue, ChunkHolder holder) {
+        WorldChunk chunk = holder.getWorldChunk();
+        if (chunk == null) {
+            return;
+        }
 
-            ChunkPos pos = holder.getPos();
-            if (this.sentChunks.contains(pos.toLong()) || this.culledChunks.contains(pos.toLong())) {
-                continue;
-            }
+        ChunkPos pos = holder.getPos();
+        if (this.sentChunks.contains(pos.toLong()) || this.culledChunks.contains(pos.toLong())) {
+            return;
+        }
 
-            ChunkPos centerPos = new ChunkPos(player.getBlockPos());
-            if (centerPos.method_24022(pos) > WorldPreview.config.chunkDistance) {
-                continue;
-            }
+        ChunkPos centerPos = new ChunkPos(player.getBlockPos());
+        if (centerPos.method_24022(pos) > WorldPreview.config.chunkDistance) {
+            return;
+        }
 
-            if (WorldPreview.config.chunkDataCulling && !this.frustum.isVisible(new Box(pos.getStartX(), 0, pos.getStartZ(), pos.getStartX() + 16, chunk.getHighestNonEmptySectionYOffset() + 16, pos.getStartZ() + 16))) {
-                this.culledChunks.add(pos.toLong());
-                WorldPreview.debug("Culled chunk at " + pos.x + ", " + pos.z + ".");
-                for (ChunkPos neighbor : this.getNeighborChunks(pos)) {
-                    if (this.sentChunks.contains(neighbor.toLong())) {
-                        packetQueue.add(this.createEmptyChunkPacket(chunk));
-                        this.sentEmptyChunks.add(pos.toLong());
-                        break;
-                    }
-                }
-                continue;
-            }
-
-            Set<Packet<?>> chunkPackets = new LinkedHashSet<>();
-
-            chunkPackets.add(new ChunkDataS2CPacket(this.cullChunkSections(chunk), 65535, true));
-            ((WPChunkHolder) holder).worldpreview$flushUpdates();
-            chunkPackets.add(new LightUpdateS2CPacket(chunk.getPos(), chunk.getLightingProvider(), true));
-
+        if (this.shouldCullChunk(chunk)) {
+            this.culledChunks.add(pos.toLong());
+            WorldPreview.debug("Culled chunk at " + pos.x + ", " + pos.z + ".");
             for (ChunkPos neighbor : this.getNeighborChunks(pos)) {
-                ChunkHolder neighborHolder = chunkHolders.get(neighbor.toLong());
-                if (neighborHolder == null) {
-                    continue;
-                }
-                WorldChunk neighborChunk = neighborHolder.getWorldChunk();
-                if (neighborChunk == null) {
-                    continue;
-                }
-
                 if (this.sentChunks.contains(neighbor.toLong())) {
-                    int[] lightUpdates = ((WPChunkHolder) neighborHolder).worldpreview$flushUpdates();
-                    if (lightUpdates[0] != 0 || lightUpdates[1] != 0) {
-                        chunkPackets.add(new LightUpdateS2CPacket(neighbor, neighborChunk.getLightingProvider(), lightUpdates[0], lightUpdates[1], false));
-                    }
-                } else if (this.culledChunks.contains(neighbor.toLong()) && !this.sentEmptyChunks.contains(neighbor.toLong())) {
-                    chunkPackets.add(this.createEmptyChunkPacket(neighborChunk));
-                    this.sentEmptyChunks.add(neighbor.toLong());
+                    packetQueue.add(this.createEmptyChunkPacket(chunk));
+                    this.sentEmptyChunks.add(pos.toLong());
+                    break;
                 }
             }
-
-            packetQueue.addAll(chunkPackets);
-
-            this.sentChunks.add(pos.toLong());
+            return;
         }
 
-        ((ThreadedAnvilChunkStorageAccessor) this.threadedAnvilChunkStorage).getEntityTrackers().forEach((id, tracker) -> {
-            if (this.sentEntities.contains(id) || this.culledEntities.contains(id)) {
-                return;
+        Set<Packet<?>> chunkPackets = new LinkedHashSet<>();
+
+        chunkPackets.add(new ChunkDataS2CPacket(this.cullChunkSections(chunk), 65535, true));
+        ((WPChunkHolder) holder).worldpreview$flushUpdates();
+        chunkPackets.add(new LightUpdateS2CPacket(chunk.getPos(), chunk.getLightingProvider(), true));
+
+        for (ChunkPos neighbor : this.getNeighborChunks(pos)) {
+            ChunkHolder neighborHolder = this.getChunkHolder(neighbor);
+            WorldChunk neighborChunk = this.getChunk(neighborHolder);
+            if (neighborHolder == null || neighborChunk == null) {
+                continue;
             }
 
-            ThreadedAnvilChunkStorageAccessor.EntityTrackerAccessor entityTracker = (ThreadedAnvilChunkStorageAccessor.EntityTrackerAccessor) tracker;
-            Entity entity = entityTracker.getEntity();
-
-            if (!this.shouldSendEntity(entity)) {
-                return;
-            }
-
-            // Do not try to cull entities that are vehicles or passengers, supporting that would cause unnecessary complexity
-            if (WorldPreview.config.entityDataCulling && !entity.hasVehicle() && !entity.hasPassengers() && !entity.ignoreCameraFrustum && !this.frustum.isVisible(entity.getVisibilityBoundingBox())) {
-                this.culledEntities.add(entity.getEntityId());
-                WorldPreview.debug("Culled entity " + entity + ".");
-                return;
-            }
-
-            Set<Packet<?>> entityPackets = new LinkedHashSet<>();
-
-            long chunkPos = ChunkPos.toLong(entity.chunkX, entity.chunkZ);
-            if (!this.sentChunks.contains(chunkPos) && !this.sentEmptyChunks.contains(chunkPos)) {
-                ChunkHolder chunkHolder = chunkHolders.get(chunkPos);
-                if (chunkHolder == null) {
-                    return;
+            if (this.sentChunks.contains(neighbor.toLong())) {
+                int[] lightUpdates = ((WPChunkHolder) neighborHolder).worldpreview$flushUpdates();
+                if (lightUpdates[0] != 0 || lightUpdates[1] != 0) {
+                    chunkPackets.add(new LightUpdateS2CPacket(neighbor, neighborChunk.getLightingProvider(), lightUpdates[0], lightUpdates[1], false));
                 }
-                WorldChunk chunk = chunkHolder.getWorldChunk();
-                if (chunk == null) {
-                    return;
-                }
-                entityPackets.add(this.createEmptyChunkPacket(chunk));
-                this.sentEmptyChunks.add(chunkPos);
+            } else if (this.culledChunks.contains(neighbor.toLong()) && !this.sentEmptyChunks.contains(neighbor.toLong())) {
+                chunkPackets.add(this.createEmptyChunkPacket(neighborChunk));
+                this.sentEmptyChunks.add(neighbor.toLong());
             }
+        }
 
-            entityTracker.getEntry().sendPackets(entityPackets::add);
-            // see EntityTrackerEntry#tick
-            entityPackets.add(new EntityS2CPacket.Rotate(id, (byte) MathHelper.floor(entity.yaw * 256.0f / 360.0f), (byte) MathHelper.floor(entity.pitch * 256.0f / 360.0f), entity.isOnGround()));
-            entityPackets.add(new EntitySetHeadYawS2CPacket(entity, (byte) MathHelper.floor(entity.getHeadYaw() * 256.0f / 360.0f)));
+        packetQueue.addAll(chunkPackets);
 
-            packetQueue.addAll(entityPackets);
-
-            this.sentEntities.add(id);
-        });
+        this.sentChunks.add(pos.toLong());
     }
 
     @Unique
-    private Set<ChunkPos> getNeighborChunks(ChunkPos pos) {
-        Set<ChunkPos> neighbors = new HashSet<>();
-        for (int x = -1; x <= 1; x++) {
-            for (int z = -1; z <= 1; z++) {
-                if (x == 0 && z == 0) {
-                    continue;
-                }
-                neighbors.add(new ChunkPos(pos.x + x, pos.z + z));
-            }
-        }
-        return neighbors;
-    }
-
-    @Unique
-    private ChunkDataS2CPacket createEmptyChunkPacket(WorldChunk chunk) {
-        return new ChunkDataS2CPacket(new WorldChunk(chunk.getWorld(), chunk.getPos(), chunk.getBiomeArray()), 65535, true);
+    private boolean shouldCullChunk(WorldChunk chunk) {
+        ChunkPos pos = chunk.getPos();
+        return WorldPreview.config.chunkDataCulling && !this.frustum.isVisible(new Box(pos.getStartX(), 0, pos.getStartZ(), pos.getStartX() + 16, chunk.getHighestNonEmptySectionYOffset() + 16, pos.getStartZ() + 16));
     }
 
     @Unique
@@ -297,6 +248,46 @@ public abstract class ServerChunkManagerMixin {
     }
 
     @Unique
+    private void processEntity(Set<Packet<?>> packetQueue, int id, ThreadedAnvilChunkStorageAccessor.EntityTrackerAccessor tracker) {
+        if (this.sentEntities.contains(id) || this.culledEntities.contains(id)) {
+            return;
+        }
+
+        Entity entity = tracker.getEntity();
+
+        if (!this.shouldSendEntity(entity)) {
+            return;
+        }
+
+        if (this.shouldCullEntity(entity)) {
+            this.culledEntities.add(entity.getEntityId());
+            WorldPreview.debug("Culled entity " + entity + ".");
+            return;
+        }
+
+        Set<Packet<?>> entityPackets = new LinkedHashSet<>();
+
+        ChunkPos chunkPos = new ChunkPos(entity.chunkX, entity.chunkZ);
+        if (!this.sentChunks.contains(chunkPos.toLong()) && !this.sentEmptyChunks.contains(chunkPos.toLong())) {
+            WorldChunk chunk = this.getChunk(chunkPos);
+            if (chunk == null) {
+                return;
+            }
+            entityPackets.add(this.createEmptyChunkPacket(chunk));
+            this.sentEmptyChunks.add(chunkPos.toLong());
+        }
+
+        tracker.getEntry().sendPackets(entityPackets::add);
+        // see EntityTrackerEntry#tick
+        entityPackets.add(new EntityS2CPacket.Rotate(id, (byte) MathHelper.floor(entity.yaw * 256.0f / 360.0f), (byte) MathHelper.floor(entity.pitch * 256.0f / 360.0f), entity.isOnGround()));
+        entityPackets.add(new EntitySetHeadYawS2CPacket(entity, (byte) MathHelper.floor(entity.getHeadYaw() * 256.0f / 360.0f)));
+
+        packetQueue.addAll(entityPackets);
+
+        this.sentEntities.add(id);
+    }
+
+    @Unique
     private boolean shouldSendEntity(Entity entity) {
         // prevent passengers being sent before their vehicle
         Entity vehicle = entity.getVehicle();
@@ -305,5 +296,48 @@ public abstract class ServerChunkManagerMixin {
         }
         long chunkPos = ChunkPos.toLong(entity.chunkX, entity.chunkZ);
         return this.sentChunks.contains(chunkPos) || this.culledChunks.contains(chunkPos);
+    }
+
+    @Unique
+    private boolean shouldCullEntity(Entity entity) {
+        // Do not try to cull entities that are vehicles or passengers, supporting that would cause unnecessary complexity
+        return WorldPreview.config.entityDataCulling && !entity.hasVehicle() && !entity.hasPassengers() && !entity.ignoreCameraFrustum && !this.frustum.isVisible(entity.getVisibilityBoundingBox());
+    }
+
+    @Unique
+    private ChunkHolder getChunkHolder(ChunkPos pos) {
+        return ((ThreadedAnvilChunkStorageAccessor) this.threadedAnvilChunkStorage).getChunkHolders().get(pos.toLong());
+    }
+
+    @Unique
+    private WorldChunk getChunk(ChunkHolder holder) {
+        if (holder == null) {
+            return null;
+        }
+        return holder.getWorldChunk();
+    }
+
+    @Unique
+    private WorldChunk getChunk(ChunkPos pos) {
+        return this.getChunk(this.getChunkHolder(pos));
+    }
+
+    @Unique
+    private Set<ChunkPos> getNeighborChunks(ChunkPos pos) {
+        Set<ChunkPos> neighbors = new HashSet<>();
+        for (int x = -1; x <= 1; x++) {
+            for (int z = -1; z <= 1; z++) {
+                if (x == 0 && z == 0) {
+                    continue;
+                }
+                neighbors.add(new ChunkPos(pos.x + x, pos.z + z));
+            }
+        }
+        return neighbors;
+    }
+
+    @Unique
+    private ChunkDataS2CPacket createEmptyChunkPacket(WorldChunk chunk) {
+        return new ChunkDataS2CPacket(new WorldChunk(chunk.getWorld(), chunk.getPos(), chunk.getBiomeArray()), 65535, true);
     }
 }
