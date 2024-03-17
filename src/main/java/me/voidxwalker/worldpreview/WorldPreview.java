@@ -1,6 +1,9 @@
 package me.voidxwalker.worldpreview;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import me.voidxwalker.worldpreview.mixin.access.ClientPlayNetworkHandlerAccessor;
+import me.voidxwalker.worldpreview.mixin.access.EntityAccessor;
+import me.voidxwalker.worldpreview.mixin.access.MinecraftClientAccessor;
 import me.voidxwalker.worldpreview.mixin.access.PlayerEntityAccessor;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -9,16 +12,26 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.render.Camera;
+import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.entity.PlayerModelPart;
 import net.minecraft.client.util.InputUtil;
+import net.minecraft.client.util.Window;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
+import net.minecraft.entity.Entity;
 import net.minecraft.network.Packet;
+import net.minecraft.network.listener.ClientPlayPacketListener;
+import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
+import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
+import net.minecraft.network.packet.s2c.play.MobSpawnS2CPacket;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.MathHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.HashSet;
 import java.util.Set;
 
 public class WorldPreview implements ClientModInitializer {
@@ -115,5 +128,135 @@ public class WorldPreview implements ClientModInitializer {
 
     public static void clear() {
         set(null, null, null, null, null);
+    }
+
+    public static boolean updateState() {
+        if (WorldPreview.inPreview) {
+            return false;
+        }
+        synchronized (WorldPreview.LOCK) {
+            WorldPreview.inPreview = WorldPreview.world != null && WorldPreview.player != null && WorldPreview.interactionManager != null && WorldPreview.camera != null && WorldPreview.packetQueue != null;
+
+            if (WorldPreview.inPreview) {
+                // we set the worldRenderer here instead of WorldPreview#configure because doing it from the server thread can cause issues
+                WorldPreview.worldRenderer.setWorld(WorldPreview.world);
+                WorldPreview.logPreviewStart = true;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static void runAsPreview(Runnable runnable) {
+        MinecraftClient client = MinecraftClient.getInstance();
+
+        WorldRenderer worldRenderer = client.worldRenderer;
+        ClientPlayerEntity player = client.player;
+        ClientWorld world = client.world;
+        Entity cameraEntity = client.cameraEntity;
+        ClientPlayerInteractionManager interactionManager = client.interactionManager;
+
+        try {
+            renderingPreview = true;
+
+            ((MinecraftClientAccessor) client).setWorldRenderer(WorldPreview.worldRenderer);
+            client.player = WorldPreview.player;
+            client.world = WorldPreview.world;
+            client.cameraEntity = WorldPreview.player;
+            client.interactionManager = WorldPreview.interactionManager;
+
+            runnable.run();
+        } finally {
+            renderingPreview = false;
+
+            ((MinecraftClientAccessor) client).setWorldRenderer(worldRenderer);
+            client.player = player;
+            client.world = world;
+            client.cameraEntity = cameraEntity;
+            client.interactionManager = interactionManager;
+        }
+    }
+
+    public static void tickPackets() {
+        long start = System.currentTimeMillis();
+
+        int appliedPackets = 0;
+        for (Packet<?> packet : new HashSet<>(packetQueue)) {
+            if (config.dataLimit < 100 && appliedPackets >= config.dataLimit && (packet instanceof ChunkDataS2CPacket || packet instanceof MobSpawnS2CPacket || packet instanceof EntitySpawnS2CPacket)) {
+                break;
+            }
+            //noinspection unchecked
+            ((Packet<ClientPlayPacketListener>) packet).apply(player.networkHandler);
+            appliedPackets++;
+            packetQueue.remove(packet);
+        }
+
+        if (appliedPackets != 0) {
+            debug("Took " + (System.currentTimeMillis() - start) + " ms to load " + appliedPackets + " packets.");
+        }
+    }
+
+    public static void tickEntities() {
+        long start = System.currentTimeMillis();
+        int tickedEntities = 0;
+
+        // clip the player into swimming/crawling mode if necessary
+        ((PlayerEntityAccessor) player).callUpdateSize();
+
+        for (Entity entity : world.getEntities()) {
+            if (!((EntityAccessor) entity).isFirstUpdate() || entity.getVehicle() != null && ((EntityAccessor) entity.getVehicle()).isFirstUpdate()) {
+                continue;
+            }
+            tickEntity(entity);
+            for (Entity passenger : entity.getPassengersDeep()) {
+                tickEntity(passenger);
+                tickedEntities++;
+            }
+            tickedEntities++;
+        }
+
+        if (tickedEntities != 0) {
+            debug("Took " + (System.currentTimeMillis() - start) + " ms to tick " + tickedEntities + " new entities.");
+        }
+    }
+
+    private static void tickEntity(Entity entity) {
+        if (entity.getVehicle() != null) {
+            entity.getVehicle().updatePassengerPosition(entity);
+            entity.calculateDimensions();
+            entity.updatePositionAndAngles(entity.getX(), entity.getY(), entity.getZ(), entity.yaw, entity.pitch);
+        }
+        entity.baseTick();
+    }
+
+    @SuppressWarnings("deprecation")
+    public static void render(MatrixStack matrices) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        Window window = client.getWindow();
+
+        RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
+        RenderSystem.loadIdentity();
+        RenderSystem.ortho(0.0, window.getFramebufferWidth(), window.getFramebufferHeight(), 0.0, 1000.0, 3000.0);
+        RenderSystem.loadIdentity();
+        RenderSystem.translatef(0.0F, 0.0F, 0.0F);
+        DiffuseLighting.disableGuiDepthLighting();
+
+        client.gameRenderer.getLightmapTextureManager().tick();
+        client.gameRenderer.renderWorld(0.0F, Util.getMeasuringTimeNano(), new MatrixStack());
+        worldRenderer.drawEntityOutlinesFramebuffer();
+
+        RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
+        RenderSystem.matrixMode(5889);
+        RenderSystem.loadIdentity();
+        RenderSystem.ortho(0.0D, (double) window.getFramebufferWidth() / window.getScaleFactor(), (double) window.getFramebufferHeight() / window.getScaleFactor(), 0.0D, 1000.0D, 3000.0D);
+        RenderSystem.matrixMode(5888);
+        RenderSystem.loadIdentity();
+        RenderSystem.translatef(0.0F, 0.0F, -2000.0F);
+        DiffuseLighting.enableGuiDepthLighting();
+        RenderSystem.defaultAlphaFunc();
+
+        client.inGameHud.render(matrices, 0.0F);
+
+        RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
     }
 }
