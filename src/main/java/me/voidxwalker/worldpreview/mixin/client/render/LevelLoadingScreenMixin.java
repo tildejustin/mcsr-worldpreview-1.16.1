@@ -1,6 +1,5 @@
 package me.voidxwalker.worldpreview.mixin.client.render;
 
-import com.google.common.collect.ImmutableSet;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.mojang.blaze3d.systems.RenderSystem;
 import me.voidxwalker.worldpreview.WorldPreview;
@@ -35,6 +34,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.HashSet;
 
 @Mixin(LevelLoadingScreen.class)
 public abstract class LevelLoadingScreenMixin extends Screen {
@@ -107,7 +108,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
             long start = System.currentTimeMillis();
 
             int appliedPackets = 0;
-            for (Packet<?> packet : ImmutableSet.copyOf(WorldPreview.packetQueue)) {
+            for (Packet<?> packet : new HashSet<>(WorldPreview.packetQueue)) {
                 if (WorldPreview.config.dataLimit < 100 && appliedPackets >= WorldPreview.config.dataLimit && (packet instanceof ChunkDataS2CPacket || packet instanceof MobSpawnS2CPacket || packet instanceof EntitySpawnS2CPacket)) {
                     break;
                 }
