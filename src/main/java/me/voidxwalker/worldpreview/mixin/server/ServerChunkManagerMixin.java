@@ -49,7 +49,7 @@ public abstract class ServerChunkManagerMixin {
     @Unique
     private final Set<Long> sentChunks = new HashSet<>();
     @Unique
-    private final Set<Long> borderChunks = new HashSet<>();
+    private final Set<Long> sentEmptyChunks = new HashSet<>();
     @Unique
     private final Set<Long> culledChunks = new HashSet<>();
     @Unique
@@ -126,7 +126,7 @@ public abstract class ServerChunkManagerMixin {
             this.aspectRatio = aspectRatio;
 
             this.culledChunks.clear();
-            this.borderChunks.clear();
+            this.sentEmptyChunks.clear();
             this.culledEntities.clear();
 
             WorldPreview.debug("Created new Frustum (Camera: [" + cameraPos.getX() + ", " + cameraPos.getY() + ", " + cameraPos.getZ() + ", " + yaw + ", " + pitch + "], FOV: " + fov + ", Aspect Ratio: " + aspectRatio + ").");
@@ -154,8 +154,8 @@ public abstract class ServerChunkManagerMixin {
                 WorldPreview.debug("Culled chunk at " + pos.x + ", " + pos.z + ".");
                 for (ChunkPos neighbor : this.getNeighborChunks(pos)) {
                     if (this.sentChunks.contains(neighbor.toLong())) {
-                        this.borderChunks.add(pos.toLong());
-                        packetQueue.add(new ChunkDataS2CPacket(new WorldChunk(chunk.getWorld(), chunk.getPos(), chunk.getBiomeArray()), 65535, true));
+                        packetQueue.add(this.createEmptyChunkPacket(chunk));
+                        this.sentEmptyChunks.add(pos.toLong());
                         break;
                     }
                 }
@@ -183,8 +183,9 @@ public abstract class ServerChunkManagerMixin {
                     if (lightUpdates[0] != 0 || lightUpdates[1] != 0) {
                         chunkPackets.add(new LightUpdateS2CPacket(neighbor, neighborChunk.getLightingProvider(), lightUpdates[0], lightUpdates[1], false));
                     }
-                } else if (this.culledChunks.contains(neighbor.toLong()) && this.borderChunks.add(neighbor.toLong())) {
-                    chunkPackets.add(new ChunkDataS2CPacket(new WorldChunk(neighborChunk.getWorld(), neighborChunk.getPos(), neighborChunk.getBiomeArray()), 65535, true));
+                } else if (this.culledChunks.contains(neighbor.toLong()) && !this.sentEmptyChunks.contains(neighbor.toLong())) {
+                    chunkPackets.add(this.createEmptyChunkPacket(neighborChunk));
+                    this.sentEmptyChunks.add(neighbor.toLong());
                 }
             }
 
@@ -206,13 +207,27 @@ public abstract class ServerChunkManagerMixin {
             }
 
             // Do not try to cull entities that are vehicles or passengers, supporting that would cause unnecessary complexity
-            if (WorldPreview.config.entityDataCulling && !entity.hasVehicle() && !entity.hasPassengers() && this.frustum.isVisible(entity.getVisibilityBoundingBox())) {
+            if (WorldPreview.config.entityDataCulling && !entity.hasVehicle() && !entity.hasPassengers() && !entity.ignoreCameraFrustum && !this.frustum.isVisible(entity.getVisibilityBoundingBox())) {
                 this.culledEntities.add(entity.getEntityId());
                 WorldPreview.debug("Culled entity " + entity + ".");
                 return;
             }
 
             Set<Packet<?>> entityPackets = new LinkedHashSet<>();
+
+            long chunkPos = ChunkPos.toLong(entity.chunkX, entity.chunkZ);
+            if (!this.sentChunks.contains(chunkPos) && !this.sentEmptyChunks.contains(chunkPos)) {
+                ChunkHolder chunkHolder = chunkHolders.get(chunkPos);
+                if (chunkHolder == null) {
+                    return;
+                }
+                WorldChunk chunk = chunkHolder.getWorldChunk();
+                if (chunk == null) {
+                    return;
+                }
+                entityPackets.add(this.createEmptyChunkPacket(chunk));
+                this.sentEmptyChunks.add(chunkPos);
+            }
 
             entityTracker.getEntry().sendPackets(entityPackets::add);
             // see EntityTrackerEntry#tick
@@ -237,6 +252,11 @@ public abstract class ServerChunkManagerMixin {
             }
         }
         return neighbors;
+    }
+
+    @Unique
+    private ChunkDataS2CPacket createEmptyChunkPacket(WorldChunk chunk) {
+        return new ChunkDataS2CPacket(new WorldChunk(chunk.getWorld(), chunk.getPos(), chunk.getBiomeArray()), 65535, true);
     }
 
     @Unique
@@ -283,31 +303,7 @@ public abstract class ServerChunkManagerMixin {
         if (vehicle != null && !this.sentEntities.contains(vehicle.getEntityId())) {
             return false;
         }
-
         long chunkPos = ChunkPos.toLong(entity.chunkX, entity.chunkZ);
-        if (this.sentChunks.contains(chunkPos)) {
-            return true;
-        }
-        if (!this.culledChunks.contains(chunkPos)) {
-            return false;
-        }
-
-        // if the entities chunk has been culled, check if it overlaps with any other chunk around it
-        Box box = entity.getVisibilityBoundingBox();
-
-        int minX = MathHelper.floor(box.minX - 0.5) >> 4;
-        int minZ = MathHelper.floor(box.minZ - 0.5) >> 4;
-
-        int maxX = MathHelper.floor(box.maxX + 0.5) >> 4;
-        int maxZ = MathHelper.floor(box.maxZ + 0.5) >> 4;
-
-        for (int x = minX; x <= maxX; x++) {
-            for (int z = minZ; z <= maxZ; z++) {
-                if (this.sentChunks.contains(ChunkPos.toLong(x, z))) {
-                    return true;
-                }
-            }
-        }
-        return false;
+        return this.sentChunks.contains(chunkPos) || this.culledChunks.contains(chunkPos);
     }
 }
