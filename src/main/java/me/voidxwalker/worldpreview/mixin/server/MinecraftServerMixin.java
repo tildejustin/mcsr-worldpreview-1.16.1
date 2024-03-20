@@ -43,6 +43,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.*;
+import java.util.concurrent.LinkedBlockingQueue;
 
 @Mixin(MinecraftServer.class)
 public abstract class MinecraftServerMixin implements WPMinecraftServer {
@@ -156,7 +157,7 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
 
             Camera camera = new Camera();
 
-            Set<Packet<?>> packetQueue = Collections.synchronizedSet(new LinkedHashSet<>());
+            Queue<Packet<?>> packetQueue = new LinkedBlockingQueue<>();
             packetQueue.add(new PlayerListS2CPacket(PlayerListS2CPacket.Action.ADD_PLAYER, fakePlayer));
             packetQueue.add(new GameStateChangeS2CPacket(GameStateChangeS2CPacket.GAME_MODE_CHANGED, fakePlayer.interactionManager.getGameMode().getId()));
 

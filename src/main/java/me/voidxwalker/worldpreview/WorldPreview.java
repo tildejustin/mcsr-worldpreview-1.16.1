@@ -31,8 +31,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Queue;
 
 public class WorldPreview implements ClientModInitializer {
 
@@ -46,7 +45,7 @@ public class WorldPreview implements ClientModInitializer {
     public static ClientPlayerEntity player;
     public static ClientWorld world;
     public static Camera camera;
-    public static Set<Packet<?>> packetQueue;
+    public static Queue<Packet<?>> packetQueue;
 
     public static boolean inPreview;
     public static boolean renderingPreview;
@@ -79,7 +78,7 @@ public class WorldPreview implements ClientModInitializer {
         ));
     }
 
-    public static void set(ClientWorld world, ClientPlayerEntity player, ClientPlayerInteractionManager interactionManager, Camera camera, Set<Packet<?>> packetQueue) {
+    public static void set(ClientWorld world, ClientPlayerEntity player, ClientPlayerInteractionManager interactionManager, Camera camera, Queue<Packet<?>> packetQueue) {
         synchronized (LOCK) {
             WorldPreview.world = world;
             WorldPreview.player = player;
@@ -89,7 +88,7 @@ public class WorldPreview implements ClientModInitializer {
         }
     }
 
-    public static void configure(ClientWorld world, ClientPlayerEntity player, ClientPlayerInteractionManager interactionManager, Camera camera, Set<Packet<?>> packetQueue) {
+    public static void configure(ClientWorld world, ClientPlayerEntity player, ClientPlayerInteractionManager interactionManager, Camera camera, Queue<Packet<?>> packetQueue) {
         synchronized (LOCK) {
             set(world, player, interactionManager, camera, packetQueue);
 
@@ -181,8 +180,9 @@ public class WorldPreview implements ClientModInitializer {
         long start = System.currentTimeMillis();
 
         int appliedPackets = 0;
-        for (Packet<?> packet : new HashSet<>(packetQueue)) {
-            if (config.dataLimit < 100 && appliedPackets >= config.dataLimit && (packet instanceof ChunkDataS2CPacket || packet instanceof MobSpawnS2CPacket || packet instanceof EntitySpawnS2CPacket)) {
+        Packet<?> packet;
+        while ((packet = packetQueue.poll()) != null) {
+            if (config.dataLimit < 100 && config.dataLimit <= appliedPackets && canStopAtPacket(packet)) {
                 break;
             }
             //noinspection unchecked
@@ -194,6 +194,10 @@ public class WorldPreview implements ClientModInitializer {
         if (appliedPackets != 0) {
             debug("Took " + (System.currentTimeMillis() - start) + " ms to load " + appliedPackets + " packets.");
         }
+    }
+
+    private static boolean canStopAtPacket(Packet<?> packet) {
+        return packet instanceof ChunkDataS2CPacket || packet instanceof MobSpawnS2CPacket || packet instanceof EntitySpawnS2CPacket;
     }
 
     public static void tickEntities() {

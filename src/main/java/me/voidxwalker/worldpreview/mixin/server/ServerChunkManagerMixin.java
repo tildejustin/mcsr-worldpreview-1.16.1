@@ -1,6 +1,5 @@
 package me.voidxwalker.worldpreview.mixin.server;
 
-import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import me.voidxwalker.worldpreview.WorldPreview;
 import me.voidxwalker.worldpreview.interfaces.WPChunkHolder;
 import me.voidxwalker.worldpreview.mixin.access.ThreadedAnvilChunkStorageAccessor;
@@ -31,10 +30,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
+
 
 @Mixin(ServerChunkManager.class)
 public abstract class ServerChunkManagerMixin {
@@ -79,7 +76,7 @@ public abstract class ServerChunkManagerMixin {
         ClientWorld world;
         ClientPlayerEntity player;
         Camera camera;
-        Set<Packet<?>> packetQueue;
+        Queue<Packet<?>> packetQueue;
         synchronized (WorldPreview.LOCK) {
             world = WorldPreview.world;
             player = WorldPreview.player;
@@ -96,8 +93,7 @@ public abstract class ServerChunkManagerMixin {
 
         this.updateFrustum(player, camera);
 
-        Long2ObjectLinkedOpenHashMap<ChunkHolder> chunkHolders = ((ThreadedAnvilChunkStorageAccessor) this.threadedAnvilChunkStorage).getChunkHolders();
-        for (ChunkHolder holder : chunkHolders.values()) {
+        for (ChunkHolder holder : ((ThreadedAnvilChunkStorageAccessor) this.threadedAnvilChunkStorage).getChunkHolders().values()) {
             this.processChunk(player, packetQueue, holder);
         }
 
@@ -107,7 +103,7 @@ public abstract class ServerChunkManagerMixin {
     @Unique
     private void updateFrustum(ClientPlayerEntity player, Camera camera) {
         MinecraftClient client = MinecraftClient.getInstance();
-        double fov = Math.min(client.options.fov * player.getSpeed(), 180.0);
+        double fov = Math.min(client.options.fov * Math.min(Math.max(player.getSpeed(), 0.1f), 1.5f), 180.0);
         double aspectRatio = (double) client.getWindow().getFramebufferWidth() / client.getWindow().getFramebufferHeight();
         Vec3d cameraPos;
         float pitch;
@@ -146,7 +142,7 @@ public abstract class ServerChunkManagerMixin {
     }
 
     @Unique
-    private void processChunk(ClientPlayerEntity player, Set<Packet<?>> packetQueue, ChunkHolder holder) {
+    private void processChunk(ClientPlayerEntity player, Queue<Packet<?>> packetQueue, ChunkHolder holder) {
         WorldChunk chunk = holder.getWorldChunk();
         if (chunk == null) {
             return;
@@ -248,7 +244,7 @@ public abstract class ServerChunkManagerMixin {
     }
 
     @Unique
-    private void processEntity(Set<Packet<?>> packetQueue, int id, ThreadedAnvilChunkStorageAccessor.EntityTrackerAccessor tracker) {
+    private void processEntity(Queue<Packet<?>> packetQueue, int id, ThreadedAnvilChunkStorageAccessor.EntityTrackerAccessor tracker) {
         if (this.sentEntities.contains(id) || this.culledEntities.contains(id)) {
             return;
         }
