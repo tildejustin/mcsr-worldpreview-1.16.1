@@ -180,20 +180,19 @@ public class WorldPreview implements ClientModInitializer {
         long start = System.currentTimeMillis();
 
         int appliedPackets = 0;
-        Packet<?> packet;
-        while ((packet = packetQueue.poll()) != null) {
-            if (config.dataLimit < 100 && config.dataLimit <= appliedPackets && canStopAtPacket(packet)) {
-                break;
-            }
+        while (!shouldStopAtPacket(packetQueue.peek(), appliedPackets)) {
             //noinspection unchecked
-            ((Packet<ClientPlayPacketListener>) packet).apply(player.networkHandler);
+            ((Packet<ClientPlayPacketListener>) packetQueue.poll()).apply(player.networkHandler);
             appliedPackets++;
-            packetQueue.remove(packet);
         }
 
         if (appliedPackets != 0) {
             debug("Took " + (System.currentTimeMillis() - start) + " ms to load " + appliedPackets + " packets.");
         }
+    }
+
+    private static boolean shouldStopAtPacket(Packet<?> packet, int appliedPackets) {
+        return packet == null || (config.dataLimit < 100 && config.dataLimit <= appliedPackets && canStopAtPacket(packet));
     }
 
     private static boolean canStopAtPacket(Packet<?> packet) {
