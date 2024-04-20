@@ -11,6 +11,7 @@
     "access.ThreadedAnvilChunkStorageAccessor",
     "access.ThreadedAnvilChunkStorageAccessor$EntityTrackerAccessor",
     "client.CameraMixin",
+    "client.ClientPlayNetworkHandlerMixin",
     "client.MinecraftClientMixin",
     "client.PlayerListEntryMixin",
     "client.render.GameRendererMixin",
