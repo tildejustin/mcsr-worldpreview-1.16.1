@@ -7,6 +7,7 @@ import me.voidxwalker.worldpreview.mixin.access.MinecraftClientAccessor;
 import me.voidxwalker.worldpreview.mixin.access.PlayerEntityAccessor;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
@@ -37,6 +38,7 @@ public class WorldPreview implements ClientModInitializer {
 
     public static final Object LOCK = new Object();
     public static final Logger LOGGER = LogManager.getLogger();
+    public static final boolean HAS_STATEOUTPUT = FabricLoader.getInstance().isModLoaded("state-output");
 
     public static WorldPreviewConfig config;
 

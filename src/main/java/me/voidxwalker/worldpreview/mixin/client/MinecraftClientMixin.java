@@ -3,6 +3,7 @@ package me.voidxwalker.worldpreview.mixin.client;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import me.voidxwalker.worldpreview.WorldPreview;
+import me.voidxwalker.worldpreview.compat.StateOutputCompat;
 import me.voidxwalker.worldpreview.interfaces.WPMinecraftServer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.LevelLoadingScreen;
@@ -72,6 +73,9 @@ public abstract class MinecraftClientMixin {
     private void logWorldPreviewStart(CallbackInfo ci) {
         if (WorldPreview.logPreviewStart) {
             WorldPreview.LOGGER.info("Starting Preview at (" + WorldPreview.player.getX() + ", " + WorldPreview.player.getY() + ", " + WorldPreview.player.getZ() + ")");
+            if (WorldPreview.HAS_STATEOUTPUT) {
+                StateOutputCompat.outputPreviewing();
+            }
             WorldPreview.logPreviewStart = false;
         }
     }

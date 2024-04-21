@@ -32,7 +32,7 @@ dependencies {
     modCompileOnly "com.github.Minecraft-Java-Edition-Speedrunning:sodium:7e4905f134"
 
     // State-Output
-    //modCompileOnly files("libs/state-output-1.1.1+1.16-1.17.1.jar")
+    implementation "dev.tildejustin.state-output:state-output-common:v1.1.4"
 }
 
 processResources {
