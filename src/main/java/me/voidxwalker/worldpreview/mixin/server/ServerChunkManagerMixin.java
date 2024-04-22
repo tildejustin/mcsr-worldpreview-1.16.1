@@ -22,6 +22,7 @@ import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.*;
 import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.WorldChunk;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -42,6 +43,10 @@ public abstract class ServerChunkManagerMixin {
     @Shadow
     @Final
     public ThreadedAnvilChunkStorage threadedAnvilChunkStorage;
+
+    @Shadow
+    @Nullable
+    public abstract WorldChunk getWorldChunk(int chunkX, int chunkZ);
 
     @Unique
     private final Set<Long> sentChunks = new HashSet<>();
@@ -143,13 +148,15 @@ public abstract class ServerChunkManagerMixin {
 
     @Unique
     private void processChunk(ClientPlayerEntity player, Queue<Packet<?>> packetQueue, ChunkHolder holder) {
-        WorldChunk chunk = holder.getWorldChunk();
-        if (chunk == null) {
+        ChunkPos pos = holder.getPos();
+        if (this.sentChunks.contains(pos.toLong()) || this.culledChunks.contains(pos.toLong())) {
             return;
         }
 
-        ChunkPos pos = holder.getPos();
-        if (this.sentChunks.contains(pos.toLong()) || this.culledChunks.contains(pos.toLong())) {
+        // ChunkHolder#getWorldChunk only returns the chunk once it's ready to be ticked,
+        // so instead we use ThreadedAnvilChunkStorage#getWorldChunk which returns the chunk once its fully generated
+        WorldChunk chunk = this.getWorldChunk(pos.x, pos.z);
+        if (chunk == null) {
             return;
         }
 
