@@ -28,6 +28,8 @@ import net.minecraft.network.packet.s2c.play.EntitySpawnS2CPacket;
 import net.minecraft.network.packet.s2c.play.MobSpawnS2CPacket;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.profiler.Profiler;
+import net.minecraft.util.registry.Registry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
@@ -59,7 +61,7 @@ public class WorldPreview implements ClientModInitializer {
 
     public static void debug(String message) {
         if (config.debug) {
-            LOGGER.info("Worldpreview-DEBUG | " + message);
+            LOGGER.info("Worldpreview-DEBUG | {}", message);
         }
     }
 
@@ -179,13 +181,18 @@ public class WorldPreview implements ClientModInitializer {
     }
 
     public static void tickPackets() {
+        Profiler profiler = MinecraftClient.getInstance().getProfiler();
         long start = System.currentTimeMillis();
-
         int appliedPackets = 0;
+
+        profiler.swap("tick_packets");
         while (!shouldStopAtPacket(packetQueue.peek(), appliedPackets)) {
             //noinspection unchecked
-            ((Packet<ClientPlayPacketListener>) packetQueue.poll()).apply(player.networkHandler);
+            Packet<ClientPlayPacketListener> packet = (Packet<ClientPlayPacketListener>) packetQueue.poll();
+            profiler.push(packet.getClass().getSimpleName());
+            packet.apply(player.networkHandler);
             appliedPackets++;
+            profiler.pop();
         }
 
         if (appliedPackets != 0) {
@@ -202,12 +209,15 @@ public class WorldPreview implements ClientModInitializer {
     }
 
     public static void tickEntities() {
+        Profiler profiler = MinecraftClient.getInstance().getProfiler();
         long start = System.currentTimeMillis();
         int tickedEntities = 0;
 
+        profiler.swap("update_player_size");
         // clip the player into swimming/crawling mode if necessary
         ((PlayerEntityAccessor) player).callUpdateSize();
 
+        profiler.swap("tick_new_entities");
         for (Entity entity : world.getEntities()) {
             if (!((EntityAccessor) entity).isFirstUpdate() || entity.getVehicle() != null && ((EntityAccessor) entity.getVehicle()).isFirstUpdate()) {
                 continue;
@@ -226,18 +236,26 @@ public class WorldPreview implements ClientModInitializer {
     }
 
     private static void tickEntity(Entity entity) {
+        Profiler profiler = MinecraftClient.getInstance().getProfiler();
+        profiler.push(() -> Registry.ENTITY_TYPE.getId(entity.getType()).toString());
+
         if (entity.getVehicle() != null) {
             entity.getVehicle().updatePassengerPosition(entity);
             entity.calculateDimensions();
             entity.updatePositionAndAngles(entity.getX(), entity.getY(), entity.getZ(), entity.yaw, entity.pitch);
         }
         entity.baseTick();
+
+        profiler.pop();
     }
 
     @SuppressWarnings("deprecation")
     public static void render(MatrixStack matrices) {
         MinecraftClient client = MinecraftClient.getInstance();
+        Profiler profiler = client.getProfiler();
         Window window = client.getWindow();
+
+        profiler.swap("render_preview");
 
         RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
         RenderSystem.loadIdentity();
@@ -246,9 +264,13 @@ public class WorldPreview implements ClientModInitializer {
         RenderSystem.translatef(0.0F, 0.0F, 0.0F);
         DiffuseLighting.disableGuiDepthLighting();
 
+        profiler.push("light_map");
         client.gameRenderer.getLightmapTextureManager().tick();
+        profiler.swap("render_world");
         client.gameRenderer.renderWorld(0.0F, Util.getMeasuringTimeNano(), new MatrixStack());
+        profiler.swap("entity_outlines");
         worldRenderer.drawEntityOutlinesFramebuffer();
+        profiler.pop();
 
         RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
         RenderSystem.matrixMode(5889);
@@ -260,7 +282,9 @@ public class WorldPreview implements ClientModInitializer {
         DiffuseLighting.enableGuiDepthLighting();
         RenderSystem.defaultAlphaFunc();
 
+        profiler.push("ingame_hud");
         client.inGameHud.render(matrices, 0.0F);
+        profiler.pop();
 
         RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);
     }
