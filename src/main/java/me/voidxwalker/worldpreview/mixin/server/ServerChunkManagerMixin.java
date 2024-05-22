@@ -33,7 +33,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.*;
 
-
 @Mixin(ServerChunkManager.class)
 public abstract class ServerChunkManagerMixin {
 
@@ -178,7 +177,7 @@ public abstract class ServerChunkManagerMixin {
             return;
         }
 
-        Set<Packet<?>> chunkPackets = new LinkedHashSet<>();
+        List<Packet<?>> chunkPackets = new ArrayList<>();
 
         chunkPackets.add(new ChunkDataS2CPacket(this.cullChunkSections(chunk), 65535, true));
         ((WPChunkHolder) holder).worldpreview$flushUpdates();
@@ -186,7 +185,7 @@ public abstract class ServerChunkManagerMixin {
 
         for (ChunkPos neighbor : this.getNeighborChunks(pos)) {
             ChunkHolder neighborHolder = this.getChunkHolder(neighbor);
-            WorldChunk neighborChunk = this.getChunk(neighborHolder);
+            WorldChunk neighborChunk = this.getWorldChunk(neighbor.x, neighbor.z);
             if (neighborHolder == null || neighborChunk == null) {
                 continue;
             }
@@ -268,11 +267,11 @@ public abstract class ServerChunkManagerMixin {
             return;
         }
 
-        Set<Packet<?>> entityPackets = new LinkedHashSet<>();
+        List<Packet<?>> entityPackets = new ArrayList<>();
 
         ChunkPos chunkPos = new ChunkPos(entity.chunkX, entity.chunkZ);
         if (!this.sentChunks.contains(chunkPos.toLong()) && !this.sentEmptyChunks.contains(chunkPos.toLong())) {
-            WorldChunk chunk = this.getChunk(chunkPos);
+            WorldChunk chunk = this.getWorldChunk(chunkPos.x, chunkPos.z);
             if (chunk == null) {
                 return;
             }
@@ -310,19 +309,6 @@ public abstract class ServerChunkManagerMixin {
     @Unique
     private ChunkHolder getChunkHolder(ChunkPos pos) {
         return ((ThreadedAnvilChunkStorageAccessor) this.threadedAnvilChunkStorage).getChunkHolders().get(pos.toLong());
-    }
-
-    @Unique
-    private WorldChunk getChunk(ChunkHolder holder) {
-        if (holder == null) {
-            return null;
-        }
-        return holder.getWorldChunk();
-    }
-
-    @Unique
-    private WorldChunk getChunk(ChunkPos pos) {
-        return this.getChunk(this.getChunkHolder(pos));
     }
 
     @Unique
