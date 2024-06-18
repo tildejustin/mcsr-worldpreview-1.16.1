@@ -140,8 +140,6 @@ public abstract class ServerChunkManagerMixin {
             this.culledChunks.clear();
             this.sentEmptyChunks.clear();
             this.culledEntities.clear();
-
-            WorldPreview.debug("Created new Frustum (Camera: [" + cameraPos.getX() + ", " + cameraPos.getY() + ", " + cameraPos.getZ() + ", " + yaw + ", " + pitch + "], FOV: " + fov + ", Aspect Ratio: " + aspectRatio + ").");
         }
     }
 
@@ -166,7 +164,6 @@ public abstract class ServerChunkManagerMixin {
 
         if (this.shouldCullChunk(chunk)) {
             this.culledChunks.add(pos.toLong());
-            WorldPreview.debug("Culled chunk at " + pos.x + ", " + pos.z + ".");
             for (ChunkPos neighbor : this.getNeighborChunks(pos)) {
                 if (this.sentChunks.contains(neighbor.toLong())) {
                     packetQueue.add(this.createEmptyChunkPacket(chunk));
@@ -243,7 +240,6 @@ public abstract class ServerChunkManagerMixin {
         }
 
         if (!Arrays.equals(chunkSections, chunk.getSectionArray())) {
-            WorldPreview.debug("Culled chunk sections at " + pos.x + ", " + pos.z + ".");
             return new WorldChunk(chunk.getWorld(), chunk.getPos(), chunk.getBiomeArray(), chunk.getUpgradeData(), chunk.getBlockTickScheduler(), chunk.getFluidTickScheduler(), chunk.getInhabitedTime(), chunkSections, null);
         }
         return chunk;
@@ -263,7 +259,6 @@ public abstract class ServerChunkManagerMixin {
 
         if (this.shouldCullEntity(entity)) {
             this.culledEntities.add(entity.getEntityId());
-            WorldPreview.debug("Culled entity " + entity + ".");
             return;
         }
 

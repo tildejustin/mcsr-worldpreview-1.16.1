@@ -16,6 +16,5 @@
   "speedrunapi.config.worldpreview.option.chunkSectionDataCulling": "Chunk Section Data Culling",
   "speedrunapi.config.worldpreview.option.chunkSectionDataCulling.description": "On top of Chunk Data Culling, check if individual chunk sections are within FOV before sending them to the preview.",
   "speedrunapi.config.worldpreview.option.entityDataCulling": "Entity Data Culling",
-  "speedrunapi.config.worldpreview.option.entityDataCulling.description": "Check if an entity is within FOV before sending it to the preview.",
-  "speedrunapi.config.worldpreview.option.debug": "Debug Mode"
+  "speedrunapi.config.worldpreview.option.entityDataCulling.description": "Check if an entity is within FOV before sending it to the preview."
 }

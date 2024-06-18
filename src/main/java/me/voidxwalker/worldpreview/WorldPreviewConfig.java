@@ -20,8 +20,6 @@ public class WorldPreviewConfig implements SpeedrunConfig {
 
     public boolean entityDataCulling = true;
 
-    public boolean debug = false;
-
     {
         WorldPreview.config = this;
     }

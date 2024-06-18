@@ -37,6 +37,7 @@ import org.lwjgl.glfw.GLFW;
 import java.util.Queue;
 
 public class WorldPreview implements ClientModInitializer {
+    public static final boolean START_ON_OLD_WORLDS = false;
 
     public static final Object LOCK = new Object();
     public static final Logger LOGGER = LogManager.getLogger();
@@ -58,12 +59,6 @@ public class WorldPreview implements ClientModInitializer {
 
     public static KeyBinding resetKey;
     public static KeyBinding freezeKey;
-
-    public static void debug(String message) {
-        if (config.debug) {
-            LOGGER.info("Worldpreview-DEBUG | {}", message);
-        }
-    }
 
     @Override
     public void onInitializeClient() {
@@ -182,7 +177,6 @@ public class WorldPreview implements ClientModInitializer {
 
     public static void tickPackets() {
         Profiler profiler = MinecraftClient.getInstance().getProfiler();
-        long start = System.currentTimeMillis();
         int appliedPackets = 0;
 
         profiler.swap("tick_packets");
@@ -193,10 +187,6 @@ public class WorldPreview implements ClientModInitializer {
             packet.apply(player.networkHandler);
             appliedPackets++;
             profiler.pop();
-        }
-
-        if (appliedPackets != 0) {
-            debug("Took " + (System.currentTimeMillis() - start) + " ms to load " + appliedPackets + " packets.");
         }
     }
 
@@ -210,8 +200,6 @@ public class WorldPreview implements ClientModInitializer {
 
     public static void tickEntities() {
         Profiler profiler = MinecraftClient.getInstance().getProfiler();
-        long start = System.currentTimeMillis();
-        int tickedEntities = 0;
 
         profiler.swap("update_player_size");
         // clip the player into swimming/crawling mode if necessary
@@ -225,13 +213,7 @@ public class WorldPreview implements ClientModInitializer {
             tickEntity(entity);
             for (Entity passenger : entity.getPassengersDeep()) {
                 tickEntity(passenger);
-                tickedEntities++;
             }
-            tickedEntities++;
-        }
-
-        if (tickedEntities != 0) {
-            debug("Took " + (System.currentTimeMillis() - start) + " ms to tick " + tickedEntities + " new entities.");
         }
     }
 

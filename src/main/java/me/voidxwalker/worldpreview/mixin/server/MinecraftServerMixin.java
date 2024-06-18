@@ -81,14 +81,11 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
     @ModifyVariable(method = "prepareStartRegion", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkManager;getTotalChunksLoadedCount()I"))
     private ServerWorld configureWorldPreview(ServerWorld serverWorld) {
         if (this.shouldConfigurePreview) {
-            long start = System.currentTimeMillis();
-
             WPFakeServerPlayerEntity fakePlayer;
             try {
                 this.calculatingSpawn = true;
                 fakePlayer = new WPFakeServerPlayerEntity(serverWorld.getServer(), serverWorld, MinecraftClient.getInstance().getSession().getProfile(), new ServerPlayerInteractionManager(serverWorld));
             } catch (WorldPreviewMissingChunkException e) {
-                WorldPreview.debug("Waiting for more chunks to generate before calculating player spawn.");
                 return serverWorld;
             } finally {
                 this.calculatingSpawn = false;
@@ -195,8 +192,6 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
             WorldPreview.configure(world, player, interactionManager, camera, packetQueue);
 
             this.shouldConfigurePreview = false;
-
-            WorldPreview.debug("Took " + (System.currentTimeMillis() - start) + " ms to configure preview.");
         }
         return serverWorld;
     }
