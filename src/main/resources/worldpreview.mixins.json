@@ -20,6 +20,7 @@
     "client.render.LevelLoadingScreenMixin",
     "compat.sodium.ChunkRenderContainerMixin",
     "server.ChunkHolderMixin",
+    "server.IntegratedServerMixin",
     "server.MinecraftServerMixin",
     "server.ServerChunkManagerMixin",
     "server.ServerPlayerEntityMixin",

@@ -42,14 +42,17 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.*;
+import java.security.KeyPair;
+import java.util.HashSet;
+import java.util.Queue;
+import java.util.UUID;
 import java.util.concurrent.LinkedBlockingQueue;
 
 @Mixin(MinecraftServer.class)
 public abstract class MinecraftServerMixin implements WPMinecraftServer {
 
     @Unique
-    private volatile boolean killed;
+    protected volatile boolean killed;
     @Unique
     private volatile boolean tooLateToKill;
     @Unique
@@ -65,6 +68,9 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
 
     @Shadow
     public abstract SaveProperties getSaveProperties();
+
+    @Shadow
+    public abstract void setKeyPair(KeyPair keyPair);
 
     @ModifyExpressionValue(method = "createWorlds", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/ServerWorldProperties;isInitialized()Z"))
     private boolean setShouldConfigurePreview(boolean isInitialized) {
