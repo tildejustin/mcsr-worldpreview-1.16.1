@@ -5,8 +5,6 @@ import org.mcsr.speedrunapi.config.api.annotations.Config;
 
 public class WorldPreviewConfig implements SpeedrunConfig {
 
-    public boolean previewOldWorlds = false;
-
     @Config.Numbers.Whole.Bounds(min = 1, max = 16)
     public int chunkDistance = 16;
 
