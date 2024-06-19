@@ -1,6 +1,7 @@
 package me.voidxwalker.worldpreview.mixin.compat.sodium;
 
 import me.jellysquid.mods.sodium.client.render.chunk.ChunkRenderContainer;
+import me.jellysquid.mods.sodium.client.render.chunk.data.ChunkRenderData;
 import me.voidxwalker.worldpreview.WorldPreview;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -20,9 +21,12 @@ public abstract class ChunkRenderContainerMixin {
     @Final
     private int chunkZ;
 
+    @Shadow
+    private ChunkRenderData data;
+
     @Inject(method = "canRebuild", at = @At("HEAD"), cancellable = true)
     private void doNotWaitForNeighbourChunksOnWall(CallbackInfoReturnable<Boolean> cir) {
-        if (WorldPreview.renderingPreview && Math.max(Math.abs(this.chunkX - WorldPreview.player.chunkX), Math.abs(this.chunkZ - WorldPreview.player.chunkZ)) < WorldPreview.config.instantRenderDistance) {
+        if (this.data == ChunkRenderData.ABSENT && WorldPreview.renderingPreview && Math.max(Math.abs(this.chunkX - WorldPreview.player.chunkX), Math.abs(this.chunkZ - WorldPreview.player.chunkZ)) < WorldPreview.config.instantRenderDistance) {
             cir.setReturnValue(true);
         }
     }
