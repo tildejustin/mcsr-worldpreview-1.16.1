@@ -156,13 +156,11 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
                 }
             }
 
-            fakePlayer.interactionManager.setGameMode(gameMode != GameMode.NOT_SET ? gameMode : this.getDefaultGameMode(), GameMode.NOT_SET);
-
             Camera camera = new Camera();
 
             Queue<Packet<?>> packetQueue = new LinkedBlockingQueue<>();
             packetQueue.add(new PlayerListS2CPacket(PlayerListS2CPacket.Action.ADD_PLAYER, fakePlayer));
-            packetQueue.add(new GameStateChangeS2CPacket(GameStateChangeS2CPacket.GAME_MODE_CHANGED, fakePlayer.interactionManager.getGameMode().getId()));
+            packetQueue.add(new GameStateChangeS2CPacket(GameStateChangeS2CPacket.GAME_MODE_CHANGED, (gameMode != GameMode.NOT_SET ? gameMode : this.getDefaultGameMode()).getId()));
 
             // see PlayerManager#sendWorldInfo
             packetQueue.add(new WorldBorderS2CPacket(serverWorld.getWorldBorder(), WorldBorderS2CPacket.Type.INITIALIZE));
