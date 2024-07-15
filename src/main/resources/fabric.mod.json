@@ -5,7 +5,15 @@
   "name": "WorldPreview",
   "description": "Makes you reset block game fast",
   "authors": [
-    "Void_X_Walker"
+    {
+      "name": "Void_X_Walker",
+      "contact": {
+        "homepage": "https://github.com/VoidXWalker/"
+      }
+    }
+  ],
+  "contributors": [
+    "contaria"
   ],
   "contact": {
     "sources": "https://github.com/KingContaria/mcsr-worldpreview-1.16.1"
@@ -28,6 +36,7 @@
   ],
   "depends": {
     "fabricloader": ">=0.16.0",
+    "minecraft": "1.16.1",
     "speedrunapi": "*"
   }
 }
