@@ -21,11 +21,6 @@
   "license": "MIT",
   "icon": "assets/worldpreview/icon.png",
   "environment": "client",
-  "entrypoints": {
-    "client": [
-      "me.voidxwalker.worldpreview.WorldPreview"
-    ]
-  },
   "custom": {
     "speedrunapi": {
       "config": "me.voidxwalker.worldpreview.WorldPreviewConfig"

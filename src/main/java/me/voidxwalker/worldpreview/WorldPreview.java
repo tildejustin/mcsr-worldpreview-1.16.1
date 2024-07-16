@@ -5,18 +5,14 @@ import me.voidxwalker.worldpreview.mixin.access.ClientPlayNetworkHandlerAccessor
 import me.voidxwalker.worldpreview.mixin.access.EntityAccessor;
 import me.voidxwalker.worldpreview.mixin.access.MinecraftClientAccessor;
 import me.voidxwalker.worldpreview.mixin.access.PlayerEntityAccessor;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
-import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.entity.PlayerModelPart;
-import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
@@ -32,11 +28,10 @@ import net.minecraft.util.profiler.Profiler;
 import net.minecraft.util.registry.Registry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.Queue;
 
-public class WorldPreview implements ClientModInitializer {
+public class WorldPreview {
     public static final boolean START_ON_OLD_WORLDS = false;
 
     public static final Object LOCK = new Object();
@@ -56,26 +51,6 @@ public class WorldPreview implements ClientModInitializer {
     public static boolean renderingPreview;
     public static boolean logPreviewStart;
     public static boolean kill;
-
-    public static KeyBinding resetKey;
-    public static KeyBinding freezeKey;
-
-    @Override
-    public void onInitializeClient() {
-        resetKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "Leave Preview",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_H,
-                "key.categories.world_preview"
-        ));
-
-        freezeKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-                "Freeze Preview",
-                InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_J,
-                "key.categories.world_preview"
-        ));
-    }
 
     public static void set(ClientWorld world, ClientPlayerEntity player, ClientPlayerInteractionManager interactionManager, Camera camera, Queue<Packet<?>> packetQueue) {
         synchronized (LOCK) {

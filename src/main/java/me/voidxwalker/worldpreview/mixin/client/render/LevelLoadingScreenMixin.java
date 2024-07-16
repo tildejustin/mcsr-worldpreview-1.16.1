@@ -26,8 +26,6 @@ public abstract class LevelLoadingScreenMixin extends Screen {
 
     @Unique
     private boolean showMenu = true;
-    @Unique
-    private boolean freezePreview = false;
 
     protected LevelLoadingScreenMixin(Text title) {
         super(title);
@@ -54,7 +52,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
             this.updatePauseMenuWidgets();
         }
 
-        if (!WorldPreview.inPreview || WorldPreview.kill || this.freezePreview) {
+        if (!WorldPreview.inPreview || WorldPreview.kill) {
             return;
         }
 
@@ -96,14 +94,6 @@ public abstract class LevelLoadingScreenMixin extends Screen {
                 this.showMenu = true;
             }
             this.updatePauseMenuWidgets();
-            return true;
-        }
-        if (WorldPreview.freezeKey.matchesKey(keyCode, scanCode)) {
-            this.freezePreview = !this.freezePreview;
-            return true;
-        }
-        if (WorldPreview.resetKey.matchesKey(keyCode, scanCode)) {
-            WorldPreview.kill = true;
             return true;
         }
         return false;
