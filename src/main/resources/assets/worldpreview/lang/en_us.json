@@ -10,11 +10,5 @@
   "speedrunapi.config.worldpreview.option.instantRenderDistance.value.0": "Off",
   "speedrunapi.config.worldpreview.option.dataLimit": "Data Limit",
   "speedrunapi.config.worldpreview.option.dataLimit.description": "Limits the amount of packets that get processed each frame of the preview.",
-  "speedrunapi.config.worldpreview.option.dataLimit.value.100": "Unlimited",
-  "speedrunapi.config.worldpreview.option.chunkDataCulling": "Chunk Data Culling",
-  "speedrunapi.config.worldpreview.option.chunkDataCulling.description": "Check if a chunk is within FOV before sending it to the preview.",
-  "speedrunapi.config.worldpreview.option.chunkSectionDataCulling": "Chunk Section Data Culling",
-  "speedrunapi.config.worldpreview.option.chunkSectionDataCulling.description": "On top of Chunk Data Culling, check if individual chunk sections are within FOV before sending them to the preview.",
-  "speedrunapi.config.worldpreview.option.entityDataCulling": "Entity Data Culling",
-  "speedrunapi.config.worldpreview.option.entityDataCulling.description": "Check if an entity is within FOV before sending it to the preview."
+  "speedrunapi.config.worldpreview.option.dataLimit.value.100": "Unlimited"
 }

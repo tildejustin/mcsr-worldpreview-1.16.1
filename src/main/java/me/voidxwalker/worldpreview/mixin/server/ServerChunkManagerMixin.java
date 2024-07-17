@@ -20,7 +20,6 @@ import net.minecraft.server.world.ServerChunkManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.server.world.ThreadedAnvilChunkStorage;
 import net.minecraft.util.math.*;
-import net.minecraft.world.chunk.ChunkSection;
 import net.minecraft.world.chunk.WorldChunk;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
@@ -35,7 +34,6 @@ import java.util.*;
 
 @Mixin(ServerChunkManager.class)
 public abstract class ServerChunkManagerMixin {
-
     @Shadow
     @Final
     private ServerWorld world;
@@ -176,7 +174,7 @@ public abstract class ServerChunkManagerMixin {
 
         List<Packet<?>> chunkPackets = new ArrayList<>();
 
-        chunkPackets.add(new ChunkDataS2CPacket(this.cullChunkSections(chunk), 65535, true));
+        chunkPackets.add(new ChunkDataS2CPacket(chunk, 65535, true));
         ((WPChunkHolder) holder).worldpreview$flushUpdates();
         chunkPackets.add(new LightUpdateS2CPacket(chunk.getPos(), chunk.getLightingProvider(), true));
 
@@ -206,43 +204,7 @@ public abstract class ServerChunkManagerMixin {
     @Unique
     private boolean shouldCullChunk(WorldChunk chunk) {
         ChunkPos pos = chunk.getPos();
-        return WorldPreview.config.chunkDataCulling && !this.frustum.isVisible(new Box(pos.getStartX(), 0, pos.getStartZ(), pos.getStartX() + 16, chunk.getHighestNonEmptySectionYOffset() + 16, pos.getStartZ() + 16));
-    }
-
-    @Unique
-    private WorldChunk cullChunkSections(WorldChunk chunk) {
-        if (!WorldPreview.config.chunkDataCulling || !WorldPreview.config.chunkSectionDataCulling) {
-            return chunk;
-        }
-
-        ChunkPos pos = chunk.getPos();
-        ChunkSection[] chunkSections = Arrays.copyOf(chunk.getSectionArray(), chunk.getSectionArray().length);
-        int i;
-        for (i = 0; i < chunkSections.length; i++) {
-            ChunkSection chunkSection = chunkSections[i];
-            if (ChunkSection.isEmpty(chunkSection)) {
-                continue;
-            }
-            if (this.frustum.isVisible(new Box(pos.getStartX(), chunkSection.getYOffset(), pos.getStartZ(), pos.getStartX() + 16, chunkSection.getYOffset() + 16, pos.getStartZ() + 16))) {
-                break;
-            }
-            chunkSections[i] = null;
-        }
-        for (int j = chunkSections.length - 1; j > i; j--) {
-            ChunkSection chunkSection = chunkSections[j];
-            if (ChunkSection.isEmpty(chunkSection)) {
-                continue;
-            }
-            if (this.frustum.isVisible(new Box(pos.getStartX(), chunkSection.getYOffset(), pos.getStartZ(), pos.getStartX() + 16, chunkSection.getYOffset() + 16, pos.getStartZ() + 16))) {
-                break;
-            }
-            chunkSections[j] = null;
-        }
-
-        if (!Arrays.equals(chunkSections, chunk.getSectionArray())) {
-            return new WorldChunk(chunk.getWorld(), chunk.getPos(), chunk.getBiomeArray(), chunk.getUpgradeData(), chunk.getBlockTickScheduler(), chunk.getFluidTickScheduler(), chunk.getInhabitedTime(), chunkSections, null);
-        }
-        return chunk;
+        return !this.frustum.isVisible(new Box(pos.getStartX(), 0, pos.getStartZ(), pos.getStartX() + 16, chunk.getHighestNonEmptySectionYOffset() + 16, pos.getStartZ() + 16));
     }
 
     @Unique
@@ -298,7 +260,7 @@ public abstract class ServerChunkManagerMixin {
     @Unique
     private boolean shouldCullEntity(Entity entity) {
         // Do not try to cull entities that are vehicles or passengers, supporting that would cause unnecessary complexity
-        return WorldPreview.config.entityDataCulling && !entity.hasVehicle() && !entity.hasPassengers() && !entity.ignoreCameraFrustum && !this.frustum.isVisible(entity.getVisibilityBoundingBox());
+        return !entity.hasVehicle() && !entity.hasPassengers() && !entity.ignoreCameraFrustum && !this.frustum.isVisible(entity.getVisibilityBoundingBox());
     }
 
     @Unique

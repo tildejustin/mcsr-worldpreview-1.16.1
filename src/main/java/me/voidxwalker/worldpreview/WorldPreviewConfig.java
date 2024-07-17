@@ -14,12 +14,6 @@ public class WorldPreviewConfig implements SpeedrunConfig {
     @Config.Numbers.Whole.Bounds(min = 1, max = 100)
     public int dataLimit = 100;
 
-    public boolean chunkDataCulling = true;
-
-    public boolean chunkSectionDataCulling = false;
-
-    public boolean entityDataCulling = true;
-
     {
         WorldPreview.config = this;
     }
