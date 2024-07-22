@@ -32,7 +32,7 @@ dependencies {
 
     // State-Output
     // check for latest versions at https://jitpack.io/#dev.tildejustin/state-output
-    implementation "dev.tildejustin.state-output:state-output-common:8b41afd674"
+    implementation "dev.tildejustin.state-output:state-output-common:89c99480fe"
 }
 
 processResources {
