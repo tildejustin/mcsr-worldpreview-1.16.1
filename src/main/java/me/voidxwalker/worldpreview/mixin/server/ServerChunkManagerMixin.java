@@ -156,7 +156,7 @@ public abstract class ServerChunkManagerMixin {
         }
 
         ChunkPos centerPos = new ChunkPos(player.getBlockPos());
-        if (centerPos.method_24022(pos) > WorldPreview.config.chunkDistance) {
+        if (centerPos.getChebyshevDistance(pos) > WorldPreview.config.chunkDistance) {
             return;
         }
 

@@ -19,7 +19,7 @@ loom {
 
 dependencies {
     minecraft "com.mojang:minecraft:$minecraft_version"
-    mappings "com.github.RedLime:yarn:${minecraft_version}.build.$yarn_build:v2"
+    mappings "dev.tildejustin:yarn:${minecraft_version}-build.$yarn_build:v2"
     modImplementation "net.fabricmc:fabric-loader:$loader_version"
 
     // SpeedrunAPI
@@ -31,7 +31,8 @@ dependencies {
     modCompileOnly "com.github.Minecraft-Java-Edition-Speedrunning:sodium:7e4905f134"
 
     // State-Output
-    implementation "dev.tildejustin.state-output:state-output-common:v1.1.4"
+    // check for latest versions at https://jitpack.io/#dev.tildejustin/state-output
+    implementation "dev.tildejustin.state-output:state-output-common:89c99480fe"
 }
 
 processResources {

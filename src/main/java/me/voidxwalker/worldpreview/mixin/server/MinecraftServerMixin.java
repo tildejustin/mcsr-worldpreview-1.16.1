@@ -114,7 +114,7 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
                     serverWorld.isDebugWorld(),
                     serverWorld.getSeed()
             );
-            ClientPlayerEntity player = interactionManager.method_29357(
+            ClientPlayerEntity player = interactionManager.createPlayer(
                     world,
                     null,
                     null
