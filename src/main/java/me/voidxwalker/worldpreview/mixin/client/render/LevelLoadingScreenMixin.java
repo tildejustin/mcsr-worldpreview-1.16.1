@@ -70,7 +70,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
     @Unique
     private void worldpreview$renderPauseMenu(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         if (this.showMenu) {
-            this.fillGradient(matrices, 0, 0, this.width, this.height, -1072689136, -804253680);
+            this.fillGradient(matrices, 0, 0, this.width, this.height + 1, -1072689136, -804253680);
         } else {
             this.drawCenteredText(matrices, this.textRenderer, new TranslatableText("menu.paused"), this.width / 2, 10, 16777215);
         }
