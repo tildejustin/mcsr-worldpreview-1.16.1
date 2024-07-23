@@ -121,8 +121,8 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
             );
 
             player.copyPositionAndRotation(fakePlayer);
-            // see ClientPlayNetworkHandler#onGameJoin
-            player.headYaw = player.yaw = -180.0F;
+            // reset the randomness introduced to the yaw in LivingEntity#<init>
+            player.headYaw = player.yaw = 0.0F;
 
             GameMode gameMode = GameMode.NOT_SET;
 
