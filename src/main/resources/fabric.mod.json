@@ -3,7 +3,7 @@
   "id": "worldpreview",
   "version": "${version}",
   "name": "WorldPreview",
-  "description": "Makes you reset block game fast",
+  "description": "Shows a preview of the world while it is generating.",
   "authors": [
     {
       "name": "Void_X_Walker",
