@@ -46,8 +46,7 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
     @ModifyVariable(method = "prepareStartRegion", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkManager;getTotalChunksLoadedCount()I"))
     private ServerWorld configureWorldPreview(ServerWorld serverWorld) {
         if (this.shouldConfigurePreview && !this.killed) {
-            WorldPreview.configure(serverWorld);
-            this.shouldConfigurePreview = false;
+            this.shouldConfigurePreview = !WorldPreview.configure(serverWorld);
         }
         return serverWorld;
     }

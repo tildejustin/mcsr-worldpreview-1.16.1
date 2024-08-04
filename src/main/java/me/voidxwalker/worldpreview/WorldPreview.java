@@ -76,13 +76,13 @@ public class WorldPreview {
         }
     }
 
-    public static void configure(ServerWorld serverWorld) {
+    public static boolean configure(ServerWorld serverWorld) {
         WPFakeServerPlayerEntity fakePlayer;
         try {
             CALCULATING_SPAWN.set(true);
             fakePlayer = new WPFakeServerPlayerEntity(serverWorld.getServer(), serverWorld, MinecraftClient.getInstance().getSession().getProfile(), new ServerPlayerInteractionManager(serverWorld));
         } catch (WorldPreviewMissingChunkException e) {
-            return;
+            return false;
         } finally {
             CALCULATING_SPAWN.remove();
         }
@@ -215,6 +215,7 @@ public class WorldPreview {
         camera.update(world, player, perspective > 0, perspective == 2, 0.0f);
 
         set(world, player, interactionManager, camera, packetQueue);
+        return true;
     }
 
     public static void clear() {
