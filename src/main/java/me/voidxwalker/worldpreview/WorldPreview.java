@@ -63,40 +63,36 @@ public class WorldPreview {
     }
 
     public static void configure(ClientWorld world, ClientPlayerEntity player, ClientPlayerInteractionManager interactionManager, Camera camera, Queue<Packet<?>> packetQueue) {
-        synchronized (LOCK) {
-            set(world, player, interactionManager, camera, packetQueue);
-
-            // make player model parts visible
-            int playerModelPartsBitMask = 0;
-            for (PlayerModelPart playerModelPart : MinecraftClient.getInstance().options.getEnabledPlayerModelParts()) {
-                playerModelPartsBitMask |= playerModelPart.getBitFlag();
-            }
-            player.getDataTracker().set(PlayerEntityAccessor.getPLAYER_MODEL_PARTS(), (byte) playerModelPartsBitMask);
-
-            // set cape to player position
-            player.prevCapeX = player.capeX = player.getX();
-            player.prevCapeY = player.capeY = player.getY();
-            player.prevCapeZ = player.capeZ = player.getZ();
-
-            world.addPlayer(player.getEntityId(), player);
-
-            // set player chunk coordinates,
-            // usually these get set when adding the entity to a chunk,
-            // however the chunk the player is in is not actually loaded yet
-            player.chunkX = MathHelper.floor(player.getX() / 16.0);
-            player.chunkY = MathHelper.clamp(MathHelper.floor(player.getY() / 16.0), 0, 16);
-            player.chunkZ = MathHelper.floor(player.getZ() / 16.0);
-
-            ((ClientPlayNetworkHandlerAccessor) player.networkHandler).setWorld(world);
-
-            // camera has to be updated early for chunk/entity data culling to work
-            int perspective = MinecraftClient.getInstance().options.perspective;
-            camera.update(world, player, perspective > 0, perspective == 2, 0.0f);
-
-            world.getChunkManager().setChunkMapCenter(player.chunkX, player.chunkZ);
-
-            kill = false;
+        // make player model parts visible
+        int playerModelPartsBitMask = 0;
+        for (PlayerModelPart playerModelPart : MinecraftClient.getInstance().options.getEnabledPlayerModelParts()) {
+            playerModelPartsBitMask |= playerModelPart.getBitFlag();
         }
+        player.getDataTracker().set(PlayerEntityAccessor.getPLAYER_MODEL_PARTS(), (byte) playerModelPartsBitMask);
+
+        // set cape to player position
+        player.prevCapeX = player.capeX = player.getX();
+        player.prevCapeY = player.capeY = player.getY();
+        player.prevCapeZ = player.capeZ = player.getZ();
+
+        world.addPlayer(player.getEntityId(), player);
+
+        // set player chunk coordinates,
+        // usually these get set when adding the entity to a chunk,
+        // however the chunk the player is in is not actually loaded yet
+        player.chunkX = MathHelper.floor(player.getX() / 16.0);
+        player.chunkY = MathHelper.clamp(MathHelper.floor(player.getY() / 16.0), 0, 16);
+        player.chunkZ = MathHelper.floor(player.getZ() / 16.0);
+
+        ((ClientPlayNetworkHandlerAccessor) player.networkHandler).setWorld(world);
+
+        // camera has to be updated early for chunk/entity data culling to work
+        int perspective = MinecraftClient.getInstance().options.perspective;
+        camera.update(world, player, perspective > 0, perspective == 2, 0.0f);
+
+        world.getChunkManager().setChunkMapCenter(player.chunkX, player.chunkZ);
+
+        set(world, player, interactionManager, camera, packetQueue);
     }
 
     public static void clear() {
@@ -104,16 +100,17 @@ public class WorldPreview {
     }
 
     public static boolean updateState() {
-        if (WorldPreview.inPreview) {
+        if (inPreview) {
             return false;
         }
-        synchronized (WorldPreview.LOCK) {
-            WorldPreview.inPreview = WorldPreview.world != null && WorldPreview.player != null && WorldPreview.interactionManager != null && WorldPreview.camera != null && WorldPreview.packetQueue != null;
+        synchronized (LOCK) {
+            inPreview = world != null && player != null && interactionManager != null && camera != null && packetQueue != null;
 
-            if (WorldPreview.inPreview) {
+            if (inPreview) {
                 // we set the worldRenderer here instead of WorldPreview#configure because doing it from the server thread can cause issues
-                WorldPreview.worldRenderer.setWorld(WorldPreview.world);
-                WorldPreview.logPreviewStart = true;
+                worldRenderer.setWorld(world);
+                logPreviewStart = true;
+                kill = false;
                 return true;
             }
         }
