@@ -69,7 +69,10 @@ public abstract class ServerChunkManagerMixin {
     @Unique
     private double aspectRatio;
 
-    @Inject(method = "tick()Z", at = @At("RETURN"))
+    @Inject(
+            method = "tick()Z",
+            at = @At("RETURN")
+    )
     private void getChunks(CallbackInfoReturnable<Boolean> cir) {
         if (this.world.getServer().getTicks() > 0) {
             return;

@@ -13,7 +13,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Mixin(Entity.class)
 public abstract class EntityMixin {
 
-    @WrapOperation(method = "<init>", at = @At(value = "INVOKE", target = "Ljava/util/concurrent/atomic/AtomicInteger;incrementAndGet()I"))
+    @WrapOperation(
+            method = "<init>",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Ljava/util/concurrent/atomic/AtomicInteger;incrementAndGet()I"
+            )
+    )
     private int doNotIncrementEntityIdOnPreview(AtomicInteger MAX_ENTITY_ID, Operation<Integer> original) {
         // for vanilla parity (where these entities wouldn't be created) we skip incrementing MAX_ENTITY_ID
         // the entity id will be set in the ClientPlayNetworkHandler anyway

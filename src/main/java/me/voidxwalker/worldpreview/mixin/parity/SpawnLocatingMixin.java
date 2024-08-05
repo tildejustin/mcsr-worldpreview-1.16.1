@@ -1,4 +1,4 @@
-package me.voidxwalker.worldpreview.mixin.server;
+package me.voidxwalker.worldpreview.mixin.parity;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
@@ -13,7 +13,13 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(SpawnLocating.class)
 public abstract class SpawnLocatingMixin {
 
-    @WrapOperation(method = "findOverworldSpawn", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerWorld;getChunk(II)Lnet/minecraft/world/chunk/WorldChunk;"))
+    @WrapOperation(
+            method = "findOverworldSpawn",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/server/world/ServerWorld;getChunk(II)Lnet/minecraft/world/chunk/WorldChunk;"
+            )
+    )
     private static WorldChunk doNotGenerateChunksDuringSpawnCalculation(ServerWorld world, int x, int z, Operation<WorldChunk> original) {
         if (Boolean.TRUE.equals(WorldPreview.CALCULATING_SPAWN.get())) {
             WorldChunk chunk = (WorldChunk) world.getExistingChunk(x, z);

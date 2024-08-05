@@ -13,12 +13,22 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(GameRenderer.class)
 public abstract class GameRendererMixin {
 
-    @Inject(method = "onResized", at = @At("TAIL"))
+    @Inject(
+            method = "onResized",
+            at = @At("TAIL")
+    )
     private void resizeWorldRenderer(int i, int j, CallbackInfo ci) {
         WorldPreview.worldRenderer.onResized(i, j);
     }
 
-    @ModifyExpressionValue(method = "*", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/GameRenderer;camera:Lnet/minecraft/client/render/Camera;", opcode = Opcodes.GETFIELD))
+    @ModifyExpressionValue(
+            method = "*",
+            at = @At(
+                    value = "FIELD",
+                    target = "Lnet/minecraft/client/render/GameRenderer;camera:Lnet/minecraft/client/render/Camera;",
+                    opcode = Opcodes.GETFIELD
+            )
+    )
     private Camera modifyCamera(Camera camera) {
         if (WorldPreview.renderingPreview) {
             return WorldPreview.camera;
@@ -26,7 +36,21 @@ public abstract class GameRendererMixin {
         return camera;
     }
 
-    @ModifyExpressionValue(method = "getFov", at = {@At(value = "FIELD", target = "Lnet/minecraft/client/render/GameRenderer;lastMovementFovMultiplier:F"), @At(value = "FIELD", target = "Lnet/minecraft/client/render/GameRenderer;movementFovMultiplier:F")})
+    @ModifyExpressionValue(
+            method = "getFov",
+            at = {
+                    @At(
+                            value = "FIELD",
+                            target = "Lnet/minecraft/client/render/GameRenderer;lastMovementFovMultiplier:F"
+                    ),
+                    @At(
+                            value = "FIELD",
+                            target = "Lnet/minecraft/client/render/GameRenderer;movementFovMultiplier:F"
+                    )
+            },
+            require = 2
+    )
+
     private float modifyMovementFovMultiplier(float movementFovMultiplier) {
         if (WorldPreview.renderingPreview) {
             return Math.min(Math.max(WorldPreview.player.getSpeed(), 0.1f), 1.5f);

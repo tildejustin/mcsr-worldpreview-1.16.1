@@ -14,7 +14,13 @@ import org.spongepowered.asm.mixin.injection.At;
 @Mixin(Camera.class)
 public abstract class CameraMixin {
 
-    @ModifyExpressionValue(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/MathHelper;lerp(FFF)F"))
+    @ModifyExpressionValue(
+            method = "update",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/util/math/MathHelper;lerp(FFF)F"
+            )
+    )
     private float modifyCameraY(float original) {
         if (this.isWorldPreview()) {
             return WorldPreview.player.getStandingEyeHeight();
@@ -22,6 +28,9 @@ public abstract class CameraMixin {
         return original;
     }
 
+    // since we have to get the camera state on the server thread,
+    // it has to be synchronized to ensure that it is correct
+    // see ServerChunkManagerMixin#updateFrustum
     @WrapMethod(method = "update")
     public synchronized void synchronizeCameraUpdate(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, Operation<Void> original) {
         original.call(area, focusedEntity, thirdPerson, inverseView, tickDelta);

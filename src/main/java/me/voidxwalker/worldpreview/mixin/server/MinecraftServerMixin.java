@@ -37,13 +37,25 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
     @Shadow
     public abstract void setKeyPair(KeyPair keyPair);
 
-    @ModifyExpressionValue(method = "createWorlds", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/ServerWorldProperties;isInitialized()Z"))
+    @ModifyExpressionValue(
+            method = "createWorlds",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/world/level/ServerWorldProperties;isInitialized()Z"
+            )
+    )
     private boolean setShouldConfigurePreview(boolean isInitialized) {
         this.shouldConfigurePreview = !isInitialized || WorldPreview.START_ON_OLD_WORLDS;
         return isInitialized;
     }
 
-    @ModifyVariable(method = "prepareStartRegion", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkManager;getTotalChunksLoadedCount()I"))
+    @ModifyVariable(
+            method = "prepareStartRegion",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/server/world/ServerChunkManager;getTotalChunksLoadedCount()I"
+            )
+    )
     private ServerWorld configureWorldPreview(ServerWorld serverWorld) {
         if (this.shouldConfigurePreview && !this.killed) {
             this.shouldConfigurePreview = !WorldPreview.configure(serverWorld);
@@ -51,13 +63,27 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
         return serverWorld;
     }
 
-    @WrapOperation(method = "prepareStartRegion", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkManager;addTicket(Lnet/minecraft/server/world/ChunkTicketType;Lnet/minecraft/util/math/ChunkPos;ILjava/lang/Object;)V"))
+    @WrapOperation(
+            method = "prepareStartRegion",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/server/world/ServerChunkManager;addTicket(Lnet/minecraft/server/world/ChunkTicketType;Lnet/minecraft/util/math/ChunkPos;ILjava/lang/Object;)V"
+            )
+    )
     private void captureChunkTicketInformation(ServerChunkManager chunkManager, ChunkTicketType<Object> ticketType, ChunkPos pos, int radius, Object argument, Operation<Void> original, @Share("removeTicket") LocalRef<Runnable> removeTicket) {
         removeTicket.set(() -> chunkManager.removeTicket(ticketType, pos, radius, argument));
         original.call(chunkManager, ticketType, pos, radius, argument);
     }
 
-    @Inject(method = "prepareStartRegion", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/world/ServerChunkManager;getTotalChunksLoadedCount()I", shift = At.Shift.AFTER), cancellable = true)
+    @Inject(
+            method = "prepareStartRegion",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/server/world/ServerChunkManager;getTotalChunksLoadedCount()I",
+                    shift = At.Shift.AFTER
+            ),
+            cancellable = true
+    )
     private void killWorldGen(WorldGenerationProgressListener worldGenerationProgressListener, CallbackInfo ci, @Share("removeTicket") LocalRef<Runnable> removeTicket) {
         if (this.killed) {
             removeTicket.get().run();
@@ -66,12 +92,21 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
         }
     }
 
-    @ModifyReturnValue(method = "shouldKeepTicking", at = @At("RETURN"))
+    @ModifyReturnValue(
+            method = "shouldKeepTicking",
+            at = @At("RETURN")
+    )
     private boolean killRunningTasks(boolean shouldKeepTicking) {
         return shouldKeepTicking && !this.killed;
     }
 
-    @ModifyExpressionValue(method = "runServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;setupServer()Z"))
+    @ModifyExpressionValue(
+            method = "runServer",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/server/MinecraftServer;setupServer()Z"
+            )
+    )
     private synchronized boolean killServer(boolean original) {
         this.tooLateToKill = true;
         return original && !this.killed;

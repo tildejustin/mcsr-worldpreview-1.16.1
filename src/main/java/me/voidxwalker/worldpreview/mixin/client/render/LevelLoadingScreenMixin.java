@@ -31,22 +31,39 @@ public abstract class LevelLoadingScreenMixin extends Screen {
         super(title);
     }
 
-    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/LevelLoadingScreen;renderBackground(Lnet/minecraft/client/util/math/MatrixStack;)V"))
+    @WrapWithCondition(
+            method = "render",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/gui/screen/LevelLoadingScreen;renderBackground(Lnet/minecraft/client/util/math/MatrixStack;)V"
+            )
+    )
     private boolean stopRenderingBackground(LevelLoadingScreen screen, MatrixStack matrixStack) {
         return !WorldPreview.inPreview;
     }
 
-    @ModifyVariable(method = "render", at = @At("STORE"), ordinal = 2)
+    @ModifyVariable(
+            method = "render",
+            at = @At("STORE"),
+            ordinal = 2
+    )
     private int moveChunkMapX(int i) {
         return 45;
     }
 
-    @ModifyVariable(method = "render", at = @At("STORE"), ordinal = 3)
+    @ModifyVariable(
+            method = "render",
+            at = @At("STORE"),
+            ordinal = 3
+    )
     private int moveChunkMapY(int i) {
         return this.height - 75;
     }
 
-    @Inject(method = "render", at = @At("HEAD"))
+    @Inject(
+            method = "render",
+            at = @At("HEAD")
+    )
     private void renderWorldPreview(MatrixStack matrices, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (WorldPreview.updateState()) {
             this.updatePauseMenuWidgets();
@@ -64,11 +81,11 @@ public abstract class LevelLoadingScreenMixin extends Screen {
             WorldPreview.render(matrices);
         });
 
-        this.worldpreview$renderPauseMenu(matrices, mouseX, mouseY, delta);
+        this.renderPauseMenu(matrices, mouseX, mouseY, delta);
     }
 
     @Unique
-    private void worldpreview$renderPauseMenu(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    private void renderPauseMenu(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         if (this.showMenu) {
             this.fillGradient(matrices, 0, 0, this.width, this.height + 1, -1072689136, -804253680);
         } else {

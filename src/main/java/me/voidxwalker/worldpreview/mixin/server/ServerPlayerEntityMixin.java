@@ -19,7 +19,13 @@ public abstract class ServerPlayerEntityMixin {
     @Unique
     private static final ThreadLocal<Integer> PREVIEW_SPAWNPOS = new ThreadLocal<>();
 
-    @ModifyExpressionValue(method = "moveToSpawn", at = @At(value = "INVOKE", target = "Ljava/util/Random;nextInt(I)I"))
+    @ModifyExpressionValue(
+            method = "moveToSpawn",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Ljava/util/Random;nextInt(I)I"
+            )
+    )
     private int setPreviewSpawnPos(int original) {
         if (this.isWorldPreviewFakePlayer()) {
             PREVIEW_SPAWNPOS.set(original);
@@ -33,7 +39,13 @@ public abstract class ServerPlayerEntityMixin {
         return original;
     }
 
-    @WrapOperation(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/PlayerManager;createStatHandler(Lnet/minecraft/entity/player/PlayerEntity;)Lnet/minecraft/stat/ServerStatHandler;"))
+    @WrapOperation(
+            method = "<init>",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/server/PlayerManager;createStatHandler(Lnet/minecraft/entity/player/PlayerEntity;)Lnet/minecraft/stat/ServerStatHandler;"
+            )
+    )
     private ServerStatHandler doNotCreateStatHandler(PlayerManager playerManager, PlayerEntity player, Operation<ServerStatHandler> original) {
         if (this.isWorldPreviewFakePlayer()) {
             return null;
@@ -41,7 +53,13 @@ public abstract class ServerPlayerEntityMixin {
         return original.call(playerManager, player);
     }
 
-    @WrapOperation(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/PlayerManager;getAdvancementTracker(Lnet/minecraft/server/network/ServerPlayerEntity;)Lnet/minecraft/advancement/PlayerAdvancementTracker;"))
+    @WrapOperation(
+            method = "<init>",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/server/PlayerManager;getAdvancementTracker(Lnet/minecraft/server/network/ServerPlayerEntity;)Lnet/minecraft/advancement/PlayerAdvancementTracker;"
+            )
+    )
     private PlayerAdvancementTracker doNotCreateAdvancementsTracker(PlayerManager playerManager, ServerPlayerEntity player, Operation<PlayerAdvancementTracker> original) {
         if (this.isWorldPreviewFakePlayer()) {
             return null;

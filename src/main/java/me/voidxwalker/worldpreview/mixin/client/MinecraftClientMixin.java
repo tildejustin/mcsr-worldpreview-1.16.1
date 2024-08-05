@@ -38,7 +38,14 @@ public abstract class MinecraftClientMixin {
     @Shadow
     public abstract void openScreen(@Nullable Screen screen);
 
-    @Inject(method = "startIntegratedServer(Ljava/lang/String;Lnet/minecraft/util/registry/RegistryTracker$Modifiable;Ljava/util/function/Function;Lcom/mojang/datafixers/util/Function4;ZLnet/minecraft/client/MinecraftClient$WorldLoadAction;)V", at = @At(value = "INVOKE", shift = At.Shift.AFTER, target = "Lnet/minecraft/server/integrated/IntegratedServer;isLoading()Z"), cancellable = true)
+    @Inject(
+            method = "startIntegratedServer(Ljava/lang/String;Lnet/minecraft/util/registry/RegistryTracker$Modifiable;Ljava/util/function/Function;Lcom/mojang/datafixers/util/Function4;ZLnet/minecraft/client/MinecraftClient$WorldLoadAction;)V",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/server/integrated/IntegratedServer;isLoading()Z"
+            ),
+            cancellable = true
+    )
     private void resetPreview(CallbackInfo ci) {
         if (this.server != null && WorldPreview.inPreview && WorldPreview.kill) {
             if (!((WPMinecraftServer) this.server).worldpreview$kill()) {
@@ -51,12 +58,25 @@ public abstract class MinecraftClientMixin {
         }
     }
 
-    @WrapWithCondition(method = "reset", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;openScreen(Lnet/minecraft/client/gui/screen/Screen;)V"))
+    @WrapWithCondition(
+            method = "reset",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/MinecraftClient;openScreen(Lnet/minecraft/client/gui/screen/Screen;)V"
+            )
+    )
     private boolean smoothTransition(MinecraftClient client, Screen screen) {
         return !(WorldPreview.inPreview && this.currentScreen instanceof LevelLoadingScreen && screen instanceof ProgressScreen);
     }
 
-    @ModifyExpressionValue(method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;world:Lnet/minecraft/client/world/ClientWorld;", opcode = Opcodes.GETFIELD))
+    @ModifyExpressionValue(
+            method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V",
+            at = @At(
+                    value = "FIELD",
+                    target = "Lnet/minecraft/client/MinecraftClient;world:Lnet/minecraft/client/world/ClientWorld;",
+                    opcode = Opcodes.GETFIELD
+            )
+    )
     private ClientWorld waitOnKilledServers(ClientWorld world) {
         if (world == null && WorldPreview.inPreview && WorldPreview.kill) {
             return WorldPreview.world;
@@ -64,12 +84,26 @@ public abstract class MinecraftClientMixin {
         return world;
     }
 
-    @Inject(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;<init>(Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/client/render/BufferBuilderStorage;)V", shift = At.Shift.AFTER))
+    @Inject(
+            method = "<init>",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/render/WorldRenderer;<init>(Lnet/minecraft/client/MinecraftClient;Lnet/minecraft/client/render/BufferBuilderStorage;)V",
+                    shift = At.Shift.AFTER
+            )
+    )
     private void createWorldPreviewRenderer(CallbackInfo ci) {
         WorldPreview.worldRenderer = new WorldRenderer(MinecraftClient.getInstance(), new BufferBuilderStorage());
     }
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/Window;swapBuffers()V", shift = At.Shift.AFTER))
+    @Inject(
+            method = "render",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/client/util/Window;swapBuffers()V",
+                    shift = At.Shift.AFTER
+            )
+    )
     private void logWorldPreviewStart(CallbackInfo ci) {
         if (WorldPreview.logPreviewStart) {
             WorldPreview.LOGGER.info("Starting Preview at (" + WorldPreview.player.getX() + ", " + WorldPreview.player.getY() + ", " + WorldPreview.player.getZ() + ")");

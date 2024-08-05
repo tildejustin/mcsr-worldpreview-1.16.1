@@ -14,7 +14,10 @@ public abstract class PlayerListEntryMixin {
     @Shadow
     protected abstract void loadTextures();
 
-    @Inject(method = "<init>", at = @At("TAIL"))
+    @Inject(
+            method = "<init>",
+            at = @At("TAIL")
+    )
     private void modifyModel(CallbackInfo ci) {
         if (WorldPreview.renderingPreview) {
             this.loadTextures();

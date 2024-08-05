@@ -24,7 +24,11 @@ public abstract class ChunkRenderContainerMixin {
     @Shadow
     private ChunkRenderData data;
 
-    @Inject(method = "canRebuild", at = @At("HEAD"), cancellable = true)
+    @Inject(
+            method = "canRebuild",
+            at = @At("HEAD"),
+            cancellable = true
+    )
     private void doNotWaitForNeighbourChunksOnWall(CallbackInfoReturnable<Boolean> cir) {
         if (this.data == ChunkRenderData.ABSENT && WorldPreview.renderingPreview && Math.max(Math.abs(this.chunkX - WorldPreview.player.chunkX), Math.abs(this.chunkZ - WorldPreview.player.chunkZ)) < WorldPreview.config.instantRenderDistance) {
             cir.setReturnValue(true);

@@ -21,12 +21,12 @@
     "client.render.LevelLoadingScreenMixin",
     "compat.sodium.ChunkRenderContainerMixin",
     "parity.EntityMixin",
+    "parity.SpawnLocatingMixin",
     "server.ChunkHolderMixin",
     "server.IntegratedServerMixin",
     "server.MinecraftServerMixin",
     "server.ServerChunkManagerMixin",
-    "server.ServerPlayerEntityMixin",
-    "server.SpawnLocatingMixin"
+    "server.ServerPlayerEntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1

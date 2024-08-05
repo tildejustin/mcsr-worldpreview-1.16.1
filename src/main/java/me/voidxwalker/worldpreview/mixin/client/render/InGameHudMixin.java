@@ -15,7 +15,14 @@ public abstract class InGameHudMixin {
     @Shadow
     private ItemStack currentStack;
 
-    @ModifyExpressionValue(method = "renderHeldItemTooltip", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/hud/InGameHud;currentStack:Lnet/minecraft/item/ItemStack;", opcode = Opcodes.GETFIELD))
+    @ModifyExpressionValue(
+            method = "renderHeldItemTooltip",
+            at = @At(
+                    value = "FIELD",
+                    target = "Lnet/minecraft/client/gui/hud/InGameHud;currentStack:Lnet/minecraft/item/ItemStack;",
+                    opcode = Opcodes.GETFIELD
+            )
+    )
     private ItemStack modifyCurrentStack(ItemStack currentStack) {
         if (WorldPreview.renderingPreview) {
             return WorldPreview.player.getMainHandStack();
@@ -23,7 +30,14 @@ public abstract class InGameHudMixin {
         return currentStack;
     }
 
-    @ModifyExpressionValue(method = "renderHeldItemTooltip", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/hud/InGameHud;heldItemTooltipFade:I", opcode = Opcodes.GETFIELD))
+    @ModifyExpressionValue(
+            method = "renderHeldItemTooltip",
+            at = @At(
+                    value = "FIELD",
+                    target = "Lnet/minecraft/client/gui/hud/InGameHud;heldItemTooltipFade:I",
+                    opcode = Opcodes.GETFIELD
+            )
+    )
     private int modifyHeldItemTooltipFade(int heldItemTooltipFade) {
         if (WorldPreview.renderingPreview) {
             // see InGameHud#tick, the check needs to be performed because vanilla doesn't reset InGameHud#currentStack when changing worlds

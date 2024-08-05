@@ -19,7 +19,14 @@ public abstract class ChunkHolderMixin implements WPChunkHolder {
     @Unique
     private int worldPreviewBlockLightUpdateBits;
 
-    @Inject(method = "markForLightUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/chunk/WorldChunk;setShouldSave(Z)V", shift = At.Shift.AFTER))
+    @Inject(
+            method = "markForLightUpdate",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/world/chunk/WorldChunk;setShouldSave(Z)V",
+                    shift = At.Shift.AFTER
+            )
+    )
     private void captureLightUpdates(LightType type, int y, CallbackInfo ci, @Local WorldChunk chunk) {
         if (type == LightType.SKY) {
             this.worldPreviewSkyLightUpdateBits |= 1 << y + 1;
