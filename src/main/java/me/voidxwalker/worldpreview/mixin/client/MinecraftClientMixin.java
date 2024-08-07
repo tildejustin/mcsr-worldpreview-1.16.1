@@ -106,7 +106,7 @@ public abstract class MinecraftClientMixin {
     )
     private void logWorldPreviewStart(CallbackInfo ci) {
         if (WorldPreview.logPreviewStart) {
-            WorldPreview.LOGGER.info("Starting Preview at (" + WorldPreview.player.getX() + ", " + WorldPreview.player.getY() + ", " + WorldPreview.player.getZ() + ")");
+            WorldPreview.LOGGER.info("Starting Preview at ({}, {}, {})", WorldPreview.player.getX(), WorldPreview.player.getY(), WorldPreview.player.getZ());
             if (WorldPreview.HAS_STATEOUTPUT) {
                 StateOutputCompat.outputPreviewing();
             }
