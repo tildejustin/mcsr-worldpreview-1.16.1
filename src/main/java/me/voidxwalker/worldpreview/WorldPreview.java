@@ -21,6 +21,7 @@ import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.network.Packet;
 import net.minecraft.network.listener.ClientPlayPacketListener;
 import net.minecraft.network.packet.s2c.play.*;
@@ -117,8 +118,18 @@ public class WorldPreview {
         );
 
         player.copyPositionAndRotation(fakePlayer);
+        // avoid the ClientPlayer being removed from previews on id collisions by setting its entityId
+        // to the ServerPlayer's as would be done in the ClientPlayNetworkHandler
+        player.setEntityId(fakePlayer.getEntityId());
+        // copy the inventory from the server player, for mods like icarus to render given items on preview
+        player.inventory.deserialize(fakePlayer.inventory.serialize(new ListTag()));
+        player.inventory.selectedSlot = fakePlayer.inventory.selectedSlot;
         // reset the randomness introduced to the yaw in LivingEntity#<init>
         player.headYaw = player.yaw = 0.0F;
+        // the end result of the elytra lerp, is applied at the beginning because
+        // otherwise seedqueue would have to take it into account when caching the framebuffer
+        player.elytraPitch = (float) (Math.PI / 12);
+        player.elytraRoll = (float) (-Math.PI / 12);
 
         GameMode gameMode = GameMode.NOT_SET;
 
