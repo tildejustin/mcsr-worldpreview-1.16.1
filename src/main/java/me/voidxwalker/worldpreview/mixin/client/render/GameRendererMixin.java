@@ -50,7 +50,6 @@ public abstract class GameRendererMixin {
             },
             require = 2
     )
-
     private float modifyMovementFovMultiplier(float movementFovMultiplier) {
         if (WorldPreview.renderingPreview) {
             return Math.min(Math.max(WorldPreview.player.getSpeed(), 0.1f), 1.5f);

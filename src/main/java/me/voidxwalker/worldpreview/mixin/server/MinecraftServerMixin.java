@@ -8,6 +8,7 @@ import com.llamalad7.mixinextras.sugar.Share;
 import com.llamalad7.mixinextras.sugar.ref.LocalRef;
 import me.voidxwalker.worldpreview.WorldPreview;
 import me.voidxwalker.worldpreview.interfaces.WPMinecraftServer;
+import me.voidxwalker.worldpreview.interfaces.WPThreadedAnvilChunkStorage;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.WorldGenerationProgressListener;
 import net.minecraft.server.world.ChunkTicketType;
@@ -58,7 +59,10 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
     )
     private ServerWorld configureWorldPreview(ServerWorld serverWorld) {
         if (this.shouldConfigurePreview && !this.killed) {
-            this.shouldConfigurePreview = !WorldPreview.configure(serverWorld);
+            if (WorldPreview.configure(serverWorld)) {
+                this.shouldConfigurePreview = false;
+                ((WPThreadedAnvilChunkStorage) serverWorld.getChunkManager().threadedAnvilChunkStorage).worldpreview$sendData();
+            }
         }
         return serverWorld;
     }

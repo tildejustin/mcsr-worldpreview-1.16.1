@@ -26,8 +26,8 @@
     "server.ChunkHolderMixin",
     "server.IntegratedServerMixin",
     "server.MinecraftServerMixin",
-    "server.ServerChunkManagerMixin",
-    "server.ServerPlayerEntityMixin"
+    "server.ServerPlayerEntityMixin",
+    "server.ThreadedAnvilChunkStorageMixin"
   ],
   "injectors": {
     "defaultRequire": 1
