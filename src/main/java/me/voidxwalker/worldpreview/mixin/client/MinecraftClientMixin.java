@@ -1,6 +1,7 @@
 package me.voidxwalker.worldpreview.mixin.client;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import me.voidxwalker.worldpreview.WorldPreview;
 import me.voidxwalker.worldpreview.compat.StateOutputCompat;
@@ -94,6 +95,14 @@ public abstract class MinecraftClientMixin {
     )
     private void createWorldPreviewRenderer(CallbackInfo ci) {
         WorldPreview.worldRenderer = new WorldRenderer(MinecraftClient.getInstance(), new BufferBuilderStorage());
+    }
+
+    @ModifyReturnValue(
+            method = "isFabulousGraphicsOrBetter",
+            at = @At("RETURN")
+    )
+    private static boolean doNotAllowFabulousGraphicsOnPreview(boolean isFabulousGraphicsOrBetter) {
+        return isFabulousGraphicsOrBetter && !WorldPreview.renderingPreview;
     }
 
     @Inject(
