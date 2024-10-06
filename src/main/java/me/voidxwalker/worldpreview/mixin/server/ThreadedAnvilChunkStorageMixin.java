@@ -230,7 +230,7 @@ public abstract class ThreadedAnvilChunkStorageMixin implements WPThreadedAnvilC
 
         if (!entityPackets.isEmpty() && chunkPackets.isEmpty()) {
             if (!this.sentChunks.contains(pos.toLong()) && this.sentEmptyChunks.add(pos.toLong())) {
-                chunkPackets.add(this.createEmptyChunkPacket(chunk));
+                chunkPackets = Collections.singletonList(this.createEmptyChunkPacket(chunk));
             }
         }
 
