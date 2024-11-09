@@ -19,7 +19,6 @@ import net.minecraft.client.render.Frustum;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.passive.SheepEntity;
 import net.minecraft.network.Packet;
 import net.minecraft.network.packet.s2c.play.ChunkDataS2CPacket;
 import net.minecraft.network.packet.s2c.play.EntityS2CPacket;
@@ -338,9 +337,5 @@ public abstract class ThreadedAnvilChunkStorageMixin implements WPThreadedAnvilC
             }
             this.sendData(packetQueue, player, worldChunk);
         }
-
-        this.entityTrackers.forEach((id, tracker) -> {
-
-        });
     }
 }
