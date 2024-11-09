@@ -24,7 +24,7 @@ public abstract class SpawnLocatingMixin {
         if (Boolean.TRUE.equals(WorldPreview.CALCULATING_SPAWN.get())) {
             WorldChunk chunk = (WorldChunk) world.getExistingChunk(x, z);
             if (chunk == null) {
-                throw new WorldPreviewMissingChunkException();
+                throw WorldPreviewMissingChunkException.INSTANCE;
             }
             return chunk;
         }
