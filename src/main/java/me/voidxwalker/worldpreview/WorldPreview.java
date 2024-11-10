@@ -105,7 +105,9 @@ public class WorldPreview {
                 serverWorld.getRegistryKey(),
                 serverWorld.getDimensionRegistryKey(),
                 serverWorld.getDimension(),
-                16,
+                // WorldPreviews Chunk Distance is one lower than Minecraft's chunkLoadDistance,
+                // when it's at 1 only the chunk the player is in gets sent
+                config.chunkDistance - 1,
                 MinecraftClient.getInstance()::getProfiler,
                 WorldPreview.worldRenderer,
                 serverWorld.isDebugWorld(),
