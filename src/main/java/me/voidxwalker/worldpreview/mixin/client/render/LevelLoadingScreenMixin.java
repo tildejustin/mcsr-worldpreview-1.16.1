@@ -6,10 +6,9 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.LevelLoadingScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -35,10 +34,10 @@ public abstract class LevelLoadingScreenMixin extends Screen {
             method = "render",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/screen/LevelLoadingScreen;renderBackground(Lnet/minecraft/client/util/math/MatrixStack;)V"
+                    target = "Lnet/minecraft/client/gui/screen/LevelLoadingScreen;renderBackground()V"
             )
     )
-    private boolean stopRenderingBackground(LevelLoadingScreen screen, MatrixStack matrixStack) {
+    private boolean stopRenderingBackground(LevelLoadingScreen screen) {
         return !WorldPreview.inPreview;
     }
 
@@ -64,7 +63,7 @@ public abstract class LevelLoadingScreenMixin extends Screen {
             method = "render",
             at = @At("HEAD")
     )
-    private void renderWorldPreview(MatrixStack matrices, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+    private void renderWorldPreview(int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (WorldPreview.updateState()) {
             this.updatePauseMenuWidgets();
         }
@@ -78,20 +77,20 @@ public abstract class LevelLoadingScreenMixin extends Screen {
         WorldPreview.runAsPreview(() -> {
             WorldPreview.tickPackets();
             WorldPreview.tickEntities();
-            WorldPreview.render(matrices);
+            WorldPreview.render();
         });
 
-        this.renderPauseMenu(matrices, mouseX, mouseY, delta);
+        this.renderPauseMenu(mouseX, mouseY, delta);
     }
 
     @Unique
-    private void renderPauseMenu(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+    private void renderPauseMenu(int mouseX, int mouseY, float delta) {
         if (this.showMenu) {
-            this.fillGradient(matrices, 0, 0, this.width, this.height + 1, -1072689136, -804253680);
+            this.fillGradient(0, 0, this.width, this.height + 1, -1072689136, -804253680);
         } else {
-            this.drawCenteredText(matrices, this.textRenderer, new TranslatableText("menu.paused"), this.width / 2, 10, 16777215);
+            this.drawCenteredString(this.textRenderer, I18n.translate("menu.paused"), this.width / 2, 10, 16777215);
         }
-        super.render(matrices, mouseX, mouseY, delta);
+        super.render(mouseX, mouseY, delta);
     }
 
     @Override
@@ -124,17 +123,17 @@ public abstract class LevelLoadingScreenMixin extends Screen {
 
     @Unique
     private void initPauseMenuWidgets() {
-        this.addButton(new ButtonWidget(this.width / 2 - 102, this.height / 4 + 24 - 16, 204, 20, new TranslatableText("menu.returnToGame"), button -> {
+        this.addButton(new ButtonWidget(this.width / 2 - 102, this.height / 4 + 24 - 16, 204, 20, I18n.translate("menu.returnToGame"), button -> {
             this.showMenu = false;
             this.updatePauseMenuWidgets();
         }));
-        this.addButton(new ButtonWidget(this.width / 2 - 102, this.height / 4 + 48 - 16, 98, 20, new TranslatableText("gui.advancements"), NO_OP));
-        this.addButton(new ButtonWidget(this.width / 2 + 4, this.height / 4 + 48 - 16, 98, 20, new TranslatableText("gui.stats"), NO_OP));
-        this.addButton(new ButtonWidget(this.width / 2 - 102, this.height / 4 + 72 - 16, 98, 20, new TranslatableText("menu.sendFeedback"), NO_OP));
-        this.addButton(new ButtonWidget(this.width / 2 + 4, this.height / 4 + 72 - 16, 98, 20, new TranslatableText("menu.reportBugs"), NO_OP));
-        this.addButton(new ButtonWidget(this.width / 2 - 102, this.height / 4 + 96 - 16, 98, 20, new TranslatableText("menu.options"), NO_OP));
-        this.addButton(new ButtonWidget(this.width / 2 + 4, this.height / 4 + 96 - 16, 98, 20, new TranslatableText("menu.shareToLan"), NO_OP));
-        this.addButton(new ButtonWidget(this.width / 2 - 102, this.height / 4 + 120 - 16, 204, 20, new TranslatableText("menu.returnToMenu"), button -> {
+        this.addButton(new ButtonWidget(this.width / 2 - 102, this.height / 4 + 48 - 16, 98, 20, I18n.translate("gui.advancements"), NO_OP));
+        this.addButton(new ButtonWidget(this.width / 2 + 4, this.height / 4 + 48 - 16, 98, 20, I18n.translate("gui.stats"), NO_OP));
+        this.addButton(new ButtonWidget(this.width / 2 - 102, this.height / 4 + 72 - 16, 98, 20, I18n.translate("menu.sendFeedback"), NO_OP));
+        this.addButton(new ButtonWidget(this.width / 2 + 4, this.height / 4 + 72 - 16, 98, 20, I18n.translate("menu.reportBugs"), NO_OP));
+        this.addButton(new ButtonWidget(this.width / 2 - 102, this.height / 4 + 96 - 16, 98, 20, I18n.translate("menu.options"), NO_OP));
+        this.addButton(new ButtonWidget(this.width / 2 + 4, this.height / 4 + 96 - 16, 98, 20, I18n.translate("menu.shareToLan"), NO_OP));
+        this.addButton(new ButtonWidget(this.width / 2 - 102, this.height / 4 + 120 - 16, 204, 20, I18n.translate("menu.returnToMenu"), button -> {
             WorldPreview.kill = true;
             button.active = false;
         }));

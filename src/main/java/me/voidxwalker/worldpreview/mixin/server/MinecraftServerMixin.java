@@ -42,7 +42,7 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
             method = "createWorlds",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/level/ServerWorldProperties;isInitialized()Z"
+                    target = "Lnet/minecraft/world/level/LevelProperties;isInitialized()Z"
             )
     )
     private boolean setShouldConfigurePreview(boolean isInitialized) {
@@ -105,7 +105,7 @@ public abstract class MinecraftServerMixin implements WPMinecraftServer {
     }
 
     @ModifyExpressionValue(
-            method = "runServer",
+            method = "run",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/server/MinecraftServer;setupServer()Z"

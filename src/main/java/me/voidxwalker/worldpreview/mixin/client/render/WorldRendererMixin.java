@@ -1,6 +1,5 @@
 package me.voidxwalker.worldpreview.mixin.client.render;
 
-import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import me.voidxwalker.worldpreview.WorldPreview;
 import net.minecraft.client.render.WorldRenderer;
@@ -46,16 +45,5 @@ public abstract class WorldRendererMixin {
     )
     private boolean fixWorldPreviewChunkRebuilding(Set<ChunkBuilder.BuiltChunk> set, Collection<ChunkBuilder.BuiltChunk> collection) {
         return !WorldPreview.renderingPreview;
-    }
-
-    @ModifyExpressionValue(
-            method = "reload",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/client/MinecraftClient;isFabulousGraphicsOrBetter()Z"
-            )
-    )
-    private boolean doNotAllowFabulousGraphicsOnPreview(boolean isFabulousGraphicsOrBetter) {
-        return isFabulousGraphicsOrBetter && (Object) this != WorldPreview.worldRenderer;
     }
 }

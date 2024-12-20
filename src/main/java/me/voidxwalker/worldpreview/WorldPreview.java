@@ -20,6 +20,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.network.Packet;
@@ -36,6 +37,8 @@ import net.minecraft.util.profiler.Profiler;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.GameRules;
+import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.world.level.LevelInfo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -101,17 +104,13 @@ public class WorldPreview {
 
         ClientWorld world = new ClientWorld(
                 networkHandler,
-                new ClientWorld.Properties(serverWorld.getDifficulty(), serverWorld.getServer().isHardcore(), serverWorld.isFlat()),
-                serverWorld.getRegistryKey(),
-                serverWorld.getDimensionRegistryKey(),
-                serverWorld.getDimension(),
+                new LevelInfo(serverWorld.getLevelProperties()),
+                serverWorld.getDimension().getType(),
                 // WorldPreviews Chunk Distance is one lower than Minecraft's chunkLoadDistance,
                 // when it's at 1 only the chunk the player is in gets sent
                 config.chunkDistance - 1,
                 MinecraftClient.getInstance()::getProfiler,
-                WorldPreview.worldRenderer,
-                serverWorld.isDebugWorld(),
-                serverWorld.getSeed()
+                WorldPreview.worldRenderer
         );
         ClientPlayerEntity player = interactionManager.createPlayer(
                 world,
@@ -138,7 +137,7 @@ public class WorldPreview {
         // This part is not actually relevant for previewing new worlds,
         // I just personally like the idea of worldpreview principally being able to work on old worlds as well
         // same with sending world info and scoreboard data
-        CompoundTag playerData = serverWorld.getServer().getSaveProperties().getPlayerData();
+        CompoundTag playerData = serverWorld.getServer().getWorld(DimensionType.OVERWORLD).getLevelProperties().getPlayerData();
         if (playerData != null) {
             player.fromTag(playerData);
 
@@ -149,13 +148,13 @@ public class WorldPreview {
 
             // see LivingEntity#readCustomDataFromTag, only gets read on server worlds
             if (playerData.contains("Attributes", 9)) {
-                player.getAttributes().fromTag(playerData.getList("Attributes", 10));
+                EntityAttributes.fromTag(player.getAttributes(), playerData.getList("Attributes", 10));
             }
 
             // see PlayerManager#onPlayerConnect
             if (playerData.contains("RootVehicle", 10)) {
                 CompoundTag vehicleData = playerData.getCompound("RootVehicle");
-                UUID uUID = vehicleData.containsUuid("Attach") ? vehicleData.getUuid("Attach") : null;
+                UUID uUID = vehicleData.containsUuidNew("Attach") ? vehicleData.getUuidNew("Attach") : null;
                 EntityType.loadEntityWithPassengers(vehicleData.getCompound("Entity"), serverWorld, entity -> {
                     entity.world = world;
                     world.addEntity(entity.getEntityId(), entity);
@@ -171,16 +170,16 @@ public class WorldPreview {
 
         Queue<Packet<?>> packetQueue = new LinkedBlockingQueue<>();
         packetQueue.add(new PlayerListS2CPacket(PlayerListS2CPacket.Action.ADD_PLAYER, fakePlayer));
-        packetQueue.add(new GameStateChangeS2CPacket(GameStateChangeS2CPacket.GAME_MODE_CHANGED, (gameMode != GameMode.NOT_SET ? gameMode : serverWorld.getServer().getDefaultGameMode()).getId()));
+        packetQueue.add(new GameStateChangeS2CPacket(3, (gameMode != GameMode.NOT_SET ? gameMode : serverWorld.getServer().getDefaultGameMode()).getId()));
 
         // see PlayerManager#sendWorldInfo
         packetQueue.add(new WorldBorderS2CPacket(serverWorld.getWorldBorder(), WorldBorderS2CPacket.Type.INITIALIZE));
         packetQueue.add(new WorldTimeUpdateS2CPacket(serverWorld.getTime(), serverWorld.getTimeOfDay(), serverWorld.getGameRules().getBoolean(GameRules.DO_DAYLIGHT_CYCLE)));
         packetQueue.add(new PlayerSpawnPositionS2CPacket(serverWorld.getSpawnPos()));
         if (serverWorld.isRaining()) {
-            packetQueue.add(new GameStateChangeS2CPacket(GameStateChangeS2CPacket.RAIN_STARTED, 0.0f));
-            packetQueue.add(new GameStateChangeS2CPacket(GameStateChangeS2CPacket.RAIN_GRADIENT_CHANGED, serverWorld.getRainGradient(1.0f)));
-            packetQueue.add(new GameStateChangeS2CPacket(GameStateChangeS2CPacket.THUNDER_GRADIENT_CHANGED, serverWorld.getThunderGradient(1.0f)));
+            packetQueue.add(new GameStateChangeS2CPacket(1, 0.0f));
+            packetQueue.add(new GameStateChangeS2CPacket(7, serverWorld.getRainGradient(1.0f)));
+            packetQueue.add(new GameStateChangeS2CPacket(8, serverWorld.getThunderGradient(1.0f)));
         }
 
         // see PlayerManager#sendScoreboard
@@ -339,8 +338,7 @@ public class WorldPreview {
         profiler.pop();
     }
 
-    @SuppressWarnings("deprecation")
-    public static void render(MatrixStack matrices) {
+    public static void render() {
         MinecraftClient client = MinecraftClient.getInstance();
         Profiler profiler = client.getProfiler();
         Window window = client.getWindow();
@@ -373,7 +371,7 @@ public class WorldPreview {
         RenderSystem.defaultAlphaFunc();
 
         profiler.push("ingame_hud");
-        client.inGameHud.render(matrices, 0.0F);
+        client.inGameHud.render(0.0F);
         profiler.pop();
 
         RenderSystem.clear(256, MinecraftClient.IS_SYSTEM_MAC);

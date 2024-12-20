@@ -4,23 +4,23 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import me.voidxwalker.worldpreview.WorldPreview;
 import me.voidxwalker.worldpreview.WorldPreviewMissingChunkException;
-import net.minecraft.server.network.SpawnLocating;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.world.World;
 import net.minecraft.world.chunk.WorldChunk;
+import net.minecraft.world.dimension.OverworldDimension;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-@Mixin(SpawnLocating.class)
+@Mixin(OverworldDimension.class)
 public abstract class SpawnLocatingMixin {
 
     @WrapOperation(
-            method = "findOverworldSpawn",
+            method = "method_26525",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/server/world/ServerWorld;getChunk(II)Lnet/minecraft/world/chunk/WorldChunk;"
+                    target = "Lnet/minecraft/world/World;getChunk(II)Lnet/minecraft/world/chunk/WorldChunk;"
             )
     )
-    private static WorldChunk doNotGenerateChunksDuringSpawnCalculation(ServerWorld world, int x, int z, Operation<WorldChunk> original) {
+    private static WorldChunk doNotGenerateChunksDuringSpawnCalculation(World world, int x, int z, Operation<WorldChunk> original) {
         if (Boolean.TRUE.equals(WorldPreview.CALCULATING_SPAWN.get())) {
             WorldChunk chunk = (WorldChunk) world.getExistingChunk(x, z);
             if (chunk == null) {

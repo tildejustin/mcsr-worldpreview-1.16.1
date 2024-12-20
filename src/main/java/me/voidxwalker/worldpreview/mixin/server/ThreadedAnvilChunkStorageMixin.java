@@ -150,9 +150,9 @@ public abstract class ThreadedAnvilChunkStorageMixin implements WPThreadedAnvilC
 
         List<Packet<?>> chunkPackets = new ArrayList<>();
 
-        chunkPackets.add(new ChunkDataS2CPacket(chunk, 65535, true));
+        chunkPackets.add(new ChunkDataS2CPacket(chunk, 65535));
         ((WPChunkHolder) holder).worldpreview$flushUpdates();
-        chunkPackets.add(new LightUpdateS2CPacket(chunk.getPos(), chunk.getLightingProvider(), true));
+        chunkPackets.add(new LightUpdateS2CPacket(chunk.getPos(), chunk.getLightingProvider()));
         chunkPackets.addAll(this.processNeighborChunks(pos));
 
         this.sentChunks.add(pos.toLong());
@@ -200,7 +200,7 @@ public abstract class ThreadedAnvilChunkStorageMixin implements WPThreadedAnvilC
                 if (this.sentChunks.contains(neighbor)) {
                     int[] lightUpdates = ((WPChunkHolder) neighborHolder).worldpreview$flushUpdates();
                     if (lightUpdates[0] != 0 || lightUpdates[1] != 0) {
-                        packets.add(new LightUpdateS2CPacket(new ChunkPos(neighbor), neighborChunk.getLightingProvider(), lightUpdates[0], lightUpdates[1], false));
+                        packets.add(new LightUpdateS2CPacket(new ChunkPos(neighbor), neighborChunk.getLightingProvider(), lightUpdates[0], lightUpdates[1]));
                     }
                 } else if (this.culledChunks.contains(neighbor) && !this.sentEmptyChunks.contains(neighbor)) {
                     packets.add(this.createEmptyChunkPacket(neighborChunk));
@@ -214,7 +214,7 @@ public abstract class ThreadedAnvilChunkStorageMixin implements WPThreadedAnvilC
     @Unique
     private void sendData(Queue<Packet<?>> packetQueue, ClientPlayerEntity player, WorldChunk chunk) {
         ChunkPos pos = chunk.getPos();
-        if (pos.getChebyshevDistance(new ChunkPos(player.getBlockPos())) > WorldPreview.config.chunkDistance) {
+        if (pos.method_24022(new ChunkPos(player.getBlockPos())) > WorldPreview.config.chunkDistance) {
             return;
         }
 
@@ -297,7 +297,7 @@ public abstract class ThreadedAnvilChunkStorageMixin implements WPThreadedAnvilC
 
     @Unique
     private ChunkDataS2CPacket createEmptyChunkPacket(WorldChunk chunk) {
-        return new ChunkDataS2CPacket(new WorldChunk(chunk.getWorld(), chunk.getPos(), chunk.getBiomeArray()), 65535, true);
+        return new ChunkDataS2CPacket(new WorldChunk(chunk.getWorld(), chunk.getPos(), chunk.getBiomeArray()), 65535);
     }
 
     @Override
@@ -320,7 +320,7 @@ public abstract class ThreadedAnvilChunkStorageMixin implements WPThreadedAnvilC
             return;
         }
 
-        if (!this.world.getRegistryKey().equals(world.getRegistryKey())) {
+        if (!(this.world.getDimension().getType() == world.getDimension().getType())) {
             return;
         }
 
