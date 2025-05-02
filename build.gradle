@@ -30,7 +30,7 @@ dependencies {
 
     // Sodium
     // check for the latest versions at https://jitpack.io/#Minecraft-Java-Edition-Speedrunning/sodium
-    modCompileOnly "com.github.Minecraft-Java-Edition-Speedrunning:sodium:b8785cddfa"
+    modCompileOnly "com.github.Minecraft-Java-Edition-Speedrunning:sodium:60faa665fe"
 
     // State-Output
     // check for latest versions at https://jitpack.io/#dev.tildejustin/state-output
