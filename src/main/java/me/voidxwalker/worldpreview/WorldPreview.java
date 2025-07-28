@@ -86,7 +86,7 @@ public class WorldPreview {
                 // WorldPreviews Chunk Distance is one lower than Minecraft's chunkLoadDistance,
                 // when it's at 1 only the chunk the player is in gets sent
                 config.chunkDistance - 1,
-                DummyProfiler.INSTANCE,
+                () -> DummyProfiler.INSTANCE,
                 WorldPreview.worldRenderer
         );
         ClientPlayerEntity player = interactionManager.createPlayer(
@@ -131,7 +131,7 @@ public class WorldPreview {
             // see PlayerManager#onPlayerConnect
             if (playerData.contains("RootVehicle", 10)) {
                 CompoundTag vehicleData = playerData.getCompound("RootVehicle");
-                UUID uUID = vehicleData.containsUuid("Attach") ? vehicleData.getUuid("Attach") : null;
+                UUID uUID = vehicleData.containsUuidNew("Attach") ? vehicleData.getUuidNew("Attach") : null;
                 EntityType.loadEntityWithPassengers(vehicleData.getCompound("Entity"), serverWorld, entity -> {
                     entity.world = world;
                     world.addEntity(entity.getEntityId(), entity);
@@ -182,9 +182,9 @@ public class WorldPreview {
         player.getDataTracker().set(PlayerEntityAccessor.worldpreview$getPLAYER_MODEL_PARTS(), (byte) playerModelPartsBitMask);
 
         // set cape to player position
-        player.field_7524 = player.field_7500 = player.getX();
-        player.field_7502 = player.field_7521 = player.getY();
-        player.field_7522 = player.field_7499 = player.getZ();
+        player.prevCapeX = player.capeX = player.getX();
+        player.prevCapeY = player.capeY = player.getY();
+        player.prevCapeZ = player.capeZ = player.getZ();
 
         world.addPlayer(player.getEntityId(), player);
 
